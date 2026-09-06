@@ -31,7 +31,8 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Poignets boutonnés ajustables",
     ],
-    images: ["assets/img/products/veste-cuir-marron-01.jpg"],
+    images: ["assets/img/products/veste-cuir-marron-01.png"],
+    fit: "contain",
   },
   {
     id: "trench-beige",
