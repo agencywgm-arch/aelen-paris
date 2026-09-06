@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <rect width="400" height="500" fill="#e3d6b8"/>
+  <g opacity="0.08" stroke="#5a4a2f" stroke-width="1">
+    <line x1="0" y1="40" x2="400" y2="40"/><line x1="0" y1="80" x2="400" y2="80"/>
+    <line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="160" x2="400" y2="160"/>
+    <line x1="0" y1="200" x2="400" y2="200"/><line x1="0" y1="240" x2="400" y2="240"/>
+    <line x1="0" y1="280" x2="400" y2="280"/><line x1="0" y1="320" x2="400" y2="320"/>
+    <line x1="0" y1="360" x2="400" y2="360"/><line x1="0" y1="400" x2="400" y2="400"/>
+  </g>
+  <g fill="none" stroke="#4a3a22" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <polygon points="150,115 200,150 250,115 270,132 215,165 215,255 185,255 185,165 130,132" fill="#b89a5e" stroke="#4a3a22"/>
+    <polygon points="120,120 55,165 66,255 92,255 98,175 130,160"/>
+    <polygon points="280,120 345,165 334,255 308,255 302,175 270,160"/>
+    <polygon points="118,160 282,160 296,250 104,250"/>
+    <line x1="200" y1="175" x2="200" y2="245"/>
+    <polygon points="104,250 296,250 300,270 100,270"/>
+    <line x1="120" y1="260" x2="120" y2="270"/><line x1="140" y1="260" x2="140" y2="270"/>
+    <line x1="160" y1="260" x2="160" y2="270"/><line x1="180" y1="260" x2="180" y2="270"/>
+    <line x1="200" y1="260" x2="200" y2="270"/><line x1="220" y1="260" x2="220" y2="270"/>
+    <line x1="240" y1="260" x2="240" y2="270"/><line x1="260" y1="260" x2="260" y2="270"/>
+    <line x1="280" y1="260" x2="280" y2="270"/>
+    <polygon points="150,195 175,195 168,225 143,222" opacity="0.8"/>
+    <polygon points="250,195 225,195 232,225 257,222" opacity="0.8"/>
+    <rect x="62" y="245" width="34" height="14" rx="3" fill="#b89a5e"/>
+    <rect x="304" y="245" width="34" height="14" rx="3" fill="#b89a5e"/>
+  </g>
+  <text x="200" y="465" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="2.5" fill="#4a3a22">VESTE COURTE — COL CROCO</text>
+  <text x="200" y="484" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="10" letter-spacing="2" fill="#4a3a2299">PHOTO À VENIR</text>
+</svg>
