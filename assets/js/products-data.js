@@ -1,6 +1,4 @@
 // Catalogue AElen Paris — données produits
-// NOTE: les images sont des placeholders stylisés. Remplacer `image` par le
-// chemin vers la photo réelle du produit une fois disponible.
 const PRODUCTS = [
   {
     id: "trench-chocolat",
@@ -15,7 +13,10 @@ const PRODUCTS = [
       "Ceinture ajustable à la taille",
       "Coton résistant, doublure satinée",
     ],
-    image: "assets/img/placeholders/trench-chocolat.svg",
+    images: [
+      "assets/img/products/trench-chocolat-01.jpg",
+      "assets/img/products/trench-chocolat-02.jpg",
+    ],
   },
   {
     id: "veste-cuir-marron",
@@ -30,7 +31,7 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Poignets boutonnés ajustables",
     ],
-    image: "assets/img/placeholders/veste-cuir-marron.svg",
+    images: ["assets/img/products/veste-cuir-marron-01.jpg"],
   },
   {
     id: "trench-beige",
@@ -45,7 +46,10 @@ const PRODUCTS = [
       "Manches à patte réglable",
       "Coton gabardine",
     ],
-    image: "assets/img/placeholders/trench-beige.svg",
+    images: [
+      "assets/img/products/trench-beige-01.jpg",
+      "assets/img/products/trench-beige-02.jpg",
+    ],
   },
   {
     id: "veste-croco-beige",
@@ -60,7 +64,10 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Doublure interne soignée",
     ],
-    image: "assets/img/placeholders/veste-croco-beige.svg",
+    images: [
+      "assets/img/products/veste-croco-beige-01.jpg",
+      "assets/img/products/veste-croco-beige-02.jpg",
+    ],
   },
   {
     id: "cardigan-bordeaux",
@@ -75,6 +82,6 @@ const PRODUCTS = [
       "Boutonnage asymétrique",
       "Épaulettes à bouton, manches à revers",
     ],
-    image: "assets/img/placeholders/cardigan-bordeaux.svg",
+    images: ["assets/img/products/cardigan-bordeaux-01.jpg"],
   },
 ];

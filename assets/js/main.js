@@ -9,7 +9,7 @@
       (p) => `
       <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
         <div class="thumb">
-          <img src="${p.image}" alt="${p.name}" loading="lazy" />
+          <img src="${p.images[0]}" alt="${p.name}" loading="lazy" />
         </div>
         <div class="info">
           <p class="cat">${p.category}</p>
@@ -28,18 +28,41 @@
   const modalTitle = document.getElementById("modal-title");
   const modalDesc = document.getElementById("modal-desc");
   const modalDetails = document.getElementById("modal-details");
+  const modalThumbs = document.getElementById("modal-thumbs");
   const modalClose = document.getElementById("modal-close");
+
+  function selectImage(product, index) {
+    modalImage.src = product.images[index];
+    modalImage.alt = product.name;
+    modalThumbs.querySelectorAll("img").forEach((img, i) => {
+      img.classList.toggle("active", i === index);
+    });
+  }
 
   function openModal(id) {
     const product = PRODUCTS.find((p) => p.id === id);
     if (!product) return;
 
-    modalImage.src = product.image;
-    modalImage.alt = product.name;
     modalCat.textContent = `${product.category} — ${product.color}`;
     modalTitle.textContent = product.name;
     modalDesc.textContent = product.description;
     modalDetails.innerHTML = product.details.map((d) => `<li>${d}</li>`).join("");
+
+    modalThumbs.innerHTML =
+      product.images.length > 1
+        ? product.images
+            .map(
+              (src, i) =>
+                `<img src="${src}" alt="${product.name} — vue ${i + 1}" data-index="${i}" />`
+            )
+            .join("")
+        : "";
+
+    selectImage(product, 0);
+
+    modalThumbs.querySelectorAll("img").forEach((img) => {
+      img.addEventListener("click", () => selectImage(product, Number(img.dataset.index)));
+    });
 
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
