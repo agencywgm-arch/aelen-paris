@@ -64,10 +64,8 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Doublure interne soignée",
     ],
-    images: [
-      "assets/img/products/veste-croco-beige-01.jpg",
-      "assets/img/products/veste-croco-beige-02.jpg",
-    ],
+    images: ["assets/img/products/veste-croco-beige-01.png"],
+    fit: "contain",
   },
   {
     id: "cardigan-bordeaux",
@@ -82,6 +80,7 @@ const PRODUCTS = [
       "Boutonnage asymétrique",
       "Épaulettes à bouton, manches à revers",
     ],
-    images: ["assets/img/products/cardigan-bordeaux-01.jpg"],
+    images: ["assets/img/products/cardigan-bordeaux-01.png"],
+    fit: "contain",
   },
 ];

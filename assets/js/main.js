@@ -8,7 +8,7 @@
     grid.innerHTML = PRODUCTS.map(
       (p) => `
       <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
-        <div class="thumb">
+        <div class="thumb${p.fit === "contain" ? " thumb-contain" : ""}">
           <img src="${p.images[0]}" alt="${p.name}" loading="lazy" />
         </div>
         <div class="info">
@@ -34,6 +34,7 @@
   function selectImage(product, index) {
     modalImage.src = product.images[index];
     modalImage.alt = product.name;
+    modalImage.parentElement.classList.toggle("modal-image-contain", product.fit === "contain");
     modalThumbs.querySelectorAll("img").forEach((img, i) => {
       img.classList.toggle("active", i === index);
     });
