@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AElen Paris — Maison de mode</title>
+  <meta name="description" content="AElen Paris — trenchs, vestes courtes et mailles pensés pour une allure parisienne intemporelle." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a href="#top" class="brand">
+        <span class="brand-ae">ÆE</span>
+        <span class="brand-name">Ælen</span>
+        <span class="brand-sub">P A R I S</span>
+      </a>
+      <nav class="main-nav" id="main-nav">
+        <a href="#collection">Collection</a>
+        <a href="#maison">La Maison</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="hero-eyebrow">Nouvelle collection</p>
+        <h1>L'allure parisienne, <br />pièce après pièce.</h1>
+        <p>Trenchs, vestes courtes et mailles conçus à Paris — des silhouettes structurées, des matières nobles, pensées pour durer bien au-delà d'une saison.</p>
+        <a href="#collection" class="btn btn-solid">Découvrir la collection</a>
+      </div>
+    </section>
+
+    <section class="section" id="collection">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="section-eyebrow">La collection</p>
+          <h2>Cinq pièces signature</h2>
+          <p>Chaque pièce est présentée ici avec une illustration provisoire — les photos définitives seront ajoutées prochainement.</p>
+        </div>
+        <div class="collection-grid" id="collection-grid">
+          <!-- Généré dynamiquement par main.js à partir de products-data.js -->
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="maison">
+      <div class="wrap about-grid">
+        <div class="about-visual">
+          <span class="monogram">ÆE</span>
+        </div>
+        <div class="about-copy">
+          <p class="section-eyebrow">La maison</p>
+          <h2>Une garde-robe pensée comme un vestiaire de rue parisienne</h2>
+          <p>AElen Paris est née d'une idée simple&nbsp;: habiller le quotidien avec des pièces d'extérieur qui ont du caractère — trenchs longs, vestes courtes à col contrasté, mailles épaisses aux détails soignés.</p>
+          <p>Chaque modèle est développé pour être porté encore et encore, saison après saison, sans jamais perdre de sa tenue.</p>
+          <a href="#contact" class="btn">Nous contacter</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="newsletter" id="contact">
+      <div class="wrap">
+        <h2>Restez informée</h2>
+        <p>Recevez en avant-première les nouvelles pièces et les temps forts de la maison.</p>
+        <form class="newsletter-form" id="newsletter-form">
+          <input type="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+          <button type="submit">S'inscrire</button>
+        </form>
+        <p class="form-note" id="form-note"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="brand-name">Ælen Paris</span>
+          <p>Maison de mode parisienne — trenchs, vestes et mailles façonnés pour durer.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul>
+            <li><a href="#collection">Collection</a></li>
+            <li><a href="#maison">La Maison</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:contact@aelenparis.fr">contact@aelenparis.fr</a></li>
+            <li>Paris, France</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year"></span> AElen Paris. Tous droits réservés.</span>
+        <span>Site en construction — images définitives à venir.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" aria-label="Fermer">✕</button>
+      <div class="modal-image">
+        <img id="modal-image" src="" alt="" />
+      </div>
+      <div class="modal-body">
+        <p class="cat" id="modal-cat"></p>
+        <h3 id="modal-title"></h3>
+        <p class="desc" id="modal-desc"></p>
+        <ul id="modal-details"></ul>
+        <a href="#contact" class="btn btn-solid" id="modal-cta">Nous contacter</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/products-data.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
