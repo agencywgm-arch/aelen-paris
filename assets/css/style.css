@@ -129,7 +129,7 @@ a { color: inherit; }
 /* ---------- Hero (vidéo pilotée par le défilement) ---------- */
 .hero-video {
   position: relative;
-  height: 320vh;
+  height: 240vh;
   background: var(--ink);
 }
 
@@ -161,9 +161,9 @@ a { color: inherit; }
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(28, 25, 23, 0.55) 0%,
-    rgba(28, 25, 23, 0.25) 35%,
-    rgba(28, 25, 23, 0.6) 100%
+    rgba(28, 25, 23, 0.4) 0%,
+    rgba(28, 25, 23, 0.08) 35%,
+    rgba(28, 25, 23, 0.45) 100%
   );
 }
 
@@ -172,6 +172,7 @@ a { color: inherit; }
   z-index: 2;
   max-width: 720px;
   padding: 0 24px;
+  will-change: opacity;
 }
 
 .hero-eyebrow {
@@ -628,7 +629,7 @@ a { color: inherit; }
   .modal { grid-template-columns: 1fr; }
   .modal-image { aspect-ratio: 4/5; }
   .collection-grid .product-card:last-child { grid-column: auto; }
-  .hero-video { height: 220vh; }
+  .hero-video { height: 180vh; }
   .hero-scroll-hint { display: none; }
 }
 

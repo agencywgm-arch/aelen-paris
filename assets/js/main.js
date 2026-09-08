@@ -5,10 +5,14 @@
   const heroSection = document.getElementById("hero-video");
   const heroSticky = document.querySelector(".hero-video-sticky");
   const heroVideo = document.getElementById("hero-video-el");
+  const heroInner = document.querySelector(".hero-inner");
+  const heroHint = document.querySelector(".hero-scroll-hint");
 
   if (heroSection && heroSticky && heroVideo) {
     let duration = 0;
-    let ticking = false;
+    let smoothedTime = 0;
+    let isVisible = true;
+    let rafId = null;
 
     heroVideo.addEventListener("loadedmetadata", () => {
       duration = heroVideo.duration || 0;
@@ -19,29 +23,54 @@
       }
     });
 
-    function scrubVideo() {
-      ticking = false;
-      if (!duration) return;
+    function tick() {
+      if (duration) {
+        const rect = heroSection.getBoundingClientRect();
+        const scrollable = heroSection.offsetHeight - heroSticky.offsetHeight;
 
-      const rect = heroSection.getBoundingClientRect();
-      const scrollable = heroSection.offsetHeight - heroSticky.offsetHeight;
-      if (scrollable <= 0) return;
+        if (scrollable > 0) {
+          const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
+          const progress = scrolled / scrollable;
+          const targetTime = progress * duration;
 
-      const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
-      const progress = scrolled / scrollable;
-      heroVideo.currentTime = progress * duration;
-    }
+          // Lissage : la vidéo glisse vers la position cible au lieu de
+          // sauter d'une image à l'autre à chaque événement de scroll.
+          smoothedTime += (targetTime - smoothedTime) * 0.15;
+          if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
+          heroVideo.currentTime = smoothedTime;
 
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(scrubVideo);
+          // Le texte s'efface dès le début du défilement pour dégager la
+          // vidéo au lieu de rester plaqué dessus tout du long.
+          const textOpacity = 1 - Math.min(progress / 0.22, 1);
+          if (heroInner) {
+            heroInner.style.opacity = textOpacity;
+            heroInner.style.pointerEvents = textOpacity < 0.05 ? "none" : "auto";
+          }
+          if (heroHint) heroHint.style.opacity = textOpacity;
+        }
+      }
+
+      if (isVisible) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        rafId = null;
       }
     }
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    scrubVideo();
+    // On ne fait tourner la boucle que lorsque le hero est réellement
+    // visible, pour ne pas gaspiller de cycles une fois qu'on l'a dépassé.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isVisible = entries[0].isIntersecting;
+        if (isVisible && rafId === null) {
+          rafId = requestAnimationFrame(tick);
+        }
+      },
+      { threshold: 0 }
+    );
+    observer.observe(heroSection);
+
+    rafId = requestAnimationFrame(tick);
   }
 
   // ---- Rendu de la grille collection ----
