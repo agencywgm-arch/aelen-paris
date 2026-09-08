@@ -35,9 +35,14 @@ a { color: inherit; }
 }
 
 /* ---------- Header ---------- */
+/* Fixe (hors flux) plutôt que sticky : le hero peut ainsi commencer à
+   y=0 et démarrer son scrubbing dès le tout premier pixel de scroll,
+   sans un temps mort le temps que la page défile sous le header. */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
   background: rgba(246, 242, 234, 0.92);
   backdrop-filter: blur(6px);
@@ -136,11 +141,7 @@ a { color: inherit; }
 .hero-video-sticky {
   position: sticky;
   top: 0;
-  /* Le header (84px + bordure 1px) reste au-dessus dans le flux normal :
-     on retire sa hauteur pour que le hero tienne entièrement dans le
-     premier écran, sans que son bas (ex. l'indice de défilement) passe
-     sous le pli avant même que l'utilisateur ait commencé à scroller. */
-  height: calc(100vh - 85px);
+  height: 100vh;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -239,6 +240,14 @@ a { color: inherit; }
 /* ---------- Section headings ---------- */
 .section { padding: 100px 0; }
 .section-alt { background: var(--ivory-deep); }
+
+/* Le header est maintenant fixed (hors flux) : compenser sa hauteur
+   pour que les liens d'ancre ne défilent pas jusque sous celui-ci. */
+#collection,
+#maison,
+#contact {
+  scroll-margin-top: 85px;
+}
 
 .section-head {
   text-align: center;
