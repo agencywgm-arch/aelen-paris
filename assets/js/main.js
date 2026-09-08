@@ -5,8 +5,6 @@
   const heroSection = document.getElementById("hero-video");
   const heroSticky = document.querySelector(".hero-video-sticky");
   const heroVideo = document.getElementById("hero-video-el");
-  const heroInner = document.querySelector(".hero-inner");
-  const heroHint = document.querySelector(".hero-scroll-hint");
 
   if (heroSection && heroSticky && heroVideo) {
     let duration = 0;
@@ -37,16 +35,13 @@
           // sauter d'une image à l'autre à chaque événement de scroll.
           smoothedTime += (targetTime - smoothedTime) * 0.15;
           if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
-          heroVideo.currentTime = smoothedTime;
 
-          // Le texte s'efface dès le début du défilement pour dégager la
-          // vidéo au lieu de rester plaqué dessus tout du long.
-          const textOpacity = 1 - Math.min(progress / 0.22, 1);
-          if (heroInner) {
-            heroInner.style.opacity = textOpacity;
-            heroInner.style.pointerEvents = textOpacity < 0.05 ? "none" : "auto";
+          // On ne redemande une image que si l'écart est perceptible :
+          // resolliciter le décodeur à chaque frame pour des micro-écarts
+          // est ce qui rend le rendu saccadé plutôt que fluide.
+          if (Math.abs(heroVideo.currentTime - smoothedTime) > 0.033) {
+            heroVideo.currentTime = smoothedTime;
           }
-          if (heroHint) heroHint.style.opacity = textOpacity;
         }
       }
 
