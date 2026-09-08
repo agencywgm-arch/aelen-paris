@@ -126,42 +126,87 @@ a { color: inherit; }
   display: block;
 }
 
-/* ---------- Hero ---------- */
-.hero {
-  min-height: 78vh;
+/* ---------- Hero (vidéo pilotée par le défilement) ---------- */
+.hero-video {
+  position: relative;
+  height: 320vh;
+  background: var(--ink);
+}
+
+.hero-video-sticky {
+  position: sticky;
+  top: 0;
+  /* Le header (84px + bordure 1px) reste au-dessus dans le flux normal :
+     on retire sa hauteur pour que le hero tienne entièrement dans le
+     premier écran, sans que son bas (ex. l'indice de défilement) passe
+     sous le pli avant même que l'utilisateur ait commencé à scroller. */
+  height: calc(100vh - 85px);
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(166, 138, 100, 0.12), transparent 45%),
-    radial-gradient(circle at 80% 70%, rgba(166, 138, 100, 0.1), transparent 45%),
-    var(--ivory);
-  padding: 80px 24px;
 }
 
-.hero-inner { max-width: 720px; }
+.hero-video-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-video-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 25, 23, 0.55) 0%,
+    rgba(28, 25, 23, 0.25) 35%,
+    rgba(28, 25, 23, 0.6) 100%
+  );
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  padding: 0 24px;
+}
 
 .hero-eyebrow {
   font-size: 12px;
   letter-spacing: 5px;
   text-transform: uppercase;
-  color: var(--taupe);
+  color: var(--taupe-light);
   margin-bottom: 22px;
 }
 
-.hero h1 {
+.hero-inner h1 {
   font-family: var(--serif);
   font-size: clamp(40px, 7vw, 72px);
   margin: 0 0 22px;
   line-height: 1.08;
+  color: var(--ivory);
 }
 
-.hero p {
+.hero-inner p {
   font-size: 17px;
-  color: var(--ink-soft);
+  color: rgba(246, 242, 234, 0.85);
   max-width: 520px;
   margin: 0 auto 34px;
+}
+
+.hero-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(246, 242, 234, 0.7);
 }
 
 .btn {
@@ -583,6 +628,8 @@ a { color: inherit; }
   .modal { grid-template-columns: 1fr; }
   .modal-image { aspect-ratio: 4/5; }
   .collection-grid .product-card:last-child { grid-column: auto; }
+  .hero-video { height: 220vh; }
+  .hero-scroll-hint { display: none; }
 }
 
 @media (max-width: 860px) {

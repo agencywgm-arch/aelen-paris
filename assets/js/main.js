@@ -1,6 +1,49 @@
 (function () {
   "use strict";
 
+  // ---- Vidéo hero pilotée par le défilement ----
+  const heroSection = document.getElementById("hero-video");
+  const heroSticky = document.querySelector(".hero-video-sticky");
+  const heroVideo = document.getElementById("hero-video-el");
+
+  if (heroSection && heroSticky && heroVideo) {
+    let duration = 0;
+    let ticking = false;
+
+    heroVideo.addEventListener("loadedmetadata", () => {
+      duration = heroVideo.duration || 0;
+      // "Amorce" la vidéo pour que le scrubbing fonctionne sur Safari/iOS.
+      const playAttempt = heroVideo.play();
+      if (playAttempt && typeof playAttempt.then === "function") {
+        playAttempt.then(() => heroVideo.pause()).catch(() => {});
+      }
+    });
+
+    function scrubVideo() {
+      ticking = false;
+      if (!duration) return;
+
+      const rect = heroSection.getBoundingClientRect();
+      const scrollable = heroSection.offsetHeight - heroSticky.offsetHeight;
+      if (scrollable <= 0) return;
+
+      const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
+      const progress = scrolled / scrollable;
+      heroVideo.currentTime = progress * duration;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(scrubVideo);
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    scrubVideo();
+  }
+
   // ---- Rendu de la grille collection ----
   const grid = document.getElementById("collection-grid");
 
