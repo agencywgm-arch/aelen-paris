@@ -266,13 +266,6 @@ a { color: inherit; }
   gap: 36px;
 }
 
-/* Avec 5 pièces sur 3 colonnes, la 2e ligne n'en compte que 2 :
-   on cale la dernière carte sur la 3e colonne plutôt que de la
-   laisser à gauche, pour équilibrer la ligne. */
-.collection-grid .product-card:last-child {
-  grid-column: 3;
-}
-
 .product-card {
   background: var(--ivory);
   border: 1px solid var(--line);
@@ -651,7 +644,6 @@ a { color: inherit; }
   .footer-grid { grid-template-columns: 1fr; }
   .modal { grid-template-columns: 1fr; }
   .modal-image { aspect-ratio: 4/5; }
-  .collection-grid .product-card:last-child { grid-column: auto; }
   .hero-video { height: 180vh; }
   .hero-scroll-hint { display: none; }
 }

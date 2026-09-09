@@ -19,22 +19,6 @@ const PRODUCTS = [
     ],
   },
   {
-    id: "cardigan-bordeaux",
-    name: "Cardigan Bordeaux",
-    category: "Mailles",
-    color: "Bordeaux",
-    description:
-      "Cardigan en grosse maille bordeaux, col montant boutonné et boutonnage asymétrique. Épaulettes à bouton pour une touche utilitaire chic.",
-    details: [
-      "Maille épaisse et chaude",
-      "Col montant boutonné",
-      "Boutonnage asymétrique",
-      "Épaulettes à bouton, manches à revers",
-    ],
-    images: ["assets/img/products/cardigan-bordeaux-01.png"],
-    fit: "contain",
-  },
-  {
     id: "trench-beige",
     name: "Trench Camel",
     category: "Manteaux",
@@ -53,6 +37,22 @@ const PRODUCTS = [
     ],
   },
   {
+    id: "veste-cuir-marron",
+    name: "Veste Courte — Col Cuir",
+    category: "Vestes",
+    color: "Marron",
+    description:
+      "Veste courte en coton marron, col contrasté façon cuir texturé, taille resserrée et poignets boutonnés réglables. Silhouette courte et structurée.",
+    details: [
+      "Coupe courte, cintrée à l'ourlet élastiqué",
+      "Col façon cuir texturé amovible visuellement",
+      "Poches passepoilées",
+      "Poignets boutonnés ajustables",
+    ],
+    images: ["assets/img/products/veste-cuir-marron-01.png"],
+    fit: "contain",
+  },
+  {
     id: "veste-croco-beige",
     name: "Veste Courte — Col Croco",
     category: "Vestes",
@@ -69,19 +69,19 @@ const PRODUCTS = [
     fit: "contain",
   },
   {
-    id: "veste-cuir-marron",
-    name: "Veste Courte — Col Cuir",
-    category: "Vestes",
-    color: "Marron",
+    id: "cardigan-bordeaux",
+    name: "Cardigan Bordeaux",
+    category: "Mailles",
+    color: "Bordeaux",
     description:
-      "Veste courte en coton marron, col contrasté façon cuir texturé, taille resserrée et poignets boutonnés réglables. Silhouette courte et structurée.",
+      "Cardigan en grosse maille bordeaux, col montant boutonné et boutonnage asymétrique. Épaulettes à bouton pour une touche utilitaire chic.",
     details: [
-      "Coupe courte, cintrée à l'ourlet élastiqué",
-      "Col façon cuir texturé amovible visuellement",
-      "Poches passepoilées",
-      "Poignets boutonnés ajustables",
+      "Maille épaisse et chaude",
+      "Col montant boutonné",
+      "Boutonnage asymétrique",
+      "Épaulettes à bouton, manches à revers",
     ],
-    images: ["assets/img/products/veste-cuir-marron-01.png"],
+    images: ["assets/img/products/cardigan-bordeaux-01.png"],
     fit: "contain",
   },
 ];
