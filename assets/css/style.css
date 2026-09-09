@@ -53,7 +53,7 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 84px;
+  height: 58px;
 }
 
 .brand {
@@ -231,7 +231,7 @@ a { color: inherit; }
 #collection,
 #maison,
 #contact {
-  scroll-margin-top: 85px;
+  scroll-margin-top: 59px;
 }
 
 .section-head {
@@ -660,7 +660,7 @@ a { color: inherit; }
   .main-nav.open {
     display: flex;
     position: absolute;
-    top: 84px;
+    top: 58px;
     left: 0;
     right: 0;
     background: var(--ivory);
