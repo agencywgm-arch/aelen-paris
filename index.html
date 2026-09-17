@@ -35,11 +35,13 @@
         <video
           id="hero-video-el"
           class="hero-video-el"
-          src="assets/video/hero.mp4"
           muted
           playsinline
           preload="auto"
-        ></video>
+        >
+          <source src="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
+          <source src="assets/video/hero.mp4" />
+        </video>
         <div class="hero-video-scrim"></div>
         <div class="hero-inner">
           <p class="hero-eyebrow">Nouvelle collection</p>
