@@ -5,12 +5,16 @@
   const heroSection = document.getElementById("hero-video");
   const heroSticky = document.querySelector(".hero-video-sticky");
   const heroVideo = document.getElementById("hero-video-el");
+  const heroInner = document.querySelector(".hero-inner");
 
   if (heroSection && heroSticky && heroVideo) {
     let duration = 0;
     let smoothedTime = 0;
     let isVisible = true;
     let rafId = null;
+    // Une fois le défilement des "slides" terminé, la vidéo passe en
+    // lecture bouclée normale et le texte du hero apparaît.
+    let loopMode = false;
 
     heroVideo.addEventListener("loadedmetadata", () => {
       duration = heroVideo.duration || 0;
@@ -21,6 +25,21 @@
       }
     });
 
+    function enterLoopMode() {
+      loopMode = true;
+      heroVideo.loop = true;
+      const p = heroVideo.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+      if (heroInner) heroInner.classList.add("is-visible");
+    }
+
+    function exitLoopMode() {
+      loopMode = false;
+      heroVideo.loop = false;
+      heroVideo.pause();
+      if (heroInner) heroInner.classList.remove("is-visible");
+    }
+
     function tick() {
       if (duration) {
         const rect = heroSection.getBoundingClientRect();
@@ -29,18 +48,25 @@
         if (scrollable > 0) {
           const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
           const progress = scrolled / scrollable;
-          const targetTime = progress * duration;
 
-          // Lissage : la vidéo glisse vers la position cible au lieu de
-          // sauter d'une image à l'autre à chaque événement de scroll.
-          smoothedTime += (targetTime - smoothedTime) * 0.15;
-          if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
+          if (progress >= 1) {
+            if (!loopMode) enterLoopMode();
+          } else {
+            if (loopMode) exitLoopMode();
 
-          // On ne redemande une image que si l'écart est perceptible :
-          // resolliciter le décodeur à chaque frame pour des micro-écarts
-          // est ce qui rend le rendu saccadé plutôt que fluide.
-          if (Math.abs(heroVideo.currentTime - smoothedTime) > 0.033) {
-            heroVideo.currentTime = smoothedTime;
+            const targetTime = progress * duration;
+
+            // Lissage : la vidéo glisse vers la position cible au lieu de
+            // sauter d'une image à l'autre à chaque événement de scroll.
+            smoothedTime += (targetTime - smoothedTime) * 0.15;
+            if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
+
+            // On ne redemande une image que si l'écart est perceptible :
+            // resolliciter le décodeur à chaque frame pour des micro-écarts
+            // est ce qui rend le rendu saccadé plutôt que fluide.
+            if (Math.abs(heroVideo.currentTime - smoothedTime) > 0.033) {
+              heroVideo.currentTime = smoothedTime;
+            }
           }
         }
       }
