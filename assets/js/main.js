@@ -123,6 +123,8 @@
   const modalDetails = document.getElementById("modal-details");
   const modalThumbs = document.getElementById("modal-thumbs");
   const modalClose = document.getElementById("modal-close");
+  const modalFittingBtn = document.getElementById("modal-fitting-btn");
+  let currentProduct = null;
 
   function selectImage(product, index) {
     modalImage.src = product.images[index];
@@ -137,6 +139,7 @@
     const product = PRODUCTS.find((p) => p.id === id);
     if (!product) return;
 
+    currentProduct = product;
     modalCat.textContent = `${product.category} — ${product.color}`;
     modalTitle.textContent = product.name;
     modalDesc.textContent = product.description;
@@ -165,6 +168,11 @@
   function closeModal() {
     overlay.hidden = true;
     document.body.style.overflow = "";
+    const fittingOverlayEl = document.getElementById("fitting-overlay");
+    if (fittingOverlayEl && !fittingOverlayEl.hidden) {
+      fittingOverlayEl.classList.remove("is-open");
+      fittingOverlayEl.hidden = true;
+    }
   }
 
   grid.addEventListener("click", (e) => {
@@ -188,6 +196,103 @@
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !overlay.hidden) closeModal();
+  });
+
+  // ---- Cabine d'essayage ----
+  const fittingOverlay = document.getElementById("fitting-overlay");
+  const fittingClose = document.getElementById("fitting-close");
+  const fittingFigure = document.getElementById("fitting-figure");
+  const fittingTitle = document.getElementById("fitting-title");
+  const fittingColorEl = document.getElementById("fitting-color");
+  const fittingSizeButtons = document.querySelectorAll("#fitting-sizes button");
+
+  // Silhouettes de vêtement très simplifiées par catégorie, positionnées
+  // sur le buste du mannequin (viewBox 0 0 240 560).
+  const GARMENT_SHAPES = {
+    Manteaux:
+      "M75,95 L60,140 L64,478 L100,478 L100,258 L140,258 L140,478 L176,478 L180,140 L165,95 C150,85 90,85 75,95 Z",
+    Vestes:
+      "M75,95 L62,140 L66,250 L174,250 L178,140 L165,95 C150,85 90,85 75,95 Z",
+    Mailles:
+      "M80,92 C80,80 160,80 160,92 L172,150 L150,160 L150,290 L90,290 L90,160 L68,150 Z",
+  };
+
+  // Couleurs approximatives associées aux libellés utilisés dans products-data.js.
+  const COLOR_HEX = {
+    Chocolat: "#4a2f22",
+    Camel: "#b98a52",
+    Marron: "#5c4033",
+    "Beige doré": "#c9a876",
+    Bordeaux: "#5c1f2e",
+    Beige: "#cbb9a0",
+    Rouge: "#a83232",
+  };
+
+  const SIZE_SCALE = { s: 0.88, m: 1, l: 1.16 };
+
+  function buildFittingSVG(product) {
+    const garmentPath = GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes;
+    const garmentColor = COLOR_HEX[product.color] || "#8a7860";
+    return `
+      <svg viewBox="0 0 240 560" xmlns="http://www.w3.org/2000/svg">
+        <g class="fitting-body-group">
+          <ellipse cx="101" cy="548" rx="20" ry="12" fill="#e7ddcb" />
+          <ellipse cx="139" cy="548" rx="20" ry="12" fill="#e7ddcb" />
+          <rect x="88" y="270" width="26" height="270" rx="13" fill="#e7ddcb" />
+          <rect x="126" y="270" width="26" height="270" rx="13" fill="#e7ddcb" />
+          <rect x="55" y="100" width="22" height="170" rx="11" fill="#e7ddcb" transform="rotate(6 66 100)" />
+          <rect x="163" y="100" width="22" height="170" rx="11" fill="#e7ddcb" transform="rotate(-6 174 100)" />
+          <path d="M78,96 C78,90 90,88 120,88 C150,88 162,90 162,96 L168,230 C168,255 150,270 120,270 C90,270 72,255 72,230 Z" fill="#e7ddcb" />
+          <ellipse cx="120" cy="44" rx="24" ry="28" fill="#e7ddcb" />
+          <rect x="110" y="70" width="20" height="18" rx="6" fill="#e7ddcb" />
+          <path d="${garmentPath}" fill="${garmentColor}" stroke="rgba(28,25,23,0.35)" stroke-width="1.5" />
+        </g>
+      </svg>
+    `;
+  }
+
+  function setFittingSize(size) {
+    const group = fittingFigure.querySelector(".fitting-body-group");
+    if (group) group.style.transform = `scaleX(${SIZE_SCALE[size] || 1})`;
+    fittingSizeButtons.forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.size === size);
+    });
+  }
+
+  function openFittingRoom(product) {
+    fittingTitle.textContent = product.name;
+    fittingColorEl.textContent = `${product.category} — ${product.color}`;
+    fittingFigure.innerHTML = buildFittingSVG(product);
+    setFittingSize("m");
+    fittingOverlay.hidden = false;
+    // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => fittingOverlay.classList.add("is-open"));
+    });
+  }
+
+  function closeFittingRoom() {
+    fittingOverlay.classList.remove("is-open");
+    setTimeout(() => {
+      fittingOverlay.hidden = true;
+    }, 700);
+  }
+
+  if (modalFittingBtn) {
+    modalFittingBtn.addEventListener("click", () => {
+      if (currentProduct) openFittingRoom(currentProduct);
+    });
+  }
+
+  fittingClose.addEventListener("click", closeFittingRoom);
+  fittingOverlay.addEventListener("click", (e) => {
+    if (e.target === fittingOverlay) closeFittingRoom();
+  });
+  fittingSizeButtons.forEach((btn) => {
+    btn.addEventListener("click", () => setFittingSize(btn.dataset.size));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
   });
 
   // ---- Menu mobile ----

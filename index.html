@@ -140,6 +140,24 @@
         <p class="desc" id="modal-desc"></p>
         <ul id="modal-details"></ul>
         <a href="#contact" class="btn btn-solid" id="modal-cta">Nous contacter</a>
+        <button type="button" class="btn btn-fitting" id="modal-fitting-btn">Essayer en cabine</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fitting-overlay" id="fitting-overlay" hidden>
+    <div class="fitting-curtain fitting-curtain-left"></div>
+    <div class="fitting-curtain fitting-curtain-right"></div>
+    <button class="fitting-close" id="fitting-close" aria-label="Fermer la cabine">✕</button>
+    <div class="fitting-stage">
+      <p class="fitting-eyebrow">Cabine d'essayage</p>
+      <h3 id="fitting-title"></h3>
+      <p class="fitting-color" id="fitting-color"></p>
+      <div class="fitting-figure" id="fitting-figure"></div>
+      <div class="fitting-sizes" id="fitting-sizes">
+        <button type="button" data-size="s">S</button>
+        <button type="button" data-size="m" class="active">M</button>
+        <button type="button" data-size="l">L</button>
       </div>
     </div>
   </div>
