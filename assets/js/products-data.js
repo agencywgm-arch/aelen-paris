@@ -37,22 +37,6 @@ const PRODUCTS = [
     ],
   },
   {
-    id: "veste-cuir-marron",
-    name: "Veste Courte — Col Cuir",
-    category: "Vestes",
-    color: "Marron",
-    description:
-      "Veste courte en coton marron, col contrasté façon cuir texturé, taille resserrée et poignets boutonnés réglables. Silhouette courte et structurée.",
-    details: [
-      "Coupe courte, cintrée à l'ourlet élastiqué",
-      "Col façon cuir texturé amovible visuellement",
-      "Poches passepoilées",
-      "Poignets boutonnés ajustables",
-    ],
-    images: ["assets/img/products/veste-cuir-marron-01.png"],
-    fit: "contain",
-  },
-  {
     id: "veste-croco-beige",
     name: "Veste Courte — Col Croco",
     category: "Vestes",
