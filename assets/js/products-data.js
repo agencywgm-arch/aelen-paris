@@ -84,4 +84,53 @@ const PRODUCTS = [
     images: ["assets/img/products/cardigan-bordeaux-01.png"],
     fit: "contain",
   },
+  {
+    id: "veste-foulard-marron",
+    name: "Veste Courte — Col Foulard Écossais",
+    category: "Vestes",
+    color: "Marron",
+    description:
+      "Veste courte en coton marron, large col cape doublé d'un tartan bleu et brun, à nouer en foulard sur le devant. Poignets et poche à rabat assortis au tartan.",
+    details: [
+      "Coupe courte, boutonnage simple",
+      "Large col cape à nouer façon foulard",
+      "Doublure et parements en tartan bleu et brun",
+      "Poche à rabat, poignets boutonnés assortis",
+    ],
+    images: [
+      "assets/img/products/veste-foulard-marron-01.jpg",
+      "assets/img/products/veste-foulard-marron-02.jpg",
+      "assets/img/products/veste-foulard-marron-03.jpg",
+    ],
+  },
+  {
+    id: "pull-raye-beige",
+    name: "Pull Col Polo Rayé Beige",
+    category: "Mailles",
+    color: "Beige",
+    description:
+      "Pull en maille épaisse à rayures beige et brun, col polo boutonné et cordon de resserre à l'ourlet. Une pièce chaude et décontractée pour l'entre-saison.",
+    details: [
+      "Maille épaisse et chaude",
+      "Col polo, boutonnage haut",
+      "Ourlet resserré par cordon",
+      "Coupe courte, manches amples",
+    ],
+    images: ["assets/img/products/pull-raye-beige-01.jpg"],
+  },
+  {
+    id: "pull-raye-rouge",
+    name: "Pull Col Polo Rayé Rouge",
+    category: "Mailles",
+    color: "Rouge",
+    description:
+      "Version rouge et gris chiné de notre pull rayé signature, col polo boutonné et cordon de resserre à l'ourlet. Un contraste vif pour twister une tenue simple.",
+    details: [
+      "Maille épaisse et chaude",
+      "Col polo, boutonnage haut",
+      "Ourlet resserré par cordon",
+      "Coupe courte, manches amples",
+    ],
+    images: ["assets/img/products/pull-raye-rouge-01.jpg"],
+  },
 ];
