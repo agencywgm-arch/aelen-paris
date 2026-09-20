@@ -408,11 +408,16 @@
   // ---- Cabine d'essayage ----
   const fittingOverlay = document.getElementById("fitting-overlay");
   const fittingClose = document.getElementById("fitting-close");
+  const fittingFigure = document.getElementById("fitting-figure");
   const fittingPhoto = document.getElementById("fitting-photo");
   const fittingTitle = document.getElementById("fitting-title");
   const fittingColorEl = document.getElementById("fitting-color");
   const fittingNote = document.getElementById("fitting-note");
   const fittingControls = document.getElementById("fitting-controls");
+  const spinToggleGroup = document.getElementById("spin-toggle-group");
+  const spinToggleBtn = document.getElementById("spin-toggle-btn");
+  const spinHint = document.getElementById("spin-hint");
+  const sizeToggleGroup = fittingControls.querySelector(".fitting-group");
 
   // Photos générées : la même styliste/mannequin virtuelle rephotographiée
   // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
@@ -455,7 +460,25 @@
     },
   };
 
+  // Rotation à 360° : 8 prises de vue (tous les 45°) de la même styliste
+  // virtuelle en taille M, générées et cadrées pour s'enchaîner sans saut de
+  // zoom. Glisser à l'écran fait défiler ces 8 images comme un flipbook.
+  const SPIN_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+  const SPIN_FRAMES = {};
+  Object.keys(FITTING_PHOTOS).forEach((id) => {
+    SPIN_FRAMES[id] = SPIN_ANGLES.map(
+      (deg) => `assets/img/spin360/${id}/frame_${String(deg).padStart(3, "0")}.webp`
+    );
+  });
+
   let fittingSize = "m";
+  let spinMode = false;
+  let spinIndex = 0;
+  let spinFramesCache = {};
+  let spinDragging = false;
+  let spinDragStartX = 0;
+  let spinDragStartIndex = 0;
+  let spinIntroTimer = null;
 
   function resolveFittingPhoto(product, size) {
     const set = FITTING_PHOTOS[product.id];
@@ -487,12 +510,99 @@
     preload.src = src;
   }
 
+  function preloadSpinFrames(id) {
+    if (spinFramesCache[id]) return spinFramesCache[id];
+    const imgs = SPIN_FRAMES[id].map((src) => {
+      const img = new Image();
+      img.src = src;
+      return img;
+    });
+    spinFramesCache[id] = imgs;
+    return imgs;
+  }
+
+  function showSpinFrame(index) {
+    const frames = spinFramesCache[currentProduct.id];
+    if (!frames) return;
+    spinIndex = ((index % frames.length) + frames.length) % frames.length;
+    fittingPhoto.src = frames[spinIndex].src;
+    fittingPhoto.classList.add("is-visible");
+  }
+
+  function stopSpinIntro() {
+    if (spinIntroTimer) {
+      clearInterval(spinIntroTimer);
+      spinIntroTimer = null;
+    }
+  }
+
+  function playSpinIntro() {
+    stopSpinIntro();
+    let step = 0;
+    const totalSteps = SPIN_ANGLES.length;
+    spinIntroTimer = setInterval(() => {
+      step += 1;
+      showSpinFrame(step);
+      if (step >= totalSteps) stopSpinIntro();
+    }, 140);
+  }
+
+  function enableSpinMode() {
+    if (!currentProduct || !SPIN_FRAMES[currentProduct.id]) return;
+    spinMode = true;
+    spinToggleBtn.dataset.spin = "on";
+    spinToggleBtn.classList.add("active");
+    sizeToggleGroup.hidden = true;
+    fittingNote.textContent = "Aperçu 360° en taille M.";
+    fittingFigure.classList.add("is-spin");
+    spinHint.classList.add("is-visible");
+    preloadSpinFrames(currentProduct.id);
+    showSpinFrame(0);
+    playSpinIntro();
+  }
+
+  function disableSpinMode() {
+    spinMode = false;
+    stopSpinIntro();
+    spinToggleBtn.dataset.spin = "off";
+    spinToggleBtn.classList.remove("active");
+    sizeToggleGroup.hidden = false;
+    fittingFigure.classList.remove("is-spin");
+    spinHint.classList.remove("is-visible");
+    setFittingSize(fittingSize);
+  }
+
+  function spinPointerDown(e) {
+    if (!spinMode) return;
+    spinDragging = true;
+    spinDragStartX = e.clientX;
+    spinDragStartIndex = spinIndex;
+    stopSpinIntro();
+    spinHint.classList.remove("is-visible");
+    fittingFigure.classList.add("is-dragging");
+    fittingFigure.setPointerCapture(e.pointerId);
+  }
+
+  function spinPointerMove(e) {
+    if (!spinMode || !spinDragging) return;
+    const dx = e.clientX - spinDragStartX;
+    const framesPerStep = 18; // px de glisse pour avancer d'une frame
+    const delta = Math.round(-dx / framesPerStep);
+    showSpinFrame(spinDragStartIndex + delta);
+  }
+
+  function spinPointerUp() {
+    spinDragging = false;
+    fittingFigure.classList.remove("is-dragging");
+  }
+
   function openFittingRoom(product) {
     fittingTitle.textContent = product.name;
     fittingColorEl.textContent = `${product.category} — ${product.color}`;
     fittingPhoto.classList.remove("is-visible");
     fittingPhoto.alt = product.name;
-    setFittingSize(fittingSize);
+    disableSpinMode();
+    spinToggleGroup.hidden = !SPIN_FRAMES[product.id];
     fittingOverlay.hidden = false;
     // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
     requestAnimationFrame(() => {
@@ -501,6 +611,7 @@
   }
 
   function closeFittingRoom() {
+    stopSpinIntro();
     fittingOverlay.classList.remove("is-open");
     setTimeout(() => {
       fittingOverlay.hidden = true;
@@ -518,13 +629,24 @@
     if (e.target === fittingOverlay) closeFittingRoom();
   });
   fittingControls.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-size]");
-    if (!btn) return;
-    setFittingSize(btn.dataset.size);
+    const sizeBtn = e.target.closest("button[data-size]");
+    if (sizeBtn) {
+      setFittingSize(sizeBtn.dataset.size);
+      return;
+    }
+    if (e.target.closest("#spin-toggle-btn")) {
+      if (spinMode) disableSpinMode();
+      else enableSpinMode();
+    }
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
   });
+
+  fittingFigure.addEventListener("pointerdown", spinPointerDown);
+  fittingFigure.addEventListener("pointermove", spinPointerMove);
+  fittingFigure.addEventListener("pointerup", spinPointerUp);
+  fittingFigure.addEventListener("pointercancel", spinPointerUp);
 
   // ---- Menu mobile ----
   const navToggle = document.getElementById("nav-toggle");

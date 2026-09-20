@@ -986,6 +986,32 @@ a { color: inherit; }
 
 .fitting-figure img.is-visible { opacity: 1; }
 
+.fitting-figure.is-spin { cursor: grab; touch-action: pan-y; }
+.fitting-figure.is-spin.is-dragging { cursor: grabbing; }
+.fitting-figure.is-spin img { user-select: none; -webkit-user-drag: none; }
+
+.spin-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translate(-50%, 6px);
+  background: rgba(20, 17, 15, 0.55);
+  color: var(--ivory);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.spin-hint.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .fitting-note {
   font-size: 11px;
   color: var(--taupe-light);
