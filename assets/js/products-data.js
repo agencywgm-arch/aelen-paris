@@ -49,7 +49,10 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Doublure interne soignée",
     ],
-    images: ["assets/img/products/veste-croco-beige-01.png"],
+    images: [
+      "assets/img/products/veste-croco-beige-01.png",
+      { src: "assets/img/products/veste-croco-beige-02.jpg", fit: "cover" },
+    ],
     fit: "contain",
   },
   {

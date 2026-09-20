@@ -97,12 +97,23 @@
   // ---- Rendu de la grille collection ----
   const grid = document.getElementById("collection-grid");
 
+  // Une entrée d'image peut être une simple chaîne (utilise le "fit" du
+  // produit) ou un objet { src, fit } pour surcharger l'affichage d'une
+  // photo précise (ex. une vraie photo ajoutée à côté d'un visuel détouré).
+  function imgSrc(entry) {
+    return typeof entry === "string" ? entry : entry.src;
+  }
+
+  function imgFit(entry, product) {
+    return typeof entry === "string" ? product.fit : entry.fit || product.fit;
+  }
+
   function renderGrid() {
     grid.innerHTML = PRODUCTS.map(
       (p) => `
       <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
-        <div class="thumb${p.fit === "contain" ? " thumb-contain" : ""}">
-          <img src="${p.images[0]}" alt="${p.name}" loading="lazy" />
+        <div class="thumb${imgFit(p.images[0], p) === "contain" ? " thumb-contain" : ""}">
+          <img src="${imgSrc(p.images[0])}" alt="${p.name}" loading="lazy" />
         </div>
         <div class="info">
           <p class="cat">${p.category}</p>
@@ -127,9 +138,10 @@
   let currentProduct = null;
 
   function selectImage(product, index) {
-    modalImage.src = product.images[index];
+    const entry = product.images[index];
+    modalImage.src = imgSrc(entry);
     modalImage.alt = product.name;
-    modalImage.parentElement.classList.toggle("modal-image-contain", product.fit === "contain");
+    modalImage.parentElement.classList.toggle("modal-image-contain", imgFit(entry, product) === "contain");
     modalThumbs.querySelectorAll("img").forEach((img, i) => {
       img.classList.toggle("active", i === index);
     });
@@ -149,8 +161,8 @@
       product.images.length > 1
         ? product.images
             .map(
-              (src, i) =>
-                `<img src="${src}" alt="${product.name} — vue ${i + 1}" data-index="${i}" />`
+              (entry, i) =>
+                `<img src="${imgSrc(entry)}" alt="${product.name} — vue ${i + 1}" data-index="${i}" />`
             )
             .join("")
         : "";
