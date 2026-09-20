@@ -42,7 +42,7 @@ const PRODUCTS = [
     images: [
       "assets/img/fitting-tryons/trench-beige-m.webp",
       { src: "assets/img/products/trench-beige-front.png", fit: "contain" },
-      { src: "assets/img/products/trench-beige-back.jpg", fit: "contain" },
+      { src: "assets/img/products/trench-beige-back.png", fit: "contain" },
     ],
   },
   {
@@ -106,9 +106,8 @@ const PRODUCTS = [
     ],
     images: [
       "assets/img/fitting-tryons/veste-foulard-marron-m.webp",
-      "assets/img/products/veste-foulard-marron-01.jpg",
-      "assets/img/products/veste-foulard-marron-02.jpg",
-      "assets/img/products/veste-foulard-marron-03.jpg",
+      { src: "assets/img/products/veste-foulard-marron-front.png", fit: "contain" },
+      { src: "assets/img/products/veste-foulard-marron-back.png", fit: "contain" },
     ],
   },
   {
@@ -128,8 +127,7 @@ const PRODUCTS = [
     ],
     images: [
       "assets/img/fitting-tryons/pull-raye-beige-m.webp",
-      "assets/img/products/pull-raye-beige-01.jpg",
-      "assets/img/products/pull-raye-beige-02.jpg",
+      { src: "assets/img/products/pull-raye-beige-front.png", fit: "contain" },
     ],
   },
   {
@@ -149,7 +147,7 @@ const PRODUCTS = [
     ],
     images: [
       "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
-      "assets/img/products/pull-raye-rouge-01.jpg",
+      { src: "assets/img/products/pull-raye-rouge-front.png", fit: "contain" },
     ],
   },
 ];
