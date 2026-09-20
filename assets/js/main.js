@@ -417,7 +417,6 @@
   const spinToggleGroup = document.getElementById("spin-toggle-group");
   const spinToggleBtn = document.getElementById("spin-toggle-btn");
   const spinHint = document.getElementById("spin-hint");
-  const sizeToggleGroup = fittingControls.querySelector(".fitting-group");
 
   // Photos générées : la même styliste/mannequin virtuelle rephotographiée
   // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
@@ -460,15 +459,20 @@
     },
   };
 
-  // Rotation à 360° : 8 prises de vue (tous les 45°) de la même styliste
-  // virtuelle en taille M, générées et cadrées pour s'enchaîner sans saut de
-  // zoom. Glisser à l'écran fait défiler ces 8 images comme un flipbook.
-  const SPIN_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+  // Rotation à 360° : 16 prises de vue (tous les 22,5°) par taille S/M/L,
+  // générées et cadrées pour s'enchaîner sans saut de zoom. Glisser à l'écran
+  // fait défiler ces 16 images comme un flipbook.
+  const SPIN_FRAME_COUNT = 16;
+  const SPIN_SIZES = ["s", "m", "l"];
   const SPIN_FRAMES = {};
   Object.keys(FITTING_PHOTOS).forEach((id) => {
-    SPIN_FRAMES[id] = SPIN_ANGLES.map(
-      (deg) => `assets/img/spin360/${id}/frame_${String(deg).padStart(3, "0")}.webp`
-    );
+    SPIN_FRAMES[id] = {};
+    SPIN_SIZES.forEach((size) => {
+      SPIN_FRAMES[id][size] = Array.from(
+        { length: SPIN_FRAME_COUNT },
+        (_, i) => `assets/img/spin360/${id}/${size}/frame_${String(i).padStart(2, "0")}.webp`
+      );
+    });
   });
 
   let fittingSize = "m";
@@ -495,6 +499,12 @@
     });
     if (!currentProduct) return;
 
+    if (spinMode) {
+      preloadSpinFrames(currentProduct.id, size);
+      showSpinFrame(spinIndex);
+      return;
+    }
+
     const { src, fallback } = resolveFittingPhoto(currentProduct, size);
     fittingNote.textContent = fallback
       ? "Aperçu en taille M — la taille " + size.toUpperCase() + " arrive bientôt pour cette pièce."
@@ -510,19 +520,20 @@
     preload.src = src;
   }
 
-  function preloadSpinFrames(id) {
-    if (spinFramesCache[id]) return spinFramesCache[id];
-    const imgs = SPIN_FRAMES[id].map((src) => {
+  function preloadSpinFrames(id, size) {
+    const key = `${id}_${size}`;
+    if (spinFramesCache[key]) return spinFramesCache[key];
+    const imgs = SPIN_FRAMES[id][size].map((src) => {
       const img = new Image();
       img.src = src;
       return img;
     });
-    spinFramesCache[id] = imgs;
+    spinFramesCache[key] = imgs;
     return imgs;
   }
 
   function showSpinFrame(index) {
-    const frames = spinFramesCache[currentProduct.id];
+    const frames = spinFramesCache[`${currentProduct.id}_${fittingSize}`];
     if (!frames) return;
     spinIndex = ((index % frames.length) + frames.length) % frames.length;
     fittingPhoto.src = frames[spinIndex].src;
@@ -539,12 +550,11 @@
   function playSpinIntro() {
     stopSpinIntro();
     let step = 0;
-    const totalSteps = SPIN_ANGLES.length;
     spinIntroTimer = setInterval(() => {
       step += 1;
       showSpinFrame(step);
-      if (step >= totalSteps) stopSpinIntro();
-    }, 140);
+      if (step >= SPIN_FRAME_COUNT) stopSpinIntro();
+    }, 90);
   }
 
   function enableSpinMode() {
@@ -552,11 +562,10 @@
     spinMode = true;
     spinToggleBtn.dataset.spin = "on";
     spinToggleBtn.classList.add("active");
-    sizeToggleGroup.hidden = true;
-    fittingNote.textContent = "Aperçu 360° en taille M.";
+    fittingNote.textContent = "";
     fittingFigure.classList.add("is-spin");
     spinHint.classList.add("is-visible");
-    preloadSpinFrames(currentProduct.id);
+    preloadSpinFrames(currentProduct.id, fittingSize);
     showSpinFrame(0);
     playSpinIntro();
   }
@@ -566,7 +575,6 @@
     stopSpinIntro();
     spinToggleBtn.dataset.spin = "off";
     spinToggleBtn.classList.remove("active");
-    sizeToggleGroup.hidden = false;
     fittingFigure.classList.remove("is-spin");
     spinHint.classList.remove("is-visible");
     setFittingSize(fittingSize);
