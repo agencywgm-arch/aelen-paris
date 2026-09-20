@@ -419,7 +419,6 @@
   const spinHint = document.getElementById("spin-hint");
   const spinPrevBtn = document.getElementById("spin-prev");
   const spinNextBtn = document.getElementById("spin-next");
-  const spinProgress = document.getElementById("spin-progress");
 
   // Photos générées : la même styliste/mannequin virtuelle rephotographiée
   // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
@@ -546,7 +545,6 @@
     spinIndex = ((index % frames.length) + frames.length) % frames.length;
     fittingPhoto.src = frames[spinIndex].src;
     fittingPhoto.classList.add("is-visible");
-    spinProgress.style.setProperty("--spin-pct", (spinIndex / frames.length) * 100);
   }
 
   function stopSpinIntro() {

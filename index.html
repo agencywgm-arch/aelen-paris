@@ -173,6 +173,13 @@
   </div>
 
   <div class="fitting-overlay" id="fitting-overlay" hidden>
+    <div class="fitting-decor">
+      <div class="fitting-panelling"></div>
+      <div class="fitting-sconce fitting-sconce-left"></div>
+      <div class="fitting-sconce fitting-sconce-right"></div>
+      <div class="fitting-rug"></div>
+      <div class="fitting-rail"></div>
+    </div>
     <div class="fitting-curtain fitting-curtain-left"></div>
     <div class="fitting-curtain fitting-curtain-right"></div>
     <button class="fitting-close" id="fitting-close" aria-label="Fermer la cabine">✕</button>
@@ -184,17 +191,16 @@
         <img id="fitting-photo" src="" alt="" />
         <button type="button" class="spin-arrow spin-arrow-left" id="spin-prev" aria-label="Tourner vers la gauche">‹</button>
         <button type="button" class="spin-arrow spin-arrow-right" id="spin-next" aria-label="Tourner vers la droite">›</button>
-        <div class="spin-progress" id="spin-progress"></div>
         <div class="spin-hint" id="spin-hint">↔ Glissez pour faire tourner</div>
       </div>
       <p class="fitting-note" id="fitting-note"></p>
       <div class="fitting-controls" id="fitting-controls">
         <div class="fitting-group">
-          <span class="fitting-label">Taille</span>
+          <span class="fitting-label">Silhouette</span>
           <div class="fitting-choices">
-            <button type="button" data-size="s">S</button>
-            <button type="button" data-size="m">M</button>
-            <button type="button" data-size="l">L</button>
+            <button type="button" data-size="s">Fine</button>
+            <button type="button" data-size="m">Classique</button>
+            <button type="button" data-size="l">Généreuse</button>
           </div>
         </div>
         <div class="fitting-group" id="spin-toggle-group" hidden>
