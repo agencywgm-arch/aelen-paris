@@ -434,7 +434,7 @@
   // Rotation à 360° : prises de vue par taille S/M/L, cadrées pour
   // s'enchaîner sans saut de zoom. On glisse directement sur la photo dès
   // l'ouverture de la cabine — pas de bascule "mode 360" séparée.
-  const SPIN_FRAME_COUNT = 16;
+  const SPIN_FRAME_COUNT = 32;
   const SPIN_SIZES = ["s", "m", "l"];
   const SPIN_FRAMES = {};
   FITTING_PRODUCT_IDS.forEach((id) => {
@@ -459,7 +459,7 @@
   let spinLastMoveX = 0;
   let spinLastMoveT = 0;
   let spinVelocity = 0; // frames par seconde, signé
-  const SPIN_FRAMES_PER_STEP = 16; // px de glisse pour avancer d'une frame
+  const SPIN_FRAMES_PER_STEP = 8; // px de glisse pour avancer d'une frame
 
   function setFittingSize(size) {
     fittingSize = size;
@@ -518,7 +518,7 @@
       step += 1;
       showSpinFrame(step);
       if (step >= SPIN_FRAME_COUNT) stopSpinIntro();
-    }, 90);
+    }, 45);
   }
 
   function openFittingSpin(product) {
