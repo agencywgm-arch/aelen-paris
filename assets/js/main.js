@@ -1046,6 +1046,15 @@
     });
   });
 
+  const navAccountToggle = document.getElementById("nav-account-toggle");
+  if (navAccountToggle) {
+    navAccountToggle.addEventListener("click", () => {
+      mainNav.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", "false");
+      openAccount();
+    });
+  }
+
   // ---- Newsletter (démo front-end uniquement) ----
   const form = document.getElementById("newsletter-form");
   const note = document.getElementById("form-note");

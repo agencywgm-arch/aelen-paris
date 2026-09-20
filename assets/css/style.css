@@ -60,6 +60,7 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
   line-height: 1;
   text-decoration: none;
   color: var(--ink);
@@ -69,6 +70,7 @@ a { color: inherit; }
   font-family: var(--serif);
   font-size: 26px;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
 .brand .brand-sub {
@@ -76,6 +78,7 @@ a { color: inherit; }
   letter-spacing: 5px;
   color: var(--taupe);
   margin-top: 2px;
+  white-space: nowrap;
 }
 
 .main-nav {
@@ -97,6 +100,20 @@ a { color: inherit; }
 .main-nav a:hover {
   color: var(--ink);
   border-color: var(--taupe);
+}
+
+.nav-account-btn {
+  display: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
 }
 
 .nav-toggle {
@@ -1413,6 +1430,12 @@ a { color: inherit; }
 @media (max-width: 860px) {
   .main-nav { display: none; }
   .nav-toggle { display: flex; }
+  /* Sur mobile, le bouton "Compte" passe dans le menu burger pour laisser
+     assez de place au logo à côté de Favoris/Panier. */
+  #account-toggle { display: none; }
+  .nav-account-btn { display: block; }
+  .header-actions { gap: 10px; }
+  .cart-toggle { font-size: 11px; padding: 6px 2px; }
   .about-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
   .modal { grid-template-columns: 1fr; }
