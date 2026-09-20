@@ -35,7 +35,10 @@ const PRODUCTS = [
       "Manches à patte réglable",
       "Coton gabardine",
     ],
-    images: ["assets/img/fitting-tryons/trench-beige-m.webp"],
+    images: [
+      "assets/img/fitting-tryons/trench-beige-m.webp",
+      { src: "assets/img/products/trench-beige-back.jpg", fit: "contain" },
+    ],
   },
   {
     id: "veste-croco-beige",
@@ -52,7 +55,10 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Doublure interne soignée",
     ],
-    images: [{ src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" }],
+    images: [
+      { src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" },
+      "assets/img/products/veste-croco-beige-back.png",
+    ],
     fit: "contain",
   },
   {
@@ -70,7 +76,10 @@ const PRODUCTS = [
       "Boutonnage asymétrique",
       "Épaulettes à bouton, manches à revers",
     ],
-    images: [{ src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" }],
+    images: [
+      { src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" },
+      "assets/img/products/cardigan-bordeaux-back.png",
+    ],
     fit: "contain",
   },
   {
