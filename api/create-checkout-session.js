@@ -23,6 +23,15 @@ module.exports = async (req, res) => {
     return;
   }
 
+  const origin = req.headers.origin || `https://${req.headers.host}`;
+
+  function absoluteImageUrl(product) {
+    const first = product.images && product.images[0];
+    if (!first) return null;
+    const src = typeof first === "string" ? first : first.src;
+    return `${origin}/${src}`;
+  }
+
   const line_items = [];
   for (const entry of items) {
     const product = PRODUCTS.find((p) => p.id === entry.id);
@@ -30,6 +39,7 @@ module.exports = async (req, res) => {
 
     const qty = Math.max(1, Math.min(20, parseInt(entry.qty, 10) || 1));
     const size = typeof entry.size === "string" ? entry.size.slice(0, 10) : "";
+    const image = absoluteImageUrl(product);
 
     line_items.push({
       quantity: qty,
@@ -38,6 +48,7 @@ module.exports = async (req, res) => {
         unit_amount: Math.round(product.price * 100),
         product_data: {
           name: size ? `${product.name} — Taille ${size}` : product.name,
+          images: image ? [image] : undefined,
         },
       },
     });
@@ -48,13 +59,14 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const origin = req.headers.origin || `https://${req.headers.host}`;
   const stripe = Stripe(stripeSecretKey);
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items,
+      locale: "fr",
+      phone_number_collection: { enabled: true },
       shipping_address_collection: {
         allowed_countries: ["FR", "BE", "CH", "LU", "MC", "DE", "ES", "IT"],
       },
