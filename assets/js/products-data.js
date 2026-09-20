@@ -85,6 +85,8 @@ const PRODUCTS = [
       "assets/img/products/veste-foulard-marron-01.jpg",
       "assets/img/products/veste-foulard-marron-02.jpg",
       "assets/img/products/veste-foulard-marron-03.jpg",
+      "assets/img/products/veste-foulard-marron-04.jpg",
+      "assets/img/products/veste-foulard-marron-05.jpg",
     ],
   },
   {
@@ -100,7 +102,11 @@ const PRODUCTS = [
       "Ourlet resserré par cordon",
       "Coupe courte, manches amples",
     ],
-    images: ["assets/img/products/pull-raye-beige-01.jpg"],
+    images: [
+      "assets/img/products/pull-raye-beige-01.jpg",
+      "assets/img/products/pull-raye-beige-02.jpg",
+      "assets/img/products/pull-raye-beige-03.jpg",
+    ],
   },
   {
     id: "pull-raye-rouge",
@@ -115,6 +121,9 @@ const PRODUCTS = [
       "Ourlet resserré par cordon",
       "Coupe courte, manches amples",
     ],
-    images: ["assets/img/products/pull-raye-rouge-01.jpg"],
+    images: [
+      "assets/img/products/pull-raye-rouge-01.jpg",
+      "assets/img/products/pull-raye-rouge-02.jpg",
+    ],
   },
 ];
