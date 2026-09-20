@@ -18,11 +18,7 @@ const PRODUCTS = [
       "Ceinture ajustable à la taille",
       "Coton résistant, doublure satinée",
     ],
-    images: [
-      "assets/img/fitting-tryons/trench-chocolat-m.webp",
-      "assets/img/products/trench-chocolat-01.jpg",
-      "assets/img/products/trench-chocolat-02.jpg",
-    ],
+    images: ["assets/img/fitting-tryons/trench-chocolat-m.webp"],
   },
   {
     id: "trench-beige",
@@ -39,11 +35,7 @@ const PRODUCTS = [
       "Manches à patte réglable",
       "Coton gabardine",
     ],
-    images: [
-      "assets/img/fitting-tryons/trench-beige-m.webp",
-      "assets/img/products/trench-beige-01.jpg",
-      "assets/img/products/trench-beige-02.jpg",
-    ],
+    images: ["assets/img/fitting-tryons/trench-beige-m.webp"],
   },
   {
     id: "veste-croco-beige",
@@ -60,11 +52,7 @@ const PRODUCTS = [
       "Poches passepoilées",
       "Doublure interne soignée",
     ],
-    images: [
-      { src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" },
-      "assets/img/products/veste-croco-beige-01.png",
-      { src: "assets/img/products/veste-croco-beige-02.jpg", fit: "cover" },
-    ],
+    images: [{ src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" }],
     fit: "contain",
   },
   {
@@ -82,10 +70,7 @@ const PRODUCTS = [
       "Boutonnage asymétrique",
       "Épaulettes à bouton, manches à revers",
     ],
-    images: [
-      { src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" },
-      "assets/img/products/cardigan-bordeaux-01.png",
-    ],
+    images: [{ src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" }],
     fit: "contain",
   },
   {
@@ -108,8 +93,6 @@ const PRODUCTS = [
       "assets/img/products/veste-foulard-marron-01.jpg",
       "assets/img/products/veste-foulard-marron-02.jpg",
       "assets/img/products/veste-foulard-marron-03.jpg",
-      "assets/img/products/veste-foulard-marron-04.jpg",
-      "assets/img/products/veste-foulard-marron-05.jpg",
     ],
   },
   {
@@ -131,8 +114,6 @@ const PRODUCTS = [
       "assets/img/fitting-tryons/pull-raye-beige-m.webp",
       "assets/img/products/pull-raye-beige-01.jpg",
       "assets/img/products/pull-raye-beige-02.jpg",
-      "assets/img/products/pull-raye-beige-03.jpg",
-      "assets/img/products/pull-raye-beige-04.jpg",
     ],
   },
   {
@@ -153,8 +134,6 @@ const PRODUCTS = [
     images: [
       "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
       "assets/img/products/pull-raye-rouge-01.jpg",
-      "assets/img/products/pull-raye-rouge-02.jpg",
-      "assets/img/products/pull-raye-rouge-03.jpg",
     ],
   },
 ];
