@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commande confirmée — AElen Paris</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a href="#top" class="brand">
+        <span class="brand-name">Ælen</span>
+        <span class="brand-sub">P A R I S</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="section confirm-section">
+      <div class="wrap confirm-wrap">
+        <p class="section-eyebrow">Merci</p>
+        <h1>Votre commande est confirmée</h1>
+        <p>
+          Un e-mail de confirmation vient de vous être envoyé avec le détail de votre commande.
+          Vous recevrez votre numéro de suivi par e-mail dès l'expédition de votre colis.
+        </p>
+        <p class="confirm-order-id" id="confirm-order-id"></p>
+        <a href="index.html#collection" class="btn btn-solid">Poursuivre mes achats</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-bottom">
+        <span>© <span id="year"></span> AElen Paris. Tous droits réservés.</span>
+        <span>Paris, France</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId) {
+      document.getElementById("confirm-order-id").textContent =
+        "Référence commande : " + sessionId;
+    }
+    try {
+      localStorage.removeItem("aelen-cart");
+    } catch (e) {}
+  </script>
+</body>
+</html>

@@ -23,9 +23,14 @@
         <a href="#maison">La Maison</a>
         <a href="#contact">Contact</a>
       </nav>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="header-actions">
+        <button class="cart-toggle" id="cart-toggle" aria-label="Voir le panier">
+          Panier <span class="cart-count" id="cart-count" hidden>0</span>
+        </button>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -137,10 +142,32 @@
       <div class="modal-body">
         <p class="cat" id="modal-cat"></p>
         <h3 id="modal-title"></h3>
+        <p class="price" id="modal-price"></p>
         <p class="desc" id="modal-desc"></p>
         <ul id="modal-details"></ul>
-        <a href="#contact" class="btn btn-solid" id="modal-cta">Nous contacter</a>
+        <div class="size-picker" id="modal-sizes"></div>
+        <button type="button" class="btn btn-solid" id="modal-add-cart">Ajouter au panier</button>
+        <a href="#contact" class="btn" id="modal-cta">Nous contacter</a>
         <button type="button" class="btn btn-fitting" id="modal-fitting-btn">Essayer en cabine</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-overlay" id="cart-overlay" hidden>
+    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+      <div class="cart-head">
+        <h3 id="cart-title">Votre panier</h3>
+        <button class="modal-close" id="cart-close" aria-label="Fermer le panier">✕</button>
+      </div>
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-empty" id="cart-empty">Votre panier est vide.</div>
+      <div class="cart-footer">
+        <div class="cart-subtotal">
+          <span>Sous-total</span>
+          <strong id="cart-subtotal">0 €</strong>
+        </div>
+        <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Passer commande</button>
+        <p class="cart-note">Livraison et taxes calculées à l'étape suivante.</p>
       </div>
     </div>
   </div>

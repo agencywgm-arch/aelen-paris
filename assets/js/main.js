@@ -108,6 +108,10 @@
     return typeof entry === "string" ? product.fit : entry.fit || product.fit;
   }
 
+  function formatPrice(value) {
+    return `${value} €`;
+  }
+
   function renderGrid() {
     grid.innerHTML = PRODUCTS.map(
       (p) => `
@@ -119,7 +123,7 @@
           <p class="cat">${p.category}</p>
           <h3>${p.name}</h3>
           <p class="desc">${p.description}</p>
-          <span class="view-link">Voir la pièce</span>
+          <span class="view-link">${formatPrice(p.price)} — Voir la pièce</span>
         </div>
       </article>`
     ).join("");
@@ -135,7 +139,11 @@
   const modalThumbs = document.getElementById("modal-thumbs");
   const modalClose = document.getElementById("modal-close");
   const modalFittingBtn = document.getElementById("modal-fitting-btn");
+  const modalPrice = document.getElementById("modal-price");
+  const modalSizes = document.getElementById("modal-sizes");
+  const modalAddCart = document.getElementById("modal-add-cart");
   let currentProduct = null;
+  let selectedSize = null;
 
   function selectImage(product, index) {
     const entry = product.images[index];
@@ -154,8 +162,24 @@
     currentProduct = product;
     modalCat.textContent = `${product.category} — ${product.color}`;
     modalTitle.textContent = product.name;
+    modalPrice.textContent = formatPrice(product.price);
     modalDesc.textContent = product.description;
     modalDetails.innerHTML = product.details.map((d) => `<li>${d}</li>`).join("");
+
+    const sizes = product.sizes || [];
+    selectedSize = sizes[0] || null;
+    modalSizes.innerHTML = sizes
+      .map(
+        (s, i) =>
+          `<button type="button" data-size="${s}" class="${i === 0 ? "active" : ""}">${s}</button>`
+      )
+      .join("");
+    modalSizes.querySelectorAll("button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedSize = btn.dataset.size;
+        modalSizes.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
+      });
+    });
 
     modalThumbs.innerHTML =
       product.images.length > 1
@@ -186,6 +210,177 @@
       fittingOverlayEl.hidden = true;
     }
   }
+
+  // ---- Panier ----
+  const CART_KEY = "aelen-cart";
+  const cartOverlay = document.getElementById("cart-overlay");
+  const cartClose = document.getElementById("cart-close");
+  const cartToggle = document.getElementById("cart-toggle");
+  const cartItemsEl = document.getElementById("cart-items");
+  const cartEmptyEl = document.getElementById("cart-empty");
+  const cartSubtotalEl = document.getElementById("cart-subtotal");
+  const cartCountEl = document.getElementById("cart-count");
+  const cartCheckoutBtn = document.getElementById("cart-checkout");
+
+  function getCart() {
+    try {
+      const raw = localStorage.getItem(CART_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCart(cart) {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    } catch (e) {}
+  }
+
+  function addToCart(productId, size, qty) {
+    const cart = getCart();
+    const existing = cart.find((item) => item.id === productId && item.size === size);
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cart.push({ id: productId, size, qty });
+    }
+    saveCart(cart);
+    renderCart();
+  }
+
+  function updateCartQty(index, qty) {
+    const cart = getCart();
+    if (!cart[index]) return;
+    if (qty <= 0) {
+      cart.splice(index, 1);
+    } else {
+      cart[index].qty = qty;
+    }
+    saveCart(cart);
+    renderCart();
+  }
+
+  function removeFromCart(index) {
+    const cart = getCart();
+    cart.splice(index, 1);
+    saveCart(cart);
+    renderCart();
+  }
+
+  function cartLines() {
+    return getCart()
+      .map((item, index) => {
+        const product = PRODUCTS.find((p) => p.id === item.id);
+        if (!product) return null;
+        return { index, item, product };
+      })
+      .filter(Boolean);
+  }
+
+  function renderCart() {
+    const lines = cartLines();
+    const totalCount = lines.reduce((sum, l) => sum + l.item.qty, 0);
+    const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.item.qty, 0);
+
+    cartCountEl.textContent = String(totalCount);
+    cartCountEl.hidden = totalCount === 0;
+    cartSubtotalEl.textContent = formatPrice(subtotal);
+    cartCheckoutBtn.disabled = lines.length === 0;
+    cartEmptyEl.hidden = lines.length > 0;
+
+    cartItemsEl.innerHTML = lines
+      .map(
+        ({ index, item, product }) => `
+        <div class="cart-item" data-index="${index}">
+          <img src="${imgSrc(product.images[0])}" alt="${product.name}" />
+          <div class="cart-item-info">
+            <h4>${product.name}</h4>
+            <p>Taille ${item.size}</p>
+            <div class="cart-item-qty">
+              <button type="button" class="cart-qty-minus">−</button>
+              <span>${item.qty}</span>
+              <button type="button" class="cart-qty-plus">+</button>
+            </div>
+            <button type="button" class="cart-item-remove">Retirer</button>
+          </div>
+          <div class="cart-item-price">${formatPrice(product.price * item.qty)}</div>
+        </div>`
+      )
+      .join("");
+
+    cartItemsEl.querySelectorAll(".cart-item").forEach((el) => {
+      const index = Number(el.dataset.index);
+      const line = lines.find((l) => l.index === index);
+      el.querySelector(".cart-qty-minus").addEventListener("click", () =>
+        updateCartQty(index, line.item.qty - 1)
+      );
+      el.querySelector(".cart-qty-plus").addEventListener("click", () =>
+        updateCartQty(index, line.item.qty + 1)
+      );
+      el.querySelector(".cart-item-remove").addEventListener("click", () => removeFromCart(index));
+    });
+  }
+
+  function openCart() {
+    renderCart();
+    cartOverlay.hidden = false;
+  }
+
+  function closeCart() {
+    cartOverlay.hidden = true;
+  }
+
+  cartToggle.addEventListener("click", openCart);
+  cartClose.addEventListener("click", closeCart);
+  cartOverlay.addEventListener("click", (e) => {
+    if (e.target === cartOverlay) closeCart();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !cartOverlay.hidden) closeCart();
+  });
+
+  modalAddCart.addEventListener("click", () => {
+    if (!currentProduct) return;
+    if (currentProduct.sizes && currentProduct.sizes.length && !selectedSize) return;
+    addToCart(currentProduct.id, selectedSize, 1);
+    openCart();
+  });
+
+  cartCheckoutBtn.addEventListener("click", async () => {
+    const lines = cartLines();
+    if (lines.length === 0) return;
+
+    cartCheckoutBtn.disabled = true;
+    cartCheckoutBtn.textContent = "Redirection…";
+
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: lines.map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty })),
+        }),
+      });
+
+      if (!response.ok) throw new Error("checkout_failed");
+
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("no_url");
+      }
+    } catch (err) {
+      cartCheckoutBtn.disabled = false;
+      cartCheckoutBtn.textContent = "Passer commande";
+      alert(
+        "Le paiement n'est pas encore configuré sur ce site. Contactez-nous directement pour finaliser votre commande."
+      );
+    }
+  });
+
+  renderCart();
 
   grid.addEventListener("click", (e) => {
     const card = e.target.closest(".product-card");
