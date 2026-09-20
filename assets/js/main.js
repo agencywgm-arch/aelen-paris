@@ -408,168 +408,92 @@
   // ---- Cabine d'essayage ----
   const fittingOverlay = document.getElementById("fitting-overlay");
   const fittingClose = document.getElementById("fitting-close");
-  const fittingFigure = document.getElementById("fitting-figure");
+  const fittingPhoto = document.getElementById("fitting-photo");
   const fittingTitle = document.getElementById("fitting-title");
   const fittingColorEl = document.getElementById("fitting-color");
+  const fittingNote = document.getElementById("fitting-note");
   const fittingControls = document.getElementById("fitting-controls");
 
-  // Vêtements réellement détourés (fond transparent) : ils sont plaqués tels
-  // quels sur le mannequin. Les pièces absentes de cette liste retombent sur
-  // une silhouette colorée — il suffit d'ajouter le fichier ici pour les
-  // basculer sur la vraie photo.
-  const FITTING_CUTOUTS = {
-    "veste-croco-beige": "assets/img/fitting/veste-croco-beige.webp",
-    "cardigan-bordeaux": "assets/img/fitting/cardigan-bordeaux.webp",
-    "veste-foulard-marron": "assets/img/fitting/veste-foulard-marron.webp",
-    "pull-raye-beige": "assets/img/fitting/pull-raye-beige.webp",
-    "pull-raye-rouge": "assets/img/fitting/pull-raye-rouge.webp",
+  // Photos générées : la même styliste/mannequin virtuelle rephotographiée
+  // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
+  // fidèle plutôt qu'un simple étirement d'image.
+  const FITTING_PHOTOS = {
+    "trench-chocolat": {
+      s: "assets/img/fitting-tryons/trench-chocolat-s.webp",
+      m: "assets/img/fitting-tryons/trench-chocolat-m.webp",
+      l: "assets/img/fitting-tryons/trench-chocolat-l.webp",
+    },
+    "trench-beige": {
+      s: "assets/img/fitting-tryons/trench-beige-s.webp",
+      m: "assets/img/fitting-tryons/trench-beige-m.webp",
+      l: "assets/img/fitting-tryons/trench-beige-l.webp",
+    },
+    "veste-croco-beige": {
+      s: "assets/img/fitting-tryons/veste-croco-beige-s.webp",
+      m: "assets/img/fitting-tryons/veste-croco-beige-m.webp",
+      l: "assets/img/fitting-tryons/veste-croco-beige-l.webp",
+    },
+    "cardigan-bordeaux": {
+      s: "assets/img/fitting-tryons/cardigan-bordeaux-s.webp",
+      m: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp",
+      l: "assets/img/fitting-tryons/cardigan-bordeaux-l.webp",
+    },
+    "veste-foulard-marron": {
+      s: "assets/img/fitting-tryons/veste-foulard-marron-s.webp",
+      m: "assets/img/fitting-tryons/veste-foulard-marron-m.webp",
+      l: "assets/img/fitting-tryons/veste-foulard-marron-l.webp",
+    },
+    "pull-raye-beige": {
+      s: "assets/img/fitting-tryons/pull-raye-beige-s.webp",
+      m: "assets/img/fitting-tryons/pull-raye-beige-m.webp",
+      l: "assets/img/fitting-tryons/pull-raye-beige-l.webp",
+    },
+    "pull-raye-rouge": {
+      // La taille S n'a pas pu être générée (crédits épuisés) — on retombe
+      // sur M en attendant, avec une note visible pour ne pas induire en erreur.
+      m: "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
+      l: "assets/img/fitting-tryons/pull-raye-rouge-l.webp",
+    },
   };
 
-  // Zone d'habillage par catégorie, dans le repère du mannequin (300x760).
-  // Plus large que le buste : les manches débordent sur les bras.
-  const GARMENT_BOX = {
-    Manteaux: { x: 34, y: 128, w: 232, h: 470 },
-    Vestes: { x: 37, y: 128, w: 226, h: 300 },
-    Mailles: { x: 37, y: 128, w: 226, h: 300 },
-  };
+  let fittingSize = "m";
 
-  // Silhouettes de repli, pour les pièces sans photo détourée.
-  const GARMENT_SHAPES = {
-    Manteaux:
-      "M90,156 C90,144 114,137 150,137 C186,137 210,144 210,156 L226,250 L222,560 L176,560 L176,320 L124,320 L124,560 L78,560 L74,250 Z",
-    Vestes:
-      "M90,156 C90,144 114,137 150,137 C186,137 210,144 210,156 L224,232 L218,332 L82,332 L76,232 Z",
-    Mailles:
-      "M92,150 C92,138 114,132 150,132 C186,132 208,138 208,150 L228,222 L198,236 L198,350 L102,350 L102,236 L72,222 Z",
-  };
-
-  const COLOR_HEX = {
-    Chocolat: "#4a2f22",
-    Camel: "#b98a52",
-    Marron: "#5c4033",
-    "Beige doré": "#c9a876",
-    Bordeaux: "#5c1f2e",
-    Beige: "#cbb9a0",
-    Rouge: "#a83232",
-  };
-
-  // Carrure (largeur du corps), stature (hauteur) et carnation.
-  const BUILD_SCALE = { s: 0.9, m: 1, l: 1.12 };
-  const HEIGHT_SCALE = { petite: 0.94, moyenne: 1, grande: 1.06 };
-  const TONES = {
-    clair: ["#f7efe3", "#e8d9c4", "#c9b49a"],
-    hale: ["#efd9bd", "#d9b992", "#b28d63"],
-    fonce: ["#c08f62", "#96684a", "#63402a"],
-  };
-
-  const fittingState = { build: "m", height: "moyenne", tone: "clair" };
-
-  function garmentMarkup(product) {
-    const box = GARMENT_BOX[product.category] || GARMENT_BOX.Vestes;
-    const cutout = FITTING_CUTOUTS[product.id];
-    if (cutout) {
-      return `<image class="fitting-garment" href="${cutout}" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" preserveAspectRatio="xMidYMin meet" filter="url(#fit-garment-shadow)" />`;
-    }
-    const shape = GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes;
-    const color = COLOR_HEX[product.color] || "#8a7860";
-    return `
-      <g class="fitting-garment" filter="url(#fit-garment-shadow)">
-        <path d="${shape}" fill="${color}" />
-        <path d="${shape}" fill="url(#fit-fabric)" />
-        <path d="M150,143 L134,145 L150,192 L166,145 Z" fill="rgba(0,0,0,0.22)" />
-        <rect x="76" y="270" width="148" height="15" fill="rgba(0,0,0,0.2)" />
-      </g>`;
+  function resolveFittingPhoto(product, size) {
+    const set = FITTING_PHOTOS[product.id];
+    if (!set) return { src: null, fallback: false };
+    if (set[size]) return { src: set[size], fallback: false };
+    const fallback = set.m || set.l || set.s;
+    return { src: fallback, fallback: true };
   }
 
-  function buildFittingSVG(product) {
-    return `
-      <svg viewBox="0 0 300 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mannequin portant ${product.name}">
-        <defs>
-          <!-- Repère absolu : la lumière traverse tout le corps d'un bloc,
-               sinon chaque membre reçoit son propre dégradé et les
-               raccords entre les formes se voient. -->
-          <linearGradient id="fit-skin" gradientUnits="userSpaceOnUse" x1="64" y1="80" x2="248" y2="520">
-            <stop offset="0" stop-color="var(--mq-1)" />
-            <stop offset="0.5" stop-color="var(--mq-2)" />
-            <stop offset="1" stop-color="var(--mq-3)" />
-          </linearGradient>
-          <linearGradient id="fit-sheen" gradientUnits="userSpaceOnUse" x1="84" y1="0" x2="220" y2="0">
-            <stop offset="0" stop-color="rgba(255,255,255,0.3)" />
-            <stop offset="0.35" stop-color="rgba(255,255,255,0.04)" />
-            <stop offset="1" stop-color="rgba(0,0,0,0.18)" />
-          </linearGradient>
-          <linearGradient id="fit-fabric" x1="0" y1="0" x2="1" y2="0.2">
-            <stop offset="0" stop-color="rgba(255,255,255,0.18)" />
-            <stop offset="0.45" stop-color="rgba(255,255,255,0)" />
-            <stop offset="1" stop-color="rgba(0,0,0,0.25)" />
-          </linearGradient>
-          <radialGradient id="fit-floor">
-            <stop offset="0" stop-color="rgba(0,0,0,0.5)" />
-            <stop offset="1" stop-color="rgba(0,0,0,0)" />
-          </radialGradient>
-          <radialGradient id="fit-glow">
-            <stop offset="0" stop-color="rgba(203,183,151,0.22)" />
-            <stop offset="1" stop-color="rgba(203,183,151,0)" />
-          </radialGradient>
-          <filter id="fit-garment-shadow" x="-25%" y="-25%" width="150%" height="150%">
-            <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity="0.42" />
-          </filter>
-        </defs>
-
-        <ellipse cx="150" cy="370" rx="150" ry="330" fill="url(#fit-glow)" />
-
-        <g class="fitting-stature">
-          <ellipse cx="150" cy="706" rx="78" ry="14" fill="url(#fit-floor)" />
-
-          <g class="fitting-head">
-            <path d="M136,108 L134,152 L166,152 L164,108 Z" fill="url(#fit-skin)" />
-            <path d="M136,108 L134,152 L166,152 L164,108 Z" fill="rgba(0,0,0,0.18)" />
-            <ellipse cx="150" cy="77" rx="30" ry="43" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-            <ellipse cx="150" cy="77" rx="30" ry="43" fill="url(#fit-sheen)" />
-          </g>
-
-          <g class="fitting-body">
-            <path d="M98,340 C96,420 106,470 110,520 C113,580 115,640 116,686 L140,686 C141,640 143,580 146,520 C149,470 150,420 150,344 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-            <path d="M202,340 C204,420 194,470 190,520 C187,580 185,640 184,686 L160,686 C159,640 157,580 154,520 C151,470 150,420 150,344 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-            <ellipse cx="124" cy="694" rx="21" ry="11" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-            <ellipse cx="176" cy="694" rx="21" ry="11" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-
-            <path d="M100,166 C88,176 82,208 80,248 C78,292 78,340 79,392 L97,394 C96,342 96,296 98,252 C100,214 104,184 112,172 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
-            <path d="M200,166 C212,176 218,208 220,248 C222,292 222,340 221,392 L203,394 C204,342 204,296 202,252 C200,214 196,184 188,172 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
-            <ellipse cx="88" cy="404" rx="11" ry="13" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
-            <ellipse cx="212" cy="404" rx="11" ry="13" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
-
-            <path d="M97,163 C97,153 118,146 150,146 C182,146 203,153 203,163 C201,196 195,232 190,268 C188,296 198,314 202,334 C202,352 180,358 150,358 C120,358 98,352 98,334 C102,314 112,296 110,268 C105,232 99,196 97,163 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
-            <path d="M97,163 C97,153 118,146 150,146 C182,146 203,153 203,163 C201,196 195,232 190,268 C188,296 198,314 202,334 C202,352 180,358 150,358 C120,358 98,352 98,334 C102,314 112,296 110,268 C105,232 99,196 97,163 Z" fill="url(#fit-sheen)" />
-
-            ${garmentMarkup(product)}
-          </g>
-        </g>
-      </svg>`;
-  }
-
-  function applyFittingState() {
-    const body = fittingFigure.querySelector(".fitting-body");
-    const stature = fittingFigure.querySelector(".fitting-stature");
-    if (body) body.style.transform = `scaleX(${BUILD_SCALE[fittingState.build] || 1})`;
-    if (stature) stature.style.transform = `scaleY(${HEIGHT_SCALE[fittingState.height] || 1})`;
-
-    const tone = TONES[fittingState.tone] || TONES.clair;
-    fittingFigure.style.setProperty("--mq-1", tone[0]);
-    fittingFigure.style.setProperty("--mq-2", tone[1]);
-    fittingFigure.style.setProperty("--mq-3", tone[2]);
-
-    fittingControls.querySelectorAll("button").forEach((btn) => {
-      const group = btn.dataset.group;
-      btn.classList.toggle("active", fittingState[group] === btn.dataset.value);
+  function setFittingSize(size) {
+    fittingSize = size;
+    fittingControls.querySelectorAll("button[data-size]").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.size === size);
     });
+    if (!currentProduct) return;
+
+    const { src, fallback } = resolveFittingPhoto(currentProduct, size);
+    fittingNote.textContent = fallback
+      ? "Aperçu en taille M — la taille " + size.toUpperCase() + " arrive bientôt pour cette pièce."
+      : "";
+
+    if (!src) return;
+    fittingPhoto.classList.remove("is-visible");
+    const preload = new Image();
+    preload.onload = () => {
+      fittingPhoto.src = src;
+      requestAnimationFrame(() => fittingPhoto.classList.add("is-visible"));
+    };
+    preload.src = src;
   }
 
   function openFittingRoom(product) {
     fittingTitle.textContent = product.name;
     fittingColorEl.textContent = `${product.category} — ${product.color}`;
-    fittingFigure.innerHTML = buildFittingSVG(product);
-    applyFittingState();
+    fittingPhoto.classList.remove("is-visible");
+    fittingPhoto.alt = product.name;
+    setFittingSize(fittingSize);
     fittingOverlay.hidden = false;
     // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
     requestAnimationFrame(() => {
@@ -595,10 +519,9 @@
     if (e.target === fittingOverlay) closeFittingRoom();
   });
   fittingControls.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-group]");
+    const btn = e.target.closest("button[data-size]");
     if (!btn) return;
-    fittingState[btn.dataset.group] = btn.dataset.value;
-    applyFittingState();
+    setFittingSize(btn.dataset.size);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
