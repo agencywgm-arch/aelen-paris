@@ -94,6 +94,38 @@
     rafId = requestAnimationFrame(tick);
   }
 
+  // ---- Parallaxe au défilement (visuel de la section "La Maison") ----
+  const aboutVisual = document.querySelector(".about-visual");
+  const aboutImg = aboutVisual ? aboutVisual.querySelector("img") : null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (aboutVisual && aboutImg && !reduceMotion) {
+    let parallaxTicking = false;
+
+    function updateParallax() {
+      const rect = aboutVisual.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // -1 quand le visuel entre juste par le bas, +1 quand il sort par le haut.
+      const progress = (vh / 2 - (rect.top + rect.height / 2)) / (vh / 2 + rect.height / 2);
+      const clamped = Math.max(-1, Math.min(1, progress));
+      const offset = clamped * 34;
+      aboutImg.style.transform = `translateY(${offset}px) scale(1.18)`;
+      parallaxTicking = false;
+    }
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!parallaxTicking) {
+          requestAnimationFrame(updateParallax);
+          parallaxTicking = true;
+        }
+      },
+      { passive: true }
+    );
+    updateParallax();
+  }
+
   // ---- Rendu de la grille collection ----
   const grid = document.getElementById("collection-grid");
 
