@@ -106,6 +106,7 @@ const PRODUCTS = [
       "assets/img/products/pull-raye-beige-01.jpg",
       "assets/img/products/pull-raye-beige-02.jpg",
       "assets/img/products/pull-raye-beige-03.jpg",
+      "assets/img/products/pull-raye-beige-04.jpg",
     ],
   },
   {
@@ -124,6 +125,25 @@ const PRODUCTS = [
     images: [
       "assets/img/products/pull-raye-rouge-01.jpg",
       "assets/img/products/pull-raye-rouge-02.jpg",
+      "assets/img/products/pull-raye-rouge-03.jpg",
+    ],
+  },
+  {
+    id: "veste-cuir-beige",
+    name: "Veste Courte — Col Cuir Beige",
+    category: "Vestes",
+    color: "Beige",
+    description:
+      "Veste courte en coton beige, large col contrasté façon cuir tressé brun foncé, poignets à boucle assortis. Une pièce structurée au contraste de matières marqué.",
+    details: [
+      "Coupe courte, cintrée à l'ourlet élastiqué",
+      "Large col façon cuir tressé brun foncé",
+      "Poignets à boucle assortis au col",
+      "Fermeture zippée sous patte boutonnée",
+    ],
+    images: [
+      "assets/img/products/veste-cuir-beige-01.jpg",
+      "assets/img/products/veste-cuir-beige-02.jpg",
     ],
   },
 ];
