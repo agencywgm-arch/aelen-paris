@@ -5,7 +5,6 @@
   const heroSection = document.getElementById("hero-video");
   const heroSticky = document.querySelector(".hero-video-sticky");
   const heroVideo = document.getElementById("hero-video-el");
-  const heroInner = document.querySelector(".hero-inner");
 
   if (heroSection && heroSticky && heroVideo) {
     let duration = 0;
@@ -30,14 +29,12 @@
       heroVideo.loop = true;
       const p = heroVideo.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
-      if (heroInner) heroInner.classList.add("is-visible");
     }
 
     function exitLoopMode() {
       loopMode = false;
       heroVideo.loop = false;
       heroVideo.pause();
-      if (heroInner) heroInner.classList.remove("is-visible");
     }
 
     function tick() {

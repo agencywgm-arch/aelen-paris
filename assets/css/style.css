@@ -201,12 +201,6 @@ a { color: inherit; }
   z-index: 2;
   max-width: 720px;
   padding: 0 24px;
-  opacity: 0;
-  transition: opacity 1s ease;
-}
-
-.hero-inner.is-visible {
-  opacity: 1;
 }
 
 .hero-eyebrow {
