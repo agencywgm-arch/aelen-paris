@@ -18,7 +18,11 @@ const PRODUCTS = [
       "Ceinture ajustable à la taille",
       "Coton résistant, doublure satinée",
     ],
-    images: ["assets/img/fitting-tryons/trench-chocolat-m.webp"],
+    images: [
+      "assets/img/fitting-tryons/trench-chocolat-m.webp",
+      { src: "assets/img/products/trench-chocolat-front.png", fit: "contain" },
+      { src: "assets/img/products/trench-chocolat-back.png", fit: "contain" },
+    ],
   },
   {
     id: "trench-beige",
@@ -37,6 +41,7 @@ const PRODUCTS = [
     ],
     images: [
       "assets/img/fitting-tryons/trench-beige-m.webp",
+      { src: "assets/img/products/trench-beige-front.png", fit: "contain" },
       { src: "assets/img/products/trench-beige-back.jpg", fit: "contain" },
     ],
   },
