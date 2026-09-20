@@ -874,6 +874,24 @@ a { color: inherit; }
   border-color: var(--ink);
 }
 
+.size-picker button.is-unavailable {
+  color: var(--taupe);
+  border-color: var(--line);
+  cursor: not-allowed;
+  position: relative;
+}
+
+.size-picker button.is-unavailable::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 1px;
+  background: var(--taupe);
+  transform: rotate(-18deg);
+}
+
 #modal-add-cart { display: block; width: 100%; margin-bottom: 10px; }
 #modal-cta { display: block; text-align: center; }
 

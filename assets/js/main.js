@@ -1,5 +1,26 @@
-(function () {
+(async function () {
   "use strict";
+
+  // ---- Surcharges prix/stock (dashboard staff) ----
+  // Se dégrade silencieusement : si l'API ne répond pas (base non
+  // configurée, hors-ligne), le catalogue statique reste inchangé.
+  async function applyProductOverrides() {
+    try {
+      const resp = await fetch("/api/product-overrides");
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const overrides = (data && data.overrides) || {};
+      PRODUCTS.forEach((product) => {
+        const o = overrides[product.id];
+        if (!o) return;
+        if (o.price != null) product.price = o.price;
+        product.outOfStockSizes = Array.isArray(o.outOfStockSizes) ? o.outOfStockSizes : [];
+      });
+    } catch (err) {
+      // Ignoré : on garde le catalogue statique.
+    }
+  }
+  await applyProductOverrides();
 
   // ---- Vidéo hero pilotée par le défilement ----
   const heroSection = document.getElementById("hero-video");
@@ -196,14 +217,19 @@
     modalDetails.innerHTML = product.details.map((d) => `<li>${d}</li>`).join("");
 
     const sizes = product.sizes || [];
-    selectedSize = sizes[0] || null;
+    const outOfStock = product.outOfStockSizes || [];
+    const firstAvailable = sizes.find((s) => !outOfStock.includes(s)) || sizes[0] || null;
+    selectedSize = firstAvailable;
     modalSizes.innerHTML = sizes
-      .map(
-        (s, i) =>
-          `<button type="button" data-size="${s}" class="${i === 0 ? "active" : ""}">${s}</button>`
-      )
+      .map((s) => {
+        const isOut = outOfStock.includes(s);
+        const cls = [s === firstAvailable ? "active" : "", isOut ? "is-unavailable" : ""]
+          .filter(Boolean)
+          .join(" ");
+        return `<button type="button" data-size="${s}" class="${cls}" ${isOut ? "disabled" : ""}>${s}</button>`;
+      })
       .join("");
-    modalSizes.querySelectorAll("button").forEach((btn) => {
+    modalSizes.querySelectorAll("button:not([disabled])").forEach((btn) => {
       btn.addEventListener("click", () => {
         selectedSize = btn.dataset.size;
         modalSizes.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
@@ -403,7 +429,9 @@
       const btn = el.querySelector(".cart-suggest-add");
       btn.addEventListener("click", () => {
         const product = PRODUCTS.find((p) => p.id === id);
-        const size = (product && product.sizes && product.sizes[0]) || null;
+        const outOfStock = (product && product.outOfStockSizes) || [];
+        const sizes = (product && product.sizes) || [];
+        const size = sizes.find((s) => !outOfStock.includes(s)) || sizes[0] || null;
         addToCart(id, size, 1);
         btn.textContent = "Ajouté ✓";
         btn.disabled = true;

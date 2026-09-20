@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Espace Staff — Ælen Paris</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <div id="admin-login" class="admin-login">
+    <div class="admin-login-card">
+      <span class="brand-name">Ælen</span>
+      <span class="brand-sub">P A R I S</span>
+      <h1>Espace staff</h1>
+      <p id="admin-login-note" class="admin-note"></p>
+      <form id="admin-login-form">
+        <input type="password" name="password" placeholder="Mot de passe" autocomplete="current-password" required />
+        <button type="submit">Se connecter</button>
+      </form>
+      <p id="admin-login-error" class="admin-error" hidden></p>
+    </div>
+  </div>
+
+  <div id="admin-app" class="admin-app" hidden>
+    <header class="admin-header">
+      <div>
+        <span class="brand-name">Ælen</span>
+        <span class="brand-sub">P A R I S</span>
+        <span class="admin-header-tag">Espace staff</span>
+      </div>
+      <button type="button" id="admin-logout" class="admin-btn admin-btn-ghost">Se déconnecter</button>
+    </header>
+
+    <nav class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="stats">Statistiques</button>
+      <button type="button" class="admin-tab" data-tab="orders">Commandes</button>
+      <button type="button" class="admin-tab" data-tab="customers">Clients</button>
+      <button type="button" class="admin-tab" data-tab="messages">Messages</button>
+      <button type="button" class="admin-tab" data-tab="products">Produits</button>
+    </nav>
+
+    <main class="admin-main">
+      <section id="admin-panel-stats" class="admin-panel active"></section>
+      <section id="admin-panel-orders" class="admin-panel"></section>
+      <section id="admin-panel-customers" class="admin-panel"></section>
+      <section id="admin-panel-messages" class="admin-panel"></section>
+      <section id="admin-panel-products" class="admin-panel"></section>
+    </main>
+  </div>
+
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 const Stripe = require("stripe");
 const PRODUCTS = require("../assets/js/products-data.js");
+const { isConfigured, getSql } = require("../lib/db.js");
 
 // Fonction serverless Vercel : crée une session Stripe Checkout à partir
 // du panier envoyé par le client. Les prix ne sont JAMAIS pris depuis la
@@ -32,20 +33,43 @@ module.exports = async (req, res) => {
     return `${origin}/${src}`;
   }
 
+  // Surcharges prix/stock définies depuis le dashboard staff (si la base
+  // est configurée) — c'est la seule source de vérité pour le montant
+  // facturé, jamais les valeurs envoyées par le client.
+  let overrides = {};
+  if (isConfigured()) {
+    try {
+      const sql = await getSql();
+      const { rows } = await sql`SELECT product_id, price, out_of_stock_sizes FROM product_overrides;`;
+      rows.forEach((r) => {
+        overrides[r.product_id] = {
+          price: r.price === null ? null : Number(r.price),
+          outOfStockSizes: r.out_of_stock_sizes || [],
+        };
+      });
+    } catch (err) {
+      // En cas d'erreur on continue avec les prix statiques du catalogue.
+    }
+  }
+
   const line_items = [];
   for (const entry of items) {
     const product = PRODUCTS.find((p) => p.id === entry.id);
     if (!product || typeof product.price !== "number") continue;
 
-    const qty = Math.max(1, Math.min(20, parseInt(entry.qty, 10) || 1));
     const size = typeof entry.size === "string" ? entry.size.slice(0, 10) : "";
+    const override = overrides[product.id];
+    if (override && override.outOfStockSizes.includes(size)) continue;
+
+    const qty = Math.max(1, Math.min(20, parseInt(entry.qty, 10) || 1));
     const image = absoluteImageUrl(product);
+    const unitPrice = override && override.price != null ? override.price : product.price;
 
     line_items.push({
       quantity: qty,
       price_data: {
         currency: "eur",
-        unit_amount: Math.round(product.price * 100),
+        unit_amount: Math.round(unitPrice * 100),
         product_data: {
           name: size ? `${product.name} — Taille ${size}` : product.name,
           images: image ? [image] : undefined,
