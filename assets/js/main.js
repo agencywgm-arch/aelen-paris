@@ -417,6 +417,9 @@
   const spinToggleGroup = document.getElementById("spin-toggle-group");
   const spinToggleBtn = document.getElementById("spin-toggle-btn");
   const spinHint = document.getElementById("spin-hint");
+  const spinPrevBtn = document.getElementById("spin-prev");
+  const spinNextBtn = document.getElementById("spin-next");
+  const spinProgress = document.getElementById("spin-progress");
 
   // Photos générées : la même styliste/mannequin virtuelle rephotographiée
   // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
@@ -483,6 +486,11 @@
   let spinDragStartX = 0;
   let spinDragStartIndex = 0;
   let spinIntroTimer = null;
+  let spinInertiaTimer = null;
+  let spinLastMoveX = 0;
+  let spinLastMoveT = 0;
+  let spinVelocity = 0; // frames par seconde, signé
+  const SPIN_FRAMES_PER_STEP = 16; // px de glisse pour avancer d'une frame
 
   function resolveFittingPhoto(product, size) {
     const set = FITTING_PHOTOS[product.id];
@@ -538,12 +546,20 @@
     spinIndex = ((index % frames.length) + frames.length) % frames.length;
     fittingPhoto.src = frames[spinIndex].src;
     fittingPhoto.classList.add("is-visible");
+    spinProgress.style.setProperty("--spin-pct", (spinIndex / frames.length) * 100);
   }
 
   function stopSpinIntro() {
     if (spinIntroTimer) {
       clearInterval(spinIntroTimer);
       spinIntroTimer = null;
+    }
+  }
+
+  function stopSpinInertia() {
+    if (spinInertiaTimer) {
+      cancelAnimationFrame(spinInertiaTimer);
+      spinInertiaTimer = null;
     }
   }
 
@@ -573,6 +589,7 @@
   function disableSpinMode() {
     spinMode = false;
     stopSpinIntro();
+    stopSpinInertia();
     spinToggleBtn.dataset.spin = "off";
     spinToggleBtn.classList.remove("active");
     fittingFigure.classList.remove("is-spin");
@@ -581,11 +598,15 @@
   }
 
   function spinPointerDown(e) {
-    if (!spinMode) return;
+    if (!spinMode || e.target.closest(".spin-arrow")) return;
     spinDragging = true;
     spinDragStartX = e.clientX;
     spinDragStartIndex = spinIndex;
+    spinLastMoveX = e.clientX;
+    spinLastMoveT = performance.now();
+    spinVelocity = 0;
     stopSpinIntro();
+    stopSpinInertia();
     spinHint.classList.remove("is-visible");
     fittingFigure.classList.add("is-dragging");
     fittingFigure.setPointerCapture(e.pointerId);
@@ -594,14 +615,54 @@
   function spinPointerMove(e) {
     if (!spinMode || !spinDragging) return;
     const dx = e.clientX - spinDragStartX;
-    const framesPerStep = 18; // px de glisse pour avancer d'une frame
-    const delta = Math.round(-dx / framesPerStep);
+    const delta = Math.round(-dx / SPIN_FRAMES_PER_STEP);
     showSpinFrame(spinDragStartIndex + delta);
+
+    const now = performance.now();
+    const dt = now - spinLastMoveT;
+    if (dt > 0) {
+      const framesMoved = -(e.clientX - spinLastMoveX) / SPIN_FRAMES_PER_STEP;
+      spinVelocity = (framesMoved / dt) * 1000; // frames/s, lissé par le dernier segment
+    }
+    spinLastMoveX = e.clientX;
+    spinLastMoveT = now;
   }
 
   function spinPointerUp() {
     spinDragging = false;
     fittingFigure.classList.remove("is-dragging");
+
+    // Inertie courte façon "flick" : la rotation continue un instant puis
+    // ralentit, pour un rendu plus fluide qu'un arrêt net au relâchement.
+    if (Math.abs(spinVelocity) > 0.5) {
+      let velocity = Math.max(-14, Math.min(14, spinVelocity));
+      let position = spinIndex;
+      let lastT = performance.now();
+      const friction = 0.94; // décroissance par frame d'animation
+
+      const step = () => {
+        const now = performance.now();
+        const dt = Math.min(48, now - lastT);
+        lastT = now;
+        position += (velocity * dt) / 1000;
+        showSpinFrame(Math.round(position));
+        velocity *= friction;
+        if (Math.abs(velocity) > 0.4) {
+          spinInertiaTimer = requestAnimationFrame(step);
+        } else {
+          spinInertiaTimer = null;
+        }
+      };
+      spinInertiaTimer = requestAnimationFrame(step);
+    }
+  }
+
+  function spinStep(direction) {
+    if (!spinMode) return;
+    stopSpinIntro();
+    stopSpinInertia();
+    spinHint.classList.remove("is-visible");
+    showSpinFrame(spinIndex + direction);
   }
 
   function openFittingRoom(product) {
@@ -620,6 +681,7 @@
 
   function closeFittingRoom() {
     stopSpinIntro();
+    stopSpinInertia();
     fittingOverlay.classList.remove("is-open");
     setTimeout(() => {
       fittingOverlay.hidden = true;
@@ -655,6 +717,8 @@
   fittingFigure.addEventListener("pointermove", spinPointerMove);
   fittingFigure.addEventListener("pointerup", spinPointerUp);
   fittingFigure.addEventListener("pointercancel", spinPointerUp);
+  spinPrevBtn.addEventListener("click", () => spinStep(-1));
+  spinNextBtn.addEventListener("click", () => spinStep(1));
 
   // ---- Menu mobile ----
   const navToggle = document.getElementById("nav-toggle");

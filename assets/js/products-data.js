@@ -19,6 +19,7 @@ const PRODUCTS = [
       "Coton résistant, doublure satinée",
     ],
     images: [
+      "assets/img/fitting-tryons/trench-chocolat-m.webp",
       "assets/img/products/trench-chocolat-01.jpg",
       "assets/img/products/trench-chocolat-02.jpg",
     ],
@@ -39,6 +40,7 @@ const PRODUCTS = [
       "Coton gabardine",
     ],
     images: [
+      "assets/img/fitting-tryons/trench-beige-m.webp",
       "assets/img/products/trench-beige-01.jpg",
       "assets/img/products/trench-beige-02.jpg",
     ],
@@ -59,6 +61,7 @@ const PRODUCTS = [
       "Doublure interne soignée",
     ],
     images: [
+      { src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" },
       "assets/img/products/veste-croco-beige-01.png",
       { src: "assets/img/products/veste-croco-beige-02.jpg", fit: "cover" },
     ],
@@ -79,7 +82,10 @@ const PRODUCTS = [
       "Boutonnage asymétrique",
       "Épaulettes à bouton, manches à revers",
     ],
-    images: ["assets/img/products/cardigan-bordeaux-01.png"],
+    images: [
+      { src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" },
+      "assets/img/products/cardigan-bordeaux-01.png",
+    ],
     fit: "contain",
   },
   {
@@ -98,6 +104,7 @@ const PRODUCTS = [
       "Poche à rabat, poignets boutonnés assortis",
     ],
     images: [
+      "assets/img/fitting-tryons/veste-foulard-marron-m.webp",
       "assets/img/products/veste-foulard-marron-01.jpg",
       "assets/img/products/veste-foulard-marron-02.jpg",
       "assets/img/products/veste-foulard-marron-03.jpg",
@@ -121,6 +128,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
+      "assets/img/fitting-tryons/pull-raye-beige-m.webp",
       "assets/img/products/pull-raye-beige-01.jpg",
       "assets/img/products/pull-raye-beige-02.jpg",
       "assets/img/products/pull-raye-beige-03.jpg",
@@ -143,6 +151,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
+      "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
       "assets/img/products/pull-raye-rouge-01.jpg",
       "assets/img/products/pull-raye-rouge-02.jpg",
       "assets/img/products/pull-raye-rouge-03.jpg",

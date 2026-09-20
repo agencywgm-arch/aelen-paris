@@ -920,11 +920,11 @@ a { color: inherit; }
   background: rgba(246, 242, 234, 0.12);
   border: 1px solid rgba(246, 242, 234, 0.3);
   color: var(--ivory);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 17px;
   z-index: 3;
 }
 
@@ -936,7 +936,9 @@ a { color: inherit; }
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.5s ease 0.35s, transform 0.5s ease 0.35s;
-  padding: 24px;
+  padding: 28px;
+  width: 100%;
+  max-width: 560px;
 }
 
 .fitting-overlay.is-open .fitting-stage {
@@ -945,7 +947,7 @@ a { color: inherit; }
 }
 
 .fitting-eyebrow {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 4px;
   text-transform: uppercase;
   color: var(--taupe-light);
@@ -954,32 +956,65 @@ a { color: inherit; }
 
 .fitting-stage h3 {
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: 28px;
   margin: 0 0 4px;
 }
 
 .fitting-color {
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(246, 242, 234, 0.7);
-  margin: 0 0 18px;
+  margin: 0 0 22px;
 }
 
+/* Le cadre évoque une psyché de cabine d'essayage : halo de spot au-dessus,
+   ombre au sol, fine bordure dorée façon miroir habillé. */
 .fitting-figure {
   position: relative;
-  width: 320px;
-  max-width: 74vw;
-  aspect-ratio: 4 / 5;
-  margin: 0 auto 20px;
-  overflow: hidden;
+  width: min(440px, 90vw);
+  aspect-ratio: 875 / 1125;
+  margin: 0 auto 24px;
   background: #ece4d6;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.fitting-figure::before {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  background: radial-gradient(
+    ellipse at 50% 30%,
+    rgba(248, 232, 200, 0.38),
+    rgba(248, 232, 200, 0.1) 45%,
+    transparent 72%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.fitting-figure::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 64%;
+  height: 26px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.5), transparent 72%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .fitting-figure img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 18px 18px 8px 8px;
+  box-shadow:
+    0 0 0 1px rgba(214, 188, 145, 0.4),
+    0 1px 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 30px 80px rgba(0, 0, 0, 0.5);
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -993,17 +1028,18 @@ a { color: inherit; }
 .spin-hint {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 16px;
   transform: translate(-50%, 6px);
-  background: rgba(20, 17, 15, 0.55);
+  background: rgba(20, 17, 15, 0.6);
   color: var(--ivory);
   font-size: 10px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 6px 12px;
+  padding: 7px 14px;
   border-radius: 999px;
   opacity: 0;
   pointer-events: none;
+  z-index: 2;
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
@@ -1011,6 +1047,62 @@ a { color: inherit; }
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Flèches de rotation pas-à-pas : utiles à la souris/clavier, en complément
+   du glisser tactile. */
+.spin-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 242, 234, 0.35);
+  background: rgba(20, 17, 15, 0.45);
+  color: var(--ivory);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.fitting-figure.is-spin .spin-arrow {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.spin-arrow:hover { background: rgba(20, 17, 15, 0.7); border-color: var(--ivory); }
+.spin-arrow-left { left: 10px; }
+.spin-arrow-right { right: 10px; }
+
+/* Anneau de progression : indique l'angle courant sur les 360°. */
+.spin-progress {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  background: conic-gradient(var(--ivory) calc(var(--spin-pct, 0) * 1%), rgba(246, 242, 234, 0.22) 0);
+}
+
+.spin-progress::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: rgba(20, 17, 15, 0.75);
+}
+
+.fitting-figure.is-spin .spin-progress { opacity: 1; }
 
 .fitting-note {
   font-size: 11px;
@@ -1081,11 +1173,14 @@ a { color: inherit; }
      pour garder un défilement progressif plutôt que saccadé/trop rapide. */
   .hero-video { height: 320vh; }
   .hero-scroll-hint { display: none; }
-  .fitting-figure { width: 240px; max-width: 68vw; margin-bottom: 14px; }
+  .fitting-figure { width: min(88vw, 48vh); aspect-ratio: 875 / 1125; margin-bottom: 16px; }
   .fitting-stage { padding: 16px; }
-  .fitting-stage h3 { font-size: 20px; }
+  .fitting-stage h3 { font-size: 22px; }
   .fitting-label { width: 64px; font-size: 9px; letter-spacing: 1.5px; }
   .fitting-choices button { min-width: 36px; height: 30px; padding: 0 10px; font-size: 11px; }
+  .spin-arrow { width: 38px; height: 38px; font-size: 19px; }
+  .spin-arrow-left { left: 6px; }
+  .spin-arrow-right { right: 6px; }
 
   /* La vidéo est plus étroite que la hauteur d'un écran de téléphone :
      en "cover" elle doit zoomer pour remplir l'écran, ce qui coupe les
