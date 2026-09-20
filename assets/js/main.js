@@ -411,27 +411,38 @@
   const fittingFigure = document.getElementById("fitting-figure");
   const fittingTitle = document.getElementById("fitting-title");
   const fittingColorEl = document.getElementById("fitting-color");
-  const fittingSizeButtons = document.querySelectorAll("#fitting-sizes button");
+  const fittingControls = document.getElementById("fitting-controls");
 
-  // Silhouettes de vêtement très simplifiées par catégorie, utilisées quand
-  // aucune photo détourée n'est disponible pour le produit (viewBox 0 0 240 560).
+  // Vêtements réellement détourés (fond transparent) : ils sont plaqués tels
+  // quels sur le mannequin. Les pièces absentes de cette liste retombent sur
+  // une silhouette colorée — il suffit d'ajouter le fichier ici pour les
+  // basculer sur la vraie photo.
+  const FITTING_CUTOUTS = {
+    "veste-croco-beige": "assets/img/fitting/veste-croco-beige.webp",
+    "cardigan-bordeaux": "assets/img/fitting/cardigan-bordeaux.webp",
+    "veste-foulard-marron": "assets/img/fitting/veste-foulard-marron.webp",
+    "pull-raye-beige": "assets/img/fitting/pull-raye-beige.webp",
+    "pull-raye-rouge": "assets/img/fitting/pull-raye-rouge.webp",
+  };
+
+  // Zone d'habillage par catégorie, dans le repère du mannequin (300x760).
+  // Plus large que le buste : les manches débordent sur les bras.
+  const GARMENT_BOX = {
+    Manteaux: { x: 34, y: 128, w: 232, h: 470 },
+    Vestes: { x: 37, y: 128, w: 226, h: 300 },
+    Mailles: { x: 37, y: 128, w: 226, h: 300 },
+  };
+
+  // Silhouettes de repli, pour les pièces sans photo détourée.
   const GARMENT_SHAPES = {
     Manteaux:
-      "M76,94 L60,140 L64,478 L100,478 L100,258 L140,258 L140,478 L176,478 L180,140 L164,94 C148,84 92,84 76,94 Z",
+      "M90,156 C90,144 114,137 150,137 C186,137 210,144 210,156 L226,250 L222,560 L176,560 L176,320 L124,320 L124,560 L78,560 L74,250 Z",
     Vestes:
-      "M76,94 L62,140 L66,250 L174,250 L178,140 L164,94 C148,84 92,84 76,94 Z",
+      "M90,156 C90,144 114,137 150,137 C186,137 210,144 210,156 L224,232 L218,332 L82,332 L76,232 Z",
     Mailles:
-      "M80,90 C80,78 160,78 160,90 L172,148 L150,158 L150,292 L90,292 L90,158 L68,148 Z",
+      "M92,150 C92,138 114,132 150,132 C186,132 208,138 208,150 L228,222 L198,236 L198,350 L102,350 L102,236 L72,222 Z",
   };
 
-  // Emplacement (dans le viewBox du mannequin) où plaquer une vraie photo
-  // détourée à la place de la silhouette plate, par catégorie.
-  const GARMENT_BOX = {
-    Vestes: { x: 62, y: 74, w: 116, h: 198 },
-    Mailles: { x: 64, y: 74, w: 112, h: 224 },
-  };
-
-  // Couleurs approximatives associées aux libellés utilisés dans products-data.js.
   const COLOR_HEX = {
     Chocolat: "#4a2f22",
     Camel: "#b98a52",
@@ -442,52 +453,115 @@
     Rouge: "#a83232",
   };
 
-  const SIZE_SCALE = { s: 0.88, m: 1, l: 1.16 };
+  // Carrure (largeur du corps), stature (hauteur) et carnation.
+  const BUILD_SCALE = { s: 0.9, m: 1, l: 1.12 };
+  const HEIGHT_SCALE = { petite: 0.94, moyenne: 1, grande: 1.06 };
+  const TONES = {
+    clair: ["#f7efe3", "#e8d9c4", "#c9b49a"],
+    hale: ["#efd9bd", "#d9b992", "#b28d63"],
+    fonce: ["#c08f62", "#96684a", "#63402a"],
+  };
 
-  // Un produit dont la première image est un PNG détouré (fond transparent)
-  // peut être plaqué tel quel sur le mannequin plutôt que représenté par un
-  // aplat de couleur.
-  function hasCutoutPhoto(product) {
-    const first = product.images[0];
-    return (
-      product.fit === "contain" &&
-      typeof first === "string" &&
-      first.toLowerCase().endsWith(".png")
-    );
+  const fittingState = { build: "m", height: "moyenne", tone: "clair" };
+
+  function garmentMarkup(product) {
+    const box = GARMENT_BOX[product.category] || GARMENT_BOX.Vestes;
+    const cutout = FITTING_CUTOUTS[product.id];
+    if (cutout) {
+      return `<image class="fitting-garment" href="${cutout}" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" preserveAspectRatio="xMidYMin meet" filter="url(#fit-garment-shadow)" />`;
+    }
+    const shape = GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes;
+    const color = COLOR_HEX[product.color] || "#8a7860";
+    return `
+      <g class="fitting-garment" filter="url(#fit-garment-shadow)">
+        <path d="${shape}" fill="${color}" />
+        <path d="${shape}" fill="url(#fit-fabric)" />
+        <path d="M150,143 L134,145 L150,192 L166,145 Z" fill="rgba(0,0,0,0.22)" />
+        <rect x="76" y="270" width="148" height="15" fill="rgba(0,0,0,0.2)" />
+      </g>`;
   }
 
   function buildFittingSVG(product) {
-    const box = GARMENT_BOX[product.category];
-    const garmentMarkup =
-      box && hasCutoutPhoto(product)
-        ? `<image href="${imgSrc(product.images[0])}" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" preserveAspectRatio="xMidYMin meet" />`
-        : `<path d="${GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes}" fill="${COLOR_HEX[product.color] || "#8a7860"}" stroke="rgba(28,25,23,0.35)" stroke-width="1.5" />`;
-
     return `
-      <svg viewBox="0 0 240 560" xmlns="http://www.w3.org/2000/svg">
-        <g class="fitting-body-group">
-          <ellipse cx="120" cy="38" rx="19" ry="23" fill="#e7ddcb" />
-          <path d="M111,58 L109,78 L131,78 L129,58 Z" fill="#e7ddcb" />
-          <path d="M80,92 C80,85 98,80 120,80 C142,80 160,85 160,92 L166,222 C166,250 146,266 120,266 C94,266 74,250 74,222 Z" fill="#e7ddcb" />
-          <polygon points="78,96 96,94 88,252 70,255" fill="#e7ddcb" />
-          <polygon points="162,96 144,94 152,252 170,255" fill="#e7ddcb" />
-          <ellipse cx="78" cy="260" rx="10" ry="9" fill="#e7ddcb" />
-          <ellipse cx="162" cy="260" rx="10" ry="9" fill="#e7ddcb" />
-          <polygon points="92,266 120,266 116,536 88,536" fill="#e7ddcb" />
-          <polygon points="120,266 148,266 152,536 124,536" fill="#e7ddcb" />
-          <ellipse cx="100" cy="544" rx="17" ry="10" fill="#e7ddcb" />
-          <ellipse cx="140" cy="544" rx="17" ry="10" fill="#e7ddcb" />
-          ${garmentMarkup}
+      <svg viewBox="0 0 300 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mannequin portant ${product.name}">
+        <defs>
+          <!-- Repère absolu : la lumière traverse tout le corps d'un bloc,
+               sinon chaque membre reçoit son propre dégradé et les
+               raccords entre les formes se voient. -->
+          <linearGradient id="fit-skin" gradientUnits="userSpaceOnUse" x1="64" y1="80" x2="248" y2="520">
+            <stop offset="0" stop-color="var(--mq-1)" />
+            <stop offset="0.5" stop-color="var(--mq-2)" />
+            <stop offset="1" stop-color="var(--mq-3)" />
+          </linearGradient>
+          <linearGradient id="fit-sheen" gradientUnits="userSpaceOnUse" x1="84" y1="0" x2="220" y2="0">
+            <stop offset="0" stop-color="rgba(255,255,255,0.3)" />
+            <stop offset="0.35" stop-color="rgba(255,255,255,0.04)" />
+            <stop offset="1" stop-color="rgba(0,0,0,0.18)" />
+          </linearGradient>
+          <linearGradient id="fit-fabric" x1="0" y1="0" x2="1" y2="0.2">
+            <stop offset="0" stop-color="rgba(255,255,255,0.18)" />
+            <stop offset="0.45" stop-color="rgba(255,255,255,0)" />
+            <stop offset="1" stop-color="rgba(0,0,0,0.25)" />
+          </linearGradient>
+          <radialGradient id="fit-floor">
+            <stop offset="0" stop-color="rgba(0,0,0,0.5)" />
+            <stop offset="1" stop-color="rgba(0,0,0,0)" />
+          </radialGradient>
+          <radialGradient id="fit-glow">
+            <stop offset="0" stop-color="rgba(203,183,151,0.22)" />
+            <stop offset="1" stop-color="rgba(203,183,151,0)" />
+          </radialGradient>
+          <filter id="fit-garment-shadow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity="0.42" />
+          </filter>
+        </defs>
+
+        <ellipse cx="150" cy="370" rx="150" ry="330" fill="url(#fit-glow)" />
+
+        <g class="fitting-stature">
+          <ellipse cx="150" cy="706" rx="78" ry="14" fill="url(#fit-floor)" />
+
+          <g class="fitting-head">
+            <path d="M136,108 L134,152 L166,152 L164,108 Z" fill="url(#fit-skin)" />
+            <path d="M136,108 L134,152 L166,152 L164,108 Z" fill="rgba(0,0,0,0.18)" />
+            <ellipse cx="150" cy="77" rx="30" ry="43" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+            <ellipse cx="150" cy="77" rx="30" ry="43" fill="url(#fit-sheen)" />
+          </g>
+
+          <g class="fitting-body">
+            <path d="M98,340 C96,420 106,470 110,520 C113,580 115,640 116,686 L140,686 C141,640 143,580 146,520 C149,470 150,420 150,344 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+            <path d="M202,340 C204,420 194,470 190,520 C187,580 185,640 184,686 L160,686 C159,640 157,580 154,520 C151,470 150,420 150,344 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+            <ellipse cx="124" cy="694" rx="21" ry="11" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+            <ellipse cx="176" cy="694" rx="21" ry="11" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+
+            <path d="M100,166 C88,176 82,208 80,248 C78,292 78,340 79,392 L97,394 C96,342 96,296 98,252 C100,214 104,184 112,172 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
+            <path d="M200,166 C212,176 218,208 220,248 C222,292 222,340 221,392 L203,394 C204,342 204,296 202,252 C200,214 196,184 188,172 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
+            <ellipse cx="88" cy="404" rx="11" ry="13" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
+            <ellipse cx="212" cy="404" rx="11" ry="13" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.18)" stroke-width="1.2" />
+
+            <path d="M97,163 C97,153 118,146 150,146 C182,146 203,153 203,163 C201,196 195,232 190,268 C188,296 198,314 202,334 C202,352 180,358 150,358 C120,358 98,352 98,334 C102,314 112,296 110,268 C105,232 99,196 97,163 Z" fill="url(#fit-skin)" stroke="rgba(74,47,28,0.16)" stroke-width="1.2" />
+            <path d="M97,163 C97,153 118,146 150,146 C182,146 203,153 203,163 C201,196 195,232 190,268 C188,296 198,314 202,334 C202,352 180,358 150,358 C120,358 98,352 98,334 C102,314 112,296 110,268 C105,232 99,196 97,163 Z" fill="url(#fit-sheen)" />
+
+            ${garmentMarkup(product)}
+          </g>
         </g>
-      </svg>
-    `;
+      </svg>`;
   }
 
-  function setFittingSize(size) {
-    const group = fittingFigure.querySelector(".fitting-body-group");
-    if (group) group.style.transform = `scaleX(${SIZE_SCALE[size] || 1})`;
-    fittingSizeButtons.forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.size === size);
+  function applyFittingState() {
+    const body = fittingFigure.querySelector(".fitting-body");
+    const stature = fittingFigure.querySelector(".fitting-stature");
+    if (body) body.style.transform = `scaleX(${BUILD_SCALE[fittingState.build] || 1})`;
+    if (stature) stature.style.transform = `scaleY(${HEIGHT_SCALE[fittingState.height] || 1})`;
+
+    const tone = TONES[fittingState.tone] || TONES.clair;
+    fittingFigure.style.setProperty("--mq-1", tone[0]);
+    fittingFigure.style.setProperty("--mq-2", tone[1]);
+    fittingFigure.style.setProperty("--mq-3", tone[2]);
+
+    fittingControls.querySelectorAll("button").forEach((btn) => {
+      const group = btn.dataset.group;
+      btn.classList.toggle("active", fittingState[group] === btn.dataset.value);
     });
   }
 
@@ -495,7 +569,7 @@
     fittingTitle.textContent = product.name;
     fittingColorEl.textContent = `${product.category} — ${product.color}`;
     fittingFigure.innerHTML = buildFittingSVG(product);
-    setFittingSize("m");
+    applyFittingState();
     fittingOverlay.hidden = false;
     // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
     requestAnimationFrame(() => {
@@ -520,8 +594,11 @@
   fittingOverlay.addEventListener("click", (e) => {
     if (e.target === fittingOverlay) closeFittingRoom();
   });
-  fittingSizeButtons.forEach((btn) => {
-    btn.addEventListener("click", () => setFittingSize(btn.dataset.size));
+  fittingControls.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-group]");
+    if (!btn) return;
+    fittingState[btn.dataset.group] = btn.dataset.value;
+    applyFittingState();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();

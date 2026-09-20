@@ -181,10 +181,31 @@
       <h3 id="fitting-title"></h3>
       <p class="fitting-color" id="fitting-color"></p>
       <div class="fitting-figure" id="fitting-figure"></div>
-      <div class="fitting-sizes" id="fitting-sizes">
-        <button type="button" data-size="s">S</button>
-        <button type="button" data-size="m" class="active">M</button>
-        <button type="button" data-size="l">L</button>
+      <div class="fitting-controls" id="fitting-controls">
+        <div class="fitting-group">
+          <span class="fitting-label">Taille</span>
+          <div class="fitting-choices">
+            <button type="button" data-group="build" data-value="s">S</button>
+            <button type="button" data-group="build" data-value="m">M</button>
+            <button type="button" data-group="build" data-value="l">L</button>
+          </div>
+        </div>
+        <div class="fitting-group">
+          <span class="fitting-label">Stature</span>
+          <div class="fitting-choices">
+            <button type="button" data-group="height" data-value="petite">Petite</button>
+            <button type="button" data-group="height" data-value="moyenne">Moyenne</button>
+            <button type="button" data-group="height" data-value="grande">Grande</button>
+          </div>
+        </div>
+        <div class="fitting-group">
+          <span class="fitting-label">Carnation</span>
+          <div class="fitting-choices fitting-tones">
+            <button type="button" data-group="tone" data-value="clair" aria-label="Carnation claire"></button>
+            <button type="button" data-group="tone" data-value="hale" aria-label="Carnation hâlée"></button>
+            <button type="button" data-group="tone" data-value="fonce" aria-label="Carnation foncée"></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

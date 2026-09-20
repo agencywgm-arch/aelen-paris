@@ -965,44 +965,90 @@ a { color: inherit; }
 }
 
 .fitting-figure {
-  width: 200px;
-  height: 460px;
-  margin: 0 auto 26px;
+  width: 260px;
+  height: 540px;
+  margin: 0 auto 24px;
+  --mq-1: #f7efe3;
+  --mq-2: #e8d9c4;
+  --mq-3: #c9b49a;
 }
 
 .fitting-figure svg { width: 100%; height: 100%; overflow: visible; }
 
-.fitting-figure .fitting-body-group {
+/* Le corps s'élargit (carrure) sans déformer la tête, la stature étire
+   l'ensemble depuis le sol pour que les pieds restent posés. */
+.fitting-figure .fitting-body,
+.fitting-figure .fitting-stature {
   transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.4s ease;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.fitting-sizes {
+.fitting-figure .fitting-body { transform-origin: center; }
+.fitting-figure .fitting-stature { transform-origin: center bottom; }
+
+.fitting-controls {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
 }
 
-.fitting-sizes button {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid rgba(246, 242, 234, 0.4);
+.fitting-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.fitting-label {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--taupe-light);
+  width: 76px;
+  text-align: right;
+}
+
+.fitting-choices {
+  display: flex;
+  gap: 8px;
+}
+
+.fitting-choices button {
+  min-width: 42px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(246, 242, 234, 0.35);
   background: transparent;
   color: var(--ivory);
-  font-size: 13px;
+  font-size: 11.5px;
   letter-spacing: 1px;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.fitting-sizes button:hover { border-color: var(--ivory); }
+.fitting-choices button:hover { border-color: var(--ivory); }
 
-.fitting-sizes button.active {
+.fitting-choices button.active {
   background: var(--ivory);
   color: var(--ink);
   border-color: var(--ivory);
+}
+
+.fitting-tones button {
+  min-width: 0;
+  width: 34px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.fitting-tones button[data-value="clair"] { background: #eadcc6; }
+.fitting-tones button[data-value="hale"] { background: #d9b992; }
+.fitting-tones button[data-value="fonce"] { background: #96684a; }
+
+.fitting-tones button.active {
+  border-color: var(--ivory);
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 3px var(--ivory);
 }
 
 /* ---------- Responsive ---------- */
@@ -1018,7 +1064,12 @@ a { color: inherit; }
      pour garder un défilement progressif plutôt que saccadé/trop rapide. */
   .hero-video { height: 320vh; }
   .hero-scroll-hint { display: none; }
-  .fitting-figure { width: 160px; height: 380px; }
+  .fitting-figure { width: 190px; height: 400px; margin-bottom: 18px; }
+  .fitting-stage { padding: 16px; }
+  .fitting-stage h3 { font-size: 20px; }
+  .fitting-label { width: 64px; font-size: 9px; letter-spacing: 1.5px; }
+  .fitting-choices button { min-width: 36px; height: 30px; padding: 0 10px; font-size: 11px; }
+  .fitting-tones button { width: 30px; }
 
   /* La vidéo est plus étroite que la hauteur d'un écran de téléphone :
      en "cover" elle doit zoomer pour remplir l'écran, ce qui coupe les
