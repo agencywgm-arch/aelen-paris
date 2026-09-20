@@ -24,6 +24,7 @@
         <a href="#contact">Contact</a>
       </nav>
       <div class="header-actions">
+        <button class="cart-toggle" id="account-toggle" aria-label="Mon compte">Compte</button>
         <button class="cart-toggle" id="fav-toggle" aria-label="Voir mes favoris">
           Favoris <span class="cart-count" id="fav-count" hidden>0</span>
         </button>
@@ -101,6 +102,17 @@
           <button type="submit">S'inscrire</button>
         </form>
         <p class="form-note" id="form-note"></p>
+
+        <div class="contact-form-block">
+          <h3>Une question ? Écrivez-nous</h3>
+          <form class="contact-form" id="contact-form">
+            <input type="text" name="name" required placeholder="Votre nom" aria-label="Nom" />
+            <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+            <textarea name="message" required placeholder="Votre message" aria-label="Message" rows="4"></textarea>
+            <button type="submit">Envoyer le message</button>
+          </form>
+          <p class="form-note" id="contact-form-note"></p>
+        </div>
       </div>
     </section>
   </main>
@@ -176,6 +188,16 @@
         <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Passer commande</button>
         <p class="cart-note">Livraison et taxes calculées à l'étape suivante.</p>
       </div>
+    </div>
+  </div>
+
+  <div class="cart-overlay" id="account-overlay" hidden>
+    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="account-title">
+      <div class="cart-head">
+        <h3 id="account-title">Mon compte</h3>
+        <button class="modal-close" id="account-close" aria-label="Fermer mon compte">✕</button>
+      </div>
+      <div class="account-body" id="account-body"></div>
     </div>
   </div>
 

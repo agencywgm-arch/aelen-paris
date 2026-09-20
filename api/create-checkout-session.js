@@ -49,6 +49,7 @@ module.exports = async (req, res) => {
         product_data: {
           name: size ? `${product.name} — Taille ${size}` : product.name,
           images: image ? [image] : undefined,
+          metadata: { productId: product.id, size },
         },
       },
     });

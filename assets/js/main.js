@@ -484,6 +484,163 @@
 
   renderCart();
 
+  // ---- Compte client (connexion par lien magique) ----
+  const accountToggle = document.getElementById("account-toggle");
+  const accountOverlay = document.getElementById("account-overlay");
+  const accountClose = document.getElementById("account-close");
+  const accountBody = document.getElementById("account-body");
+  let accountEmail = null;
+
+  function renderAccountLoggedOut(note) {
+    accountBody.innerHTML = `
+      <div class="account-login">
+        <p class="account-intro">Connectez-vous avec votre adresse e-mail : nous vous envoyons un lien de connexion, sans mot de passe.</p>
+        <form id="account-login-form">
+          <input type="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" id="account-login-email" />
+          <button type="submit" class="btn btn-solid">Recevoir le lien de connexion</button>
+        </form>
+        <p class="form-note" id="account-login-note">${note || ""}</p>
+      </div>
+    `;
+    const form = document.getElementById("account-login-form");
+    const noteEl = document.getElementById("account-login-note");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("account-login-email").value.trim();
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      btn.textContent = "Envoi…";
+      try {
+        const resp = await fetch("/api/auth/request-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await resp.json();
+        if (resp.ok && data.ok) {
+          noteEl.textContent = "Un lien de connexion vient de vous être envoyé par e-mail.";
+          form.reset();
+        } else {
+          throw new Error((data && data.error) || "error");
+        }
+      } catch (err) {
+        noteEl.textContent =
+          "La connexion par e-mail n'est pas encore configurée sur ce site. Contactez-nous directement pour accéder à votre compte.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Recevoir le lien de connexion";
+      }
+    });
+  }
+
+  async function loadOrders() {
+    const listEl = document.getElementById("account-orders-list");
+    if (!listEl) return;
+    try {
+      const resp = await fetch("/api/account/orders");
+      if (!resp.ok) throw new Error("failed");
+      const data = await resp.json();
+      if (!data.orders || data.orders.length === 0) {
+        listEl.innerHTML = `<p class="cart-empty">Aucune commande pour le moment.</p>`;
+        return;
+      }
+      listEl.innerHTML = data.orders
+        .map((order) => {
+          const date = new Date(order.createdAt).toLocaleDateString("fr-FR", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+          const itemsHtml = order.items
+            .map(
+              (it) =>
+                `<li>${it.qty} × ${it.product_name}${it.size ? ` (taille ${it.size})` : ""}</li>`
+            )
+            .join("");
+          return `
+            <div class="account-order">
+              <div class="account-order-head">
+                <span>${date}</span>
+                <strong>${formatPrice(order.amountTotal / 100)}</strong>
+              </div>
+              <ul class="account-order-items">${itemsHtml}</ul>
+              <span class="account-order-status">${order.status === "paid" ? "Payée" : order.status}</span>
+            </div>`;
+        })
+        .join("");
+    } catch (err) {
+      listEl.innerHTML = `<p class="cart-empty">Impossible de charger vos commandes pour le moment.</p>`;
+    }
+  }
+
+  function renderAccountLoggedIn(email) {
+    accountBody.innerHTML = `
+      <div class="account-loggedin">
+        <p class="account-email">Connectée en tant que <strong>${email}</strong></p>
+        <button type="button" class="btn" id="account-logout">Se déconnecter</button>
+        <h4 class="account-orders-title">Historique des commandes</h4>
+        <div id="account-orders-list" class="account-orders-list">
+          <p class="cart-empty">Chargement…</p>
+        </div>
+      </div>
+    `;
+    document.getElementById("account-logout").addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+      accountEmail = null;
+      renderAccountLoggedOut();
+    });
+    loadOrders();
+  }
+
+  async function checkAccountSession() {
+    try {
+      const resp = await fetch("/api/account/me");
+      accountEmail = resp.ok ? (await resp.json()).email : null;
+    } catch (err) {
+      accountEmail = null;
+    }
+  }
+
+  function openAccount(note) {
+    if (accountEmail) {
+      renderAccountLoggedIn(accountEmail);
+    } else {
+      renderAccountLoggedOut(note);
+    }
+    accountOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => accountOverlay.classList.add("is-open"));
+    });
+  }
+
+  function closeAccount() {
+    accountOverlay.classList.remove("is-open");
+    setTimeout(() => {
+      accountOverlay.hidden = true;
+    }, 400);
+  }
+
+  accountToggle.addEventListener("click", () => openAccount());
+  accountClose.addEventListener("click", closeAccount);
+  accountOverlay.addEventListener("click", (e) => {
+    if (e.target === accountOverlay) closeAccount();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !accountOverlay.hidden) closeAccount();
+  });
+
+  checkAccountSession().then(() => {
+    const params = new URLSearchParams(window.location.search);
+    const accountParam = params.get("account");
+    if (accountParam === "1") {
+      openAccount();
+      window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+    } else if (accountParam === "expired") {
+      openAccount("Ce lien de connexion n'est plus valide ou a expiré. Merci d'en demander un nouveau.");
+      window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+    }
+  });
+
   // ---- Favoris ----
   const FAVORITES_KEY = "aelen-favorites";
   const favToggle = document.getElementById("fav-toggle");
@@ -901,6 +1058,44 @@
     note.textContent = "Merci ! Vous êtes bien inscrite à la newsletter AElen Paris.";
     form.reset();
   });
+
+  // ---- Formulaire de contact ----
+  const contactForm = document.getElementById("contact-form");
+  const contactNote = document.getElementById("contact-form-note");
+
+  if (contactForm && contactNote) {
+    contactForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = contactForm.querySelector("button");
+      const payload = {
+        name: contactForm.querySelector('[name="name"]').value.trim(),
+        email: contactForm.querySelector('[name="email"]').value.trim(),
+        message: contactForm.querySelector('[name="message"]').value.trim(),
+      };
+      btn.disabled = true;
+      btn.textContent = "Envoi…";
+      try {
+        const resp = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await resp.json();
+        if (resp.ok && data.ok) {
+          contactNote.textContent = "Merci, votre message a bien été envoyé. Nous vous répondrons rapidement.";
+          contactForm.reset();
+        } else {
+          throw new Error((data && data.error) || "error");
+        }
+      } catch (err) {
+        contactNote.textContent =
+          "L'envoi n'est pas encore disponible sur ce site. Écrivez-nous directement à contact@aelenparis.fr.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Envoyer le message";
+      }
+    });
+  }
 
   // ---- Année footer ----
   document.getElementById("year").textContent = new Date().getFullYear();
