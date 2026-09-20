@@ -1058,8 +1058,12 @@ a { color: inherit; }
   pointer-events: none;
 }
 
+/* Deux calques image superposés : la rotation change laquelle est visible
+   via un fondu opacité très court, ce qui gomme la coupure "flipbook"
+   d'une frame à l'autre et rend le glisser nettement moins robotique. */
 .fitting-figure img {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
   width: 100%;
   height: 100%;
@@ -1072,13 +1076,15 @@ a { color: inherit; }
     0 30px 80px rgba(0, 0, 0, 0.5);
   opacity: 0;
   transition: opacity 0.4s ease;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .fitting-figure img.is-visible { opacity: 1; }
+.fitting-figure img.is-active { opacity: 1; transition: opacity 0.09s linear; z-index: 3; }
 
-.fitting-figure.is-spin { cursor: grab; touch-action: pan-y; }
-.fitting-figure.is-spin.is-dragging { cursor: grabbing; }
-.fitting-figure.is-spin img { user-select: none; -webkit-user-drag: none; }
+.fitting-figure { cursor: grab; touch-action: pan-y; }
+.fitting-figure.is-dragging { cursor: grabbing; }
 
 .spin-hint {
   position: absolute;
@@ -1104,7 +1110,7 @@ a { color: inherit; }
 }
 
 /* Flèches de rotation pas-à-pas : utiles à la souris/clavier, en complément
-   du glisser tactile. */
+   du glisser tactile, toujours actif dès l'ouverture de la cabine. */
 .spin-arrow {
   position: absolute;
   top: 50%;
@@ -1118,15 +1124,8 @@ a { color: inherit; }
   font-size: 22px;
   line-height: 1;
   cursor: pointer;
-  z-index: 2;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.fitting-figure.is-spin .spin-arrow {
-  opacity: 1;
-  pointer-events: auto;
+  z-index: 4;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .spin-arrow:hover { background: rgba(20, 17, 15, 0.7); border-color: var(--ivory); }

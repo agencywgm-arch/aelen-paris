@@ -410,64 +410,34 @@
   const fittingClose = document.getElementById("fitting-close");
   const fittingFigure = document.getElementById("fitting-figure");
   const fittingPhoto = document.getElementById("fitting-photo");
+  const fittingPhotoB = document.getElementById("fitting-photo-b");
   const fittingTitle = document.getElementById("fitting-title");
   const fittingColorEl = document.getElementById("fitting-color");
   const fittingNote = document.getElementById("fitting-note");
   const fittingControls = document.getElementById("fitting-controls");
-  const spinToggleGroup = document.getElementById("spin-toggle-group");
-  const spinToggleBtn = document.getElementById("spin-toggle-btn");
   const spinHint = document.getElementById("spin-hint");
   const spinPrevBtn = document.getElementById("spin-prev");
   const spinNextBtn = document.getElementById("spin-next");
 
-  // Photos générées : la même styliste/mannequin virtuelle rephotographiée
-  // en studio pour chaque pièce, en trois carrures (S/M/L) pour un aperçu
-  // fidèle plutôt qu'un simple étirement d'image.
-  const FITTING_PHOTOS = {
-    "trench-chocolat": {
-      s: "assets/img/fitting-tryons/trench-chocolat-s.webp",
-      m: "assets/img/fitting-tryons/trench-chocolat-m.webp",
-      l: "assets/img/fitting-tryons/trench-chocolat-l.webp",
-    },
-    "trench-beige": {
-      s: "assets/img/fitting-tryons/trench-beige-s.webp",
-      m: "assets/img/fitting-tryons/trench-beige-m.webp",
-      l: "assets/img/fitting-tryons/trench-beige-l.webp",
-    },
-    "veste-croco-beige": {
-      s: "assets/img/fitting-tryons/veste-croco-beige-s.webp",
-      m: "assets/img/fitting-tryons/veste-croco-beige-m.webp",
-      l: "assets/img/fitting-tryons/veste-croco-beige-l.webp",
-    },
-    "cardigan-bordeaux": {
-      s: "assets/img/fitting-tryons/cardigan-bordeaux-s.webp",
-      m: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp",
-      l: "assets/img/fitting-tryons/cardigan-bordeaux-l.webp",
-    },
-    "veste-foulard-marron": {
-      s: "assets/img/fitting-tryons/veste-foulard-marron-s.webp",
-      m: "assets/img/fitting-tryons/veste-foulard-marron-m.webp",
-      l: "assets/img/fitting-tryons/veste-foulard-marron-l.webp",
-    },
-    "pull-raye-beige": {
-      s: "assets/img/fitting-tryons/pull-raye-beige-s.webp",
-      m: "assets/img/fitting-tryons/pull-raye-beige-m.webp",
-      l: "assets/img/fitting-tryons/pull-raye-beige-l.webp",
-    },
-    "pull-raye-rouge": {
-      s: "assets/img/fitting-tryons/pull-raye-rouge-s.webp",
-      m: "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
-      l: "assets/img/fitting-tryons/pull-raye-rouge-l.webp",
-    },
-  };
+  // Les 7 pièces rephotographiées en studio pour la cabine (mannequin
+  // virtuel, 3 carrures S/M/L). Chacune a son jeu de frames à 360°.
+  const FITTING_PRODUCT_IDS = [
+    "trench-chocolat",
+    "trench-beige",
+    "veste-croco-beige",
+    "cardigan-bordeaux",
+    "veste-foulard-marron",
+    "pull-raye-beige",
+    "pull-raye-rouge",
+  ];
 
-  // Rotation à 360° : 16 prises de vue (tous les 22,5°) par taille S/M/L,
-  // générées et cadrées pour s'enchaîner sans saut de zoom. Glisser à l'écran
-  // fait défiler ces 16 images comme un flipbook.
+  // Rotation à 360° : prises de vue par taille S/M/L, cadrées pour
+  // s'enchaîner sans saut de zoom. On glisse directement sur la photo dès
+  // l'ouverture de la cabine — pas de bascule "mode 360" séparée.
   const SPIN_FRAME_COUNT = 16;
   const SPIN_SIZES = ["s", "m", "l"];
   const SPIN_FRAMES = {};
-  Object.keys(FITTING_PHOTOS).forEach((id) => {
+  FITTING_PRODUCT_IDS.forEach((id) => {
     SPIN_FRAMES[id] = {};
     SPIN_SIZES.forEach((size) => {
       SPIN_FRAMES[id][size] = Array.from(
@@ -478,9 +448,9 @@
   });
 
   let fittingSize = "m";
-  let spinMode = false;
   let spinIndex = 0;
   let spinFramesCache = {};
+  let spinFrontEl = null; // calque image actuellement au premier plan
   let spinDragging = false;
   let spinDragStartX = 0;
   let spinDragStartIndex = 0;
@@ -491,40 +461,14 @@
   let spinVelocity = 0; // frames par seconde, signé
   const SPIN_FRAMES_PER_STEP = 16; // px de glisse pour avancer d'une frame
 
-  function resolveFittingPhoto(product, size) {
-    const set = FITTING_PHOTOS[product.id];
-    if (!set) return { src: null, fallback: false };
-    if (set[size]) return { src: set[size], fallback: false };
-    const fallback = set.m || set.l || set.s;
-    return { src: fallback, fallback: true };
-  }
-
   function setFittingSize(size) {
     fittingSize = size;
     fittingControls.querySelectorAll("button[data-size]").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.size === size);
     });
     if (!currentProduct) return;
-
-    if (spinMode) {
-      preloadSpinFrames(currentProduct.id, size);
-      showSpinFrame(spinIndex);
-      return;
-    }
-
-    const { src, fallback } = resolveFittingPhoto(currentProduct, size);
-    fittingNote.textContent = fallback
-      ? "Aperçu en taille M — la taille " + size.toUpperCase() + " arrive bientôt pour cette pièce."
-      : "";
-
-    if (!src) return;
-    fittingPhoto.classList.remove("is-visible");
-    const preload = new Image();
-    preload.onload = () => {
-      fittingPhoto.src = src;
-      requestAnimationFrame(() => fittingPhoto.classList.add("is-visible"));
-    };
-    preload.src = src;
+    preloadSpinFrames(currentProduct.id, size);
+    showSpinFrame(spinIndex);
   }
 
   function preloadSpinFrames(id, size) {
@@ -539,12 +483,18 @@
     return imgs;
   }
 
+  // Fait défiler vers `index` en faisant apparaître la nouvelle frame en
+  // fondu (~90ms) sur un second calque, plutôt qu'un remplacement net du
+  // src — ça gomme la coupure "flipbook" entre deux angles.
   function showSpinFrame(index) {
     const frames = spinFramesCache[`${currentProduct.id}_${fittingSize}`];
     if (!frames) return;
     spinIndex = ((index % frames.length) + frames.length) % frames.length;
-    fittingPhoto.src = frames[spinIndex].src;
-    fittingPhoto.classList.add("is-visible");
+    const back = spinFrontEl === fittingPhoto ? fittingPhotoB : fittingPhoto;
+    back.src = frames[spinIndex].src;
+    back.classList.add("is-visible", "is-active");
+    if (spinFrontEl) spinFrontEl.classList.remove("is-active");
+    spinFrontEl = back;
   }
 
   function stopSpinIntro() {
@@ -571,32 +521,22 @@
     }, 90);
   }
 
-  function enableSpinMode() {
-    if (!currentProduct || !SPIN_FRAMES[currentProduct.id]) return;
-    spinMode = true;
-    spinToggleBtn.dataset.spin = "on";
-    spinToggleBtn.classList.add("active");
+  function openFittingSpin(product) {
+    fittingPhoto.classList.remove("is-visible", "is-active");
+    fittingPhotoB.classList.remove("is-visible", "is-active");
+    fittingPhoto.alt = product.name;
+    fittingPhotoB.alt = product.name;
+    spinFrontEl = null;
+    spinIndex = 0;
     fittingNote.textContent = "";
-    fittingFigure.classList.add("is-spin");
     spinHint.classList.add("is-visible");
-    preloadSpinFrames(currentProduct.id, fittingSize);
+    preloadSpinFrames(product.id, fittingSize);
     showSpinFrame(0);
     playSpinIntro();
   }
 
-  function disableSpinMode() {
-    spinMode = false;
-    stopSpinIntro();
-    stopSpinInertia();
-    spinToggleBtn.dataset.spin = "off";
-    spinToggleBtn.classList.remove("active");
-    fittingFigure.classList.remove("is-spin");
-    spinHint.classList.remove("is-visible");
-    setFittingSize(fittingSize);
-  }
-
   function spinPointerDown(e) {
-    if (!spinMode || e.target.closest(".spin-arrow")) return;
+    if (e.target.closest(".spin-arrow")) return;
     spinDragging = true;
     spinDragStartX = e.clientX;
     spinDragStartIndex = spinIndex;
@@ -611,7 +551,7 @@
   }
 
   function spinPointerMove(e) {
-    if (!spinMode || !spinDragging) return;
+    if (!spinDragging) return;
     const dx = e.clientX - spinDragStartX;
     const delta = Math.round(-dx / SPIN_FRAMES_PER_STEP);
     showSpinFrame(spinDragStartIndex + delta);
@@ -656,7 +596,6 @@
   }
 
   function spinStep(direction) {
-    if (!spinMode) return;
     stopSpinIntro();
     stopSpinInertia();
     spinHint.classList.remove("is-visible");
@@ -666,10 +605,7 @@
   function openFittingRoom(product) {
     fittingTitle.textContent = product.name;
     fittingColorEl.textContent = `${product.category} — ${product.color}`;
-    fittingPhoto.classList.remove("is-visible");
-    fittingPhoto.alt = product.name;
-    disableSpinMode();
-    spinToggleGroup.hidden = !SPIN_FRAMES[product.id];
+    openFittingSpin(product);
     fittingOverlay.hidden = false;
     // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
     requestAnimationFrame(() => {
@@ -698,14 +634,7 @@
   });
   fittingControls.addEventListener("click", (e) => {
     const sizeBtn = e.target.closest("button[data-size]");
-    if (sizeBtn) {
-      setFittingSize(sizeBtn.dataset.size);
-      return;
-    }
-    if (e.target.closest("#spin-toggle-btn")) {
-      if (spinMode) disableSpinMode();
-      else enableSpinMode();
-    }
+    if (sizeBtn) setFittingSize(sizeBtn.dataset.size);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
