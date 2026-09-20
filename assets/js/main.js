@@ -449,8 +449,7 @@
       l: "assets/img/fitting-tryons/pull-raye-beige-l.webp",
     },
     "pull-raye-rouge": {
-      // La taille S n'a pas pu être générée (crédits épuisés) — on retombe
-      // sur M en attendant, avec une note visible pour ne pas induire en erreur.
+      s: "assets/img/fitting-tryons/pull-raye-rouge-s.webp",
       m: "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
       l: "assets/img/fitting-tryons/pull-raye-rouge-l.webp",
     },
