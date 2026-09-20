@@ -58,7 +58,7 @@
 
             // Lissage : la vidéo glisse vers la position cible au lieu de
             // sauter d'une image à l'autre à chaque événement de scroll.
-            smoothedTime += (targetTime - smoothedTime) * 0.15;
+            smoothedTime += (targetTime - smoothedTime) * 0.1;
             if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
 
             // On ne redemande une image que si l'écart est perceptible :

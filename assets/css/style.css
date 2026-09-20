@@ -788,7 +788,10 @@ a { color: inherit; }
   .footer-grid { grid-template-columns: 1fr; }
   .modal { grid-template-columns: 1fr; }
   .modal-image { aspect-ratio: 4/5; }
-  .hero-video { height: 180vh; }
+  /* Plus long que sur desktop : un swipe tactile couvre proportionnellement
+     plus de distance qu'un geste de molette, il faut donc plus de scroll
+     pour garder un défilement progressif plutôt que saccadé/trop rapide. */
+  .hero-video { height: 320vh; }
   .hero-scroll-hint { display: none; }
   .fitting-figure { width: 160px; height: 380px; }
 
