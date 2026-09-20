@@ -62,6 +62,7 @@ const PRODUCTS = [
     ],
     images: [
       { src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" },
+      "assets/img/products/veste-croco-beige-01.png",
       "assets/img/products/veste-croco-beige-back.png",
     ],
     fit: "contain",
@@ -83,6 +84,7 @@ const PRODUCTS = [
     ],
     images: [
       { src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" },
+      "assets/img/products/cardigan-bordeaux-01.png",
       "assets/img/products/cardigan-bordeaux-back.png",
     ],
     fit: "contain",
