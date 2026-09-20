@@ -241,6 +241,14 @@
     } catch (e) {}
   }
 
+  let lastAddedKey = null;
+
+  function bumpCartCount() {
+    cartCountEl.classList.remove("is-bumping");
+    void cartCountEl.offsetWidth; // force le redémarrage de l'animation
+    cartCountEl.classList.add("is-bumping");
+  }
+
   function addToCart(productId, size, qty) {
     const cart = getCart();
     const existing = cart.find((item) => item.id === productId && item.size === size);
@@ -250,7 +258,9 @@
       cart.push({ id: productId, size, qty });
     }
     saveCart(cart);
+    lastAddedKey = `${productId}::${size}`;
     renderCart();
+    bumpCartCount();
   }
 
   function updateCartQty(index, qty) {
@@ -294,9 +304,10 @@
     cartEmptyEl.hidden = lines.length > 0;
 
     cartItemsEl.innerHTML = lines
-      .map(
-        ({ index, item, product }) => `
-        <div class="cart-item" data-index="${index}">
+      .map(({ index, item, product }) => {
+        const isNew = lastAddedKey === `${item.id}::${item.size}`;
+        return `
+        <div class="cart-item${isNew ? " is-new" : ""}" data-index="${index}">
           <img src="${imgSrc(product.images[0])}" alt="${product.name}" />
           <div class="cart-item-info">
             <h4>${product.name}</h4>
@@ -309,9 +320,10 @@
             <button type="button" class="cart-item-remove">Retirer</button>
           </div>
           <div class="cart-item-price">${formatPrice(product.price * item.qty)}</div>
-        </div>`
-      )
+        </div>`;
+      })
       .join("");
+    lastAddedKey = null;
 
     cartItemsEl.querySelectorAll(".cart-item").forEach((el) => {
       const index = Number(el.dataset.index);
@@ -324,15 +336,69 @@
       );
       el.querySelector(".cart-item-remove").addEventListener("click", () => removeFromCart(index));
     });
+
+    renderCartSuggestions(lines);
+  }
+
+  function renderCartSuggestions(lines) {
+    const suggestBox = document.getElementById("cart-suggestions");
+    const suggestList = document.getElementById("cart-suggest-list");
+    if (!suggestBox || !suggestList) return;
+
+    const cartIds = new Set(lines.map((l) => l.item.id));
+    const cartCategories = new Set(lines.map((l) => l.product.category));
+    const pool = PRODUCTS.filter((p) => !cartIds.has(p.id));
+    const suggestions = [
+      ...pool.filter((p) => cartCategories.has(p.category)),
+      ...pool.filter((p) => !cartCategories.has(p.category)),
+    ].slice(0, 3);
+
+    if (suggestions.length === 0) {
+      suggestBox.hidden = true;
+      return;
+    }
+    suggestBox.hidden = false;
+
+    suggestList.innerHTML = suggestions
+      .map(
+        (p) => `
+        <div class="cart-suggest-item" data-id="${p.id}">
+          <img src="${imgSrc(p.images[0])}" alt="${p.name}" />
+          <div class="cart-suggest-info">
+            <h5>${p.name}</h5>
+            <p>${formatPrice(p.price)}</p>
+          </div>
+          <button type="button" class="cart-suggest-add">Ajouter</button>
+        </div>`
+      )
+      .join("");
+
+    suggestList.querySelectorAll(".cart-suggest-item").forEach((el) => {
+      const id = el.dataset.id;
+      const btn = el.querySelector(".cart-suggest-add");
+      btn.addEventListener("click", () => {
+        const product = PRODUCTS.find((p) => p.id === id);
+        const size = (product && product.sizes && product.sizes[0]) || null;
+        addToCart(id, size, 1);
+        btn.textContent = "Ajouté ✓";
+        btn.disabled = true;
+      });
+    });
   }
 
   function openCart() {
     renderCart();
     cartOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => cartOverlay.classList.add("is-open"));
+    });
   }
 
   function closeCart() {
-    cartOverlay.hidden = true;
+    cartOverlay.classList.remove("is-open");
+    setTimeout(() => {
+      cartOverlay.hidden = true;
+    }, 400);
   }
 
   cartToggle.addEventListener("click", openCart);
@@ -479,10 +545,16 @@
   function openFavorites() {
     renderFavoritesDrawer();
     favoritesOverlay.hidden = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => favoritesOverlay.classList.add("is-open"));
+    });
   }
 
   function closeFavorites() {
-    favoritesOverlay.hidden = true;
+    favoritesOverlay.classList.remove("is-open");
+    setTimeout(() => {
+      favoritesOverlay.hidden = true;
+    }, 400);
   }
 
   favToggle.addEventListener("click", openFavorites);
