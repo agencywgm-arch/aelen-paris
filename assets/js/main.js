@@ -413,15 +413,22 @@
   const fittingColorEl = document.getElementById("fitting-color");
   const fittingSizeButtons = document.querySelectorAll("#fitting-sizes button");
 
-  // Silhouettes de vêtement très simplifiées par catégorie, positionnées
-  // sur le buste du mannequin (viewBox 0 0 240 560).
+  // Silhouettes de vêtement très simplifiées par catégorie, utilisées quand
+  // aucune photo détourée n'est disponible pour le produit (viewBox 0 0 240 560).
   const GARMENT_SHAPES = {
     Manteaux:
-      "M75,95 L60,140 L64,478 L100,478 L100,258 L140,258 L140,478 L176,478 L180,140 L165,95 C150,85 90,85 75,95 Z",
+      "M76,94 L60,140 L64,478 L100,478 L100,258 L140,258 L140,478 L176,478 L180,140 L164,94 C148,84 92,84 76,94 Z",
     Vestes:
-      "M75,95 L62,140 L66,250 L174,250 L178,140 L165,95 C150,85 90,85 75,95 Z",
+      "M76,94 L62,140 L66,250 L174,250 L178,140 L164,94 C148,84 92,84 76,94 Z",
     Mailles:
-      "M80,92 C80,80 160,80 160,92 L172,150 L150,160 L150,290 L90,290 L90,160 L68,150 Z",
+      "M80,90 C80,78 160,78 160,90 L172,148 L150,158 L150,292 L90,292 L90,158 L68,148 Z",
+  };
+
+  // Emplacement (dans le viewBox du mannequin) où plaquer une vraie photo
+  // détourée à la place de la silhouette plate, par catégorie.
+  const GARMENT_BOX = {
+    Vestes: { x: 62, y: 74, w: 116, h: 198 },
+    Mailles: { x: 64, y: 74, w: 112, h: 224 },
   };
 
   // Couleurs approximatives associées aux libellés utilisés dans products-data.js.
@@ -437,22 +444,40 @@
 
   const SIZE_SCALE = { s: 0.88, m: 1, l: 1.16 };
 
+  // Un produit dont la première image est un PNG détouré (fond transparent)
+  // peut être plaqué tel quel sur le mannequin plutôt que représenté par un
+  // aplat de couleur.
+  function hasCutoutPhoto(product) {
+    const first = product.images[0];
+    return (
+      product.fit === "contain" &&
+      typeof first === "string" &&
+      first.toLowerCase().endsWith(".png")
+    );
+  }
+
   function buildFittingSVG(product) {
-    const garmentPath = GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes;
-    const garmentColor = COLOR_HEX[product.color] || "#8a7860";
+    const box = GARMENT_BOX[product.category];
+    const garmentMarkup =
+      box && hasCutoutPhoto(product)
+        ? `<image href="${imgSrc(product.images[0])}" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" preserveAspectRatio="xMidYMin meet" />`
+        : `<path d="${GARMENT_SHAPES[product.category] || GARMENT_SHAPES.Vestes}" fill="${COLOR_HEX[product.color] || "#8a7860"}" stroke="rgba(28,25,23,0.35)" stroke-width="1.5" />`;
+
     return `
       <svg viewBox="0 0 240 560" xmlns="http://www.w3.org/2000/svg">
         <g class="fitting-body-group">
-          <ellipse cx="101" cy="548" rx="20" ry="12" fill="#e7ddcb" />
-          <ellipse cx="139" cy="548" rx="20" ry="12" fill="#e7ddcb" />
-          <rect x="88" y="270" width="26" height="270" rx="13" fill="#e7ddcb" />
-          <rect x="126" y="270" width="26" height="270" rx="13" fill="#e7ddcb" />
-          <rect x="55" y="100" width="22" height="170" rx="11" fill="#e7ddcb" transform="rotate(6 66 100)" />
-          <rect x="163" y="100" width="22" height="170" rx="11" fill="#e7ddcb" transform="rotate(-6 174 100)" />
-          <path d="M78,96 C78,90 90,88 120,88 C150,88 162,90 162,96 L168,230 C168,255 150,270 120,270 C90,270 72,255 72,230 Z" fill="#e7ddcb" />
-          <ellipse cx="120" cy="44" rx="24" ry="28" fill="#e7ddcb" />
-          <rect x="110" y="70" width="20" height="18" rx="6" fill="#e7ddcb" />
-          <path d="${garmentPath}" fill="${garmentColor}" stroke="rgba(28,25,23,0.35)" stroke-width="1.5" />
+          <ellipse cx="120" cy="38" rx="19" ry="23" fill="#e7ddcb" />
+          <path d="M111,58 L109,78 L131,78 L129,58 Z" fill="#e7ddcb" />
+          <path d="M80,92 C80,85 98,80 120,80 C142,80 160,85 160,92 L166,222 C166,250 146,266 120,266 C94,266 74,250 74,222 Z" fill="#e7ddcb" />
+          <polygon points="78,96 96,94 88,252 70,255" fill="#e7ddcb" />
+          <polygon points="162,96 144,94 152,252 170,255" fill="#e7ddcb" />
+          <ellipse cx="78" cy="260" rx="10" ry="9" fill="#e7ddcb" />
+          <ellipse cx="162" cy="260" rx="10" ry="9" fill="#e7ddcb" />
+          <polygon points="92,266 120,266 116,536 88,536" fill="#e7ddcb" />
+          <polygon points="120,266 148,266 152,536 124,536" fill="#e7ddcb" />
+          <ellipse cx="100" cy="544" rx="17" ry="10" fill="#e7ddcb" />
+          <ellipse cx="140" cy="544" rx="17" ry="10" fill="#e7ddcb" />
+          ${garmentMarkup}
         </g>
       </svg>
     `;
