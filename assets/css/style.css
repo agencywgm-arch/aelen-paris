@@ -887,61 +887,6 @@ a { color: inherit; }
 
 .fitting-overlay[hidden] { display: none; }
 
-/* Décor d'ambiance : suggère une vraie cabine boutique (lambris, appliques,
-   tapis, tringle) derrière le rideau, en CSS pur — pas de photo. */
-.fitting-decor {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.fitting-panelling {
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(246, 242, 234, 0.035) 0px,
-      rgba(246, 242, 234, 0.035) 1px,
-      transparent 1px,
-      transparent 64px
-    ),
-    radial-gradient(ellipse at 50% 0%, rgba(78, 63, 51, 0.35), transparent 60%);
-}
-
-.fitting-sconce {
-  position: absolute;
-  top: 14%;
-  width: 120px;
-  height: 220px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(248, 220, 170, 0.16), transparent 70%);
-}
-
-.fitting-sconce-left { left: 4%; }
-.fitting-sconce-right { right: 4%; }
-
-.fitting-rail {
-  position: absolute;
-  top: 9%;
-  left: 12%;
-  right: 12%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(214, 188, 145, 0.3) 15%, rgba(214, 188, 145, 0.3) 85%, transparent);
-}
-
-.fitting-rug {
-  position: absolute;
-  left: 50%;
-  bottom: 4%;
-  width: min(560px, 70vw);
-  height: 90px;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(94, 58, 45, 0.28), transparent 72%);
-}
-
 .fitting-curtain {
   position: absolute;
   top: 0;
