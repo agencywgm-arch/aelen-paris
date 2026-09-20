@@ -347,34 +347,6 @@ a { color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 
-.card-fav-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid rgba(246, 242, 234, 0.7);
-  background: rgba(28, 25, 23, 0.35);
-  color: var(--ivory);
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-}
-
-.card-fav-btn:hover { transform: scale(1.08); }
-
-.card-fav-btn.is-active {
-  background: var(--ink);
-  color: var(--ivory);
-  border-color: var(--ink);
-}
-
 .product-card .thumb img {
   width: 100%;
   height: 100%;
@@ -795,32 +767,6 @@ a { color: inherit; }
 
 .modal-image { background: var(--ivory-deep); position: relative; }
 .modal-image img { width: 100%; height: 100%; object-fit: cover; }
-
-.modal-fav-btn {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  z-index: 2;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--ivory);
-  color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.modal-fav-btn.is-active {
-  background: var(--ink);
-  color: var(--ivory);
-  border-color: var(--ink);
-}
 
 .modal-image.modal-image-contain {
   background: linear-gradient(160deg, var(--ivory-deep), var(--ivory));
@@ -1431,7 +1377,7 @@ a { color: inherit; }
   .main-nav { display: none; }
   .nav-toggle { display: flex; }
   /* Sur mobile, le bouton "Compte" passe dans le menu burger pour laisser
-     assez de place au logo à côté de Favoris/Panier. */
+     assez de place au logo à côté du panier. */
   #account-toggle { display: none; }
   .nav-account-btn { display: block; }
   .header-actions { gap: 10px; }
