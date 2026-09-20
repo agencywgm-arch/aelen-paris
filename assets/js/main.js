@@ -118,6 +118,7 @@
       <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
         <div class="thumb${imgFit(p.images[0], p) === "contain" ? " thumb-contain" : ""}">
           <img src="${imgSrc(p.images[0])}" alt="${p.name}" loading="lazy" />
+          <button type="button" class="card-fav-btn" data-id="${p.id}" aria-label="Ajouter aux favoris" aria-pressed="false">♥</button>
         </div>
         <div class="info">
           <p class="cat">${p.category}</p>
@@ -160,6 +161,9 @@
     if (!product) return;
 
     currentProduct = product;
+    const favActive = getFavorites().includes(product.id);
+    modalFavBtn.classList.toggle("is-active", favActive);
+    modalFavBtn.setAttribute("aria-pressed", String(favActive));
     modalCat.textContent = `${product.category} — ${product.color}`;
     modalTitle.textContent = product.name;
     modalPrice.textContent = formatPrice(product.price);
@@ -382,13 +386,134 @@
 
   renderCart();
 
+  // ---- Favoris ----
+  const FAVORITES_KEY = "aelen-favorites";
+  const favToggle = document.getElementById("fav-toggle");
+  const favCountEl = document.getElementById("fav-count");
+  const favoritesOverlay = document.getElementById("favorites-overlay");
+  const favoritesClose = document.getElementById("favorites-close");
+  const favoritesItemsEl = document.getElementById("favorites-items");
+  const favoritesEmptyEl = document.getElementById("favorites-empty");
+  const modalFavBtn = document.getElementById("modal-fav-btn");
+
+  function getFavorites() {
+    try {
+      const raw = localStorage.getItem(FAVORITES_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveFavorites(list) {
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  function toggleFavorite(id) {
+    const list = getFavorites();
+    const i = list.indexOf(id);
+    if (i === -1) {
+      list.push(id);
+    } else {
+      list.splice(i, 1);
+    }
+    saveFavorites(list);
+    refreshFavoritesUI();
+  }
+
+  function refreshFavoritesUI() {
+    const list = getFavorites();
+    favCountEl.textContent = String(list.length);
+    favCountEl.hidden = list.length === 0;
+
+    document.querySelectorAll(".card-fav-btn").forEach((btn) => {
+      const active = list.includes(btn.dataset.id);
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", String(active));
+    });
+
+    if (currentProduct && modalFavBtn) {
+      const active = list.includes(currentProduct.id);
+      modalFavBtn.classList.toggle("is-active", active);
+      modalFavBtn.setAttribute("aria-pressed", String(active));
+    }
+
+    if (!favoritesOverlay.hidden) renderFavoritesDrawer();
+  }
+
+  function renderFavoritesDrawer() {
+    const list = getFavorites();
+    const products = list.map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean);
+    favoritesEmptyEl.hidden = products.length > 0;
+
+    favoritesItemsEl.innerHTML = products
+      .map(
+        (p) => `
+        <div class="cart-item" data-id="${p.id}">
+          <img src="${imgSrc(p.images[0])}" alt="${p.name}" />
+          <div class="cart-item-info">
+            <h4>${p.name}</h4>
+            <p>${p.category}</p>
+            <button type="button" class="cart-item-remove fav-view-btn">Voir la pièce</button>
+          </div>
+          <div class="cart-item-price">
+            ${formatPrice(p.price)}
+            <button type="button" class="cart-item-remove fav-remove-btn">Retirer</button>
+          </div>
+        </div>`
+      )
+      .join("");
+
+    favoritesItemsEl.querySelectorAll(".cart-item").forEach((el) => {
+      const id = el.dataset.id;
+      el.querySelector(".fav-view-btn").addEventListener("click", () => {
+        closeFavorites();
+        openModal(id);
+      });
+      el.querySelector(".fav-remove-btn").addEventListener("click", () => toggleFavorite(id));
+    });
+  }
+
+  function openFavorites() {
+    renderFavoritesDrawer();
+    favoritesOverlay.hidden = false;
+  }
+
+  function closeFavorites() {
+    favoritesOverlay.hidden = true;
+  }
+
+  favToggle.addEventListener("click", openFavorites);
+  favoritesClose.addEventListener("click", closeFavorites);
+  favoritesOverlay.addEventListener("click", (e) => {
+    if (e.target === favoritesOverlay) closeFavorites();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !favoritesOverlay.hidden) closeFavorites();
+  });
+
+  modalFavBtn.addEventListener("click", () => {
+    if (!currentProduct) return;
+    toggleFavorite(currentProduct.id);
+  });
+
+  refreshFavoritesUI();
+
   grid.addEventListener("click", (e) => {
+    const favBtn = e.target.closest(".card-fav-btn");
+    if (favBtn) {
+      toggleFavorite(favBtn.dataset.id);
+      return;
+    }
     const card = e.target.closest(".product-card");
     if (card) openModal(card.dataset.id);
   });
 
   grid.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
+      if (e.target.closest(".card-fav-btn")) return;
       const card = e.target.closest(".product-card");
       if (card) {
         e.preventDefault();
