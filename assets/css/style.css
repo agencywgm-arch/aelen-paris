@@ -195,7 +195,9 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* contain = modèles entiers visibles (têtes incluses) sur grand écran PC */
+  object-fit: contain;
+  background: var(--ink);
   opacity: 0;
   transition: opacity 0.45s ease;
 }
@@ -209,7 +211,8 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  background: var(--ink);
+  object-fit: contain;
   pointer-events: none;
 }
 
