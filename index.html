@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- deploy-bust: 2026-09-21-video-hq -->
+  <!-- deploy-bust: 2026-09-21-hero-pc-new -->
   <title>AElen Paris — Maison de mode</title>
   <meta name="description" content="AElen Paris — trenchs, vestes courtes et mailles pensés pour une allure parisienne intemporelle." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,8 +47,8 @@
           class="hero-poster"
           src="assets/video/hero-poster.jpg"
           alt=""
-          width="1080"
-          height="1890"
+          width="1890"
+          height="1080"
           fetchpriority="high"
           decoding="async"
         />
@@ -66,7 +66,8 @@
             if (!v) return;
             var mobile = window.matchMedia("(max-width: 860px)").matches;
             var s = document.createElement("source");
-            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero.mp4";
+            /* PC = paysage hero-pc-new (têtes + vêtements) | mobile = portrait */
+            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-new.mp4";
             s.type = "video/mp4";
             v.appendChild(s);
             v.load();
