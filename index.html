@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/style-rest.css" />
+  <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
 </head>
 <body>
 
@@ -40,16 +41,23 @@
   <main id="top">
     <section class="hero-video" id="hero-video">
       <div class="hero-video-sticky">
+        <img
+          class="hero-poster"
+          src="assets/video/hero-poster.jpg"
+          alt=""
+          width="1080"
+          height="1890"
+          fetchpriority="high"
+          decoding="async"
+        />
         <video
           id="hero-video-el"
           class="hero-video-el"
           muted
           playsinline
-          preload="metadata"
+          preload="none"
           poster="assets/video/hero-poster.jpg"
-        >
-          <source src="assets/video/hero.mp4" type="video/mp4" />
-        </video>
+        ></video>
         <div class="hero-video-scrim"></div>
         <div class="hero-inner">
           <p class="hero-eyebrow">Nouvelle collection</p>
