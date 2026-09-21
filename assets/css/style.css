@@ -195,9 +195,9 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  /* cover = format paysage PC plein écran, têtes visibles */
   object-fit: cover;
-  object-position: center center;
+  /* Priorise le haut du cadre pour garder les têtes visibles sur PC */
+  object-position: center 12%;
   background: var(--ink);
   opacity: 0;
   transition: opacity 0.45s ease;
@@ -214,7 +214,7 @@ a { color: inherit; }
   height: 100%;
   background: var(--ink);
   object-fit: cover;
-  object-position: center center;
+  object-position: center 12%;
   pointer-events: none;
 }
 
@@ -223,8 +223,8 @@ a { color: inherit; }
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(28, 25, 23, 0.45) 0%,
-    rgba(28, 25, 23, 0.22) 35%,
+    rgba(28, 25, 23, 0.35) 0%,
+    rgba(28, 25, 23, 0.18) 35%,
     rgba(28, 25, 23, 0.5) 100%
   );
 }
