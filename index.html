@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/style-rest.css" />
   <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
+  <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
 </head>
 <body>
 
@@ -55,9 +56,21 @@
           class="hero-video-el"
           muted
           playsinline
-          preload="none"
+          preload="auto"
           poster="assets/video/hero-poster.jpg"
         ></video>
+        <script>
+          (function () {
+            var v = document.getElementById("hero-video-el");
+            if (!v) return;
+            var mobile = window.matchMedia("(max-width: 860px)").matches;
+            var s = document.createElement("source");
+            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero.mp4";
+            s.type = "video/mp4";
+            v.appendChild(s);
+            v.load();
+          })();
+        </script>
         <div class="hero-video-scrim"></div>
         <div class="hero-inner">
           <p class="hero-eyebrow">Nouvelle collection</p>

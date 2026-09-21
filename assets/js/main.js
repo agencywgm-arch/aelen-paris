@@ -20,123 +20,104 @@
       // Ignoré : on garde le catalogue statique.
     }
   }
-  await applyProductOverrides();
-
-  // ---- Vidéo hero : poster immédiat, fichier compressé, scrub desktop ----
+  // ---- Vidéo hero : poster immédiat + scrub au scroll (mobile et desktop) ----
   const heroSection = document.getElementById("hero-video");
   const heroSticky = document.querySelector(".hero-video-sticky");
   const heroVideo = document.getElementById("hero-video-el");
 
   if (heroSection && heroSticky && heroVideo) {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotionHero = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isMobile = window.matchMedia("(max-width: 860px)").matches;
-    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const saveData = !!(conn && conn.saveData);
-    const slowNet = !!(conn && /^(slow-2g|2g)$/i.test(conn.effectiveType || ""));
 
-    function markVideoReady() {
-      heroVideo.classList.add("is-ready");
-    }
+    if (!reduceMotionHero) {
+      if (!heroVideo.querySelector("source")) {
+        const source = document.createElement("source");
+        source.src = isMobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero.mp4";
+        source.type = "video/mp4";
+        heroVideo.appendChild(source);
+        heroVideo.preload = "auto";
+        heroVideo.load();
+      }
 
-    function attachHeroSource(src) {
-      while (heroVideo.firstChild) heroVideo.removeChild(heroVideo.firstChild);
-      const source = document.createElement("source");
-      source.src = src;
-      source.type = "video/mp4";
-      heroVideo.appendChild(source);
-      heroVideo.load();
-    }
+      heroVideo.addEventListener("canplay", () => heroVideo.classList.add("is-ready"), { once: true });
+      heroVideo.addEventListener("playing", () => heroVideo.classList.add("is-ready"), { once: true });
 
-    if (!reduceMotion && !saveData && !slowNet) {
-      // Mobile : ~1,3 Mo, lecture bouclée (pas de scrub : iOS ne seek
-      // pas tant que le fichier n'est pas entièrement tamponné).
-      // Desktop : ~4 Mo, scrub au défilement comme avant.
-      heroVideo.preload = isMobile ? "auto" : "metadata";
-      attachHeroSource(isMobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero.mp4");
-      heroVideo.addEventListener("canplay", markVideoReady, { once: true });
-      heroVideo.addEventListener("playing", markVideoReady, { once: true });
+      let duration = 0;
+      let smoothedTime = 0;
+      let isVisible = true;
+      let rafId = null;
+      let loopMode = false;
 
-      if (isMobile) {
-        heroVideo.loop = true;
+      heroVideo.addEventListener("loadedmetadata", () => {
+        duration = heroVideo.duration || 0;
+        // Amorce Safari/iOS pour que le seek au scroll fonctionne.
         const playAttempt = heroVideo.play();
-        if (playAttempt && typeof playAttempt.catch === "function") {
-          playAttempt.catch(() => {});
+        if (playAttempt && typeof playAttempt.then === "function") {
+          playAttempt.then(() => heroVideo.pause()).catch(() => {});
         }
-      } else {
-        let duration = 0;
-        let smoothedTime = 0;
-        let isVisible = true;
-        let rafId = null;
-        let loopMode = false;
+      });
 
-        heroVideo.addEventListener("loadedmetadata", () => {
-          duration = heroVideo.duration || 0;
-          const playAttempt = heroVideo.play();
-          if (playAttempt && typeof playAttempt.then === "function") {
-            playAttempt.then(() => heroVideo.pause()).catch(() => {});
-          }
-        });
+      function enterLoopMode() {
+        loopMode = true;
+        heroVideo.loop = true;
+        const p = heroVideo.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      }
 
-        function enterLoopMode() {
-          loopMode = true;
-          heroVideo.loop = true;
-          const p = heroVideo.play();
-          if (p && typeof p.catch === "function") p.catch(() => {});
-        }
+      function exitLoopMode() {
+        loopMode = false;
+        heroVideo.loop = false;
+        heroVideo.pause();
+      }
 
-        function exitLoopMode() {
-          loopMode = false;
-          heroVideo.loop = false;
-          heroVideo.pause();
-        }
+      function tick() {
+        if (duration) {
+          const rect = heroSection.getBoundingClientRect();
+          const scrollable = heroSection.offsetHeight - heroSticky.offsetHeight;
 
-        function tick() {
-          if (duration) {
-            const rect = heroSection.getBoundingClientRect();
-            const scrollable = heroSection.offsetHeight - heroSticky.offsetHeight;
+          if (scrollable > 0) {
+            const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
+            const progress = scrolled / scrollable;
 
-            if (scrollable > 0) {
-              const scrolled = Math.min(Math.max(-rect.top, 0), scrollable);
-              const progress = scrolled / scrollable;
+            if (progress >= 1) {
+              if (!loopMode) enterLoopMode();
+            } else {
+              if (loopMode) exitLoopMode();
 
-              if (progress >= 1) {
-                if (!loopMode) enterLoopMode();
-              } else {
-                if (loopMode) exitLoopMode();
+              const targetTime = progress * duration;
+              smoothedTime += (targetTime - smoothedTime) * 0.1;
+              if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
 
-                const targetTime = progress * duration;
-                smoothedTime += (targetTime - smoothedTime) * 0.1;
-                if (Math.abs(targetTime - smoothedTime) < 0.02) smoothedTime = targetTime;
-
-                if (Math.abs(heroVideo.currentTime - smoothedTime) > 0.033) {
-                  heroVideo.currentTime = smoothedTime;
-                }
+              if (Math.abs(heroVideo.currentTime - smoothedTime) > 0.033) {
+                heroVideo.currentTime = smoothedTime;
               }
             }
           }
-
-          if (isVisible) {
-            rafId = requestAnimationFrame(tick);
-          } else {
-            rafId = null;
-          }
         }
 
-        const observer = new IntersectionObserver(
-          (entries) => {
-            isVisible = entries[0].isIntersecting;
-            if (isVisible && rafId === null) {
-              rafId = requestAnimationFrame(tick);
-            }
-          },
-          { threshold: 0 }
-        );
-        observer.observe(heroSection);
-
-        rafId = requestAnimationFrame(tick);
+        if (isVisible) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          rafId = null;
+        }
       }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          isVisible = entries[0].isIntersecting;
+          if (isVisible && rafId === null) {
+            rafId = requestAnimationFrame(tick);
+          }
+        },
+        { threshold: 0 }
+      );
+      observer.observe(heroSection);
+
+      rafId = requestAnimationFrame(tick);
     }
   }
+
+  await applyProductOverrides();
 
   // ---- Parallaxe au défilement (visuel de la section "La Maison") ----
   const aboutVisual = document.querySelector(".about-visual");
