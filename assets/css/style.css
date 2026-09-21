@@ -34,10 +34,6 @@ a { color: inherit; }
   padding: 0 32px;
 }
 
-/* ---------- Header ---------- */
-/* Fixe (hors flux) plutôt que sticky : le hero peut ainsi commencer à
-   y=0 et démarrer son scrubbing dès le tout premier pixel de scroll,
-   sans un temps mort le temps que la page défile sous le header. */
 .site-header {
   position: fixed;
   top: 0;
@@ -176,10 +172,10 @@ a { color: inherit; }
 
 .cart-count.is-bumping { animation: badge-pop 0.45s ease; }
 
-/* ---------- Hero (vidéo pilotée par le défilement) ---------- */
+/* ---------- Hero ---------- */
 .hero-video {
   position: relative;
-  height: 240vh;
+  height: 160vh;
   background: var(--ink);
 }
 
@@ -282,7 +278,6 @@ a { color: inherit; }
   color: var(--ivory);
 }
 
-/* Hero CTA must stay visible on dark video */
 .hero-inner .btn-solid {
   background: var(--ivory);
   color: var(--ink);
@@ -295,12 +290,9 @@ a { color: inherit; }
   border-color: var(--ivory);
 }
 
-/* ---------- Section headings ---------- */
 .section { padding: 100px 0; }
 .section-alt { background: var(--ivory-deep); }
 
-/* Le header est maintenant fixed (hors flux) : compenser sa hauteur
-   pour que les liens d'ancre ne défilent pas jusque sous celui-ci. */
 #collection,
 #maison,
 #contact {
@@ -332,7 +324,6 @@ a { color: inherit; }
   font-size: 15px;
 }
 
-/* ---------- Collection grid ---------- */
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -414,7 +405,6 @@ a { color: inherit; }
   border-bottom: 1px solid var(--taupe);
 }
 
-/* ---------- About ---------- */
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -488,7 +478,6 @@ a { color: inherit; }
   margin-bottom: 18px;
 }
 
-/* ---------- Newsletter ---------- */
 .newsletter {
   text-align: center;
   padding: 90px 0;
@@ -598,7 +587,6 @@ a { color: inherit; }
 
 .contact-form button:disabled { opacity: 0.6; cursor: default; }
 
-/* ---------- Compte client ---------- */
 .account-body {
   flex: 1;
   overflow-y: auto;
@@ -677,7 +665,6 @@ a { color: inherit; }
   color: var(--taupe);
 }
 
-/* ---------- Footer ---------- */
 .site-footer {
   background: var(--ivory-deep);
   border-top: 1px solid var(--line);
@@ -738,7 +725,6 @@ a { color: inherit; }
   gap: 10px;
 }
 
-/* ---------- Modal ---------- */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -817,9 +803,7 @@ a { color: inherit; }
   background: linear-gradient(160deg, var(--ivory-deep), var(--ivory));
 }
 
-.modal-thumbs img:hover {
-  border-color: var(--taupe);
-}
+.modal-thumbs img:hover { border-color: var(--taupe); }
 
 .modal-thumbs img.active {
   border-color: var(--taupe);
@@ -870,7 +854,6 @@ a { color: inherit; }
   background: transparent;
 }
 
-/* ---------- Sélecteur de taille ---------- */
 .size-picker {
   display: flex;
   gap: 8px;
