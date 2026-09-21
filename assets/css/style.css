@@ -195,9 +195,9 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  /* Pas de transform:scale — ça floutait. Cadre net sur mannequin central */
-  object-position: center 28%;
+  /* contain = têtes + corps visibles du début à la fin du scroll */
+  object-fit: contain;
+  object-position: center center;
   background: var(--ink);
   opacity: 0;
   transition: opacity 0.45s ease;
@@ -213,8 +213,8 @@ a { color: inherit; }
   width: 100%;
   height: 100%;
   background: var(--ink);
-  object-fit: cover;
-  object-position: center 28%;
+  object-fit: contain;
+  object-position: center center;
   pointer-events: none;
 }
 
