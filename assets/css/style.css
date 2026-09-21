@@ -195,9 +195,9 @@ a { color: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  /* cover paysage = plein écran, modèles complets */
   object-fit: cover;
-  object-position: center center;
+  /* 20% = têtes sous le header, vêtements visibles */
+  object-position: center 20%;
   background: var(--ink);
   opacity: 0;
   transition: opacity 0.45s ease;
@@ -214,7 +214,7 @@ a { color: inherit; }
   height: 100%;
   background: var(--ink);
   object-fit: cover;
-  object-position: center center;
+  object-position: center 20%;
   pointer-events: none;
 }
 
