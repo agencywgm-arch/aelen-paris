@@ -342,6 +342,14 @@
     0 0 0 11px rgba(166, 138, 100, 0.25),
     0 24px 60px rgba(28, 25, 23, 0.12),
     inset 0 0 40px rgba(255, 255, 255, 0.4);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.fitting-figure.is-dragging {
+  cursor: grabbing;
 }
 
 .fitting-figure img {
@@ -351,6 +359,21 @@
   height: 100%;
   object-fit: contain;
   background: #f6f2ea;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  transition: opacity 0.05s linear;
+}
+
+.fitting-figure img.is-visible.is-active {
+  opacity: 1;
+  z-index: 1;
+}
+
+.fitting-figure img.is-visible:not(.is-active) {
+  opacity: 0;
+  z-index: 0;
 }
 
 .spin-arrow {
@@ -369,6 +392,7 @@
   line-height: 1;
   box-shadow: 0 4px 16px rgba(28, 25, 23, 0.1);
   transition: background 0.2s ease, border-color 0.2s ease;
+  pointer-events: auto;
 }
 
 .spin-arrow:hover {
@@ -388,6 +412,13 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--taupe);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.spin-hint.is-visible {
+  opacity: 1;
 }
 
 .fitting-note {
