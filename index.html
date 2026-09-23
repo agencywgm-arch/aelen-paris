@@ -3,19 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- deploy-bust: 2026-09-21-hero-pc-hq -->
   <title>AElen Paris — Maison de mode</title>
   <meta name="description" content="AElen Paris — trenchs, vestes courtes et mailles pensés pour une allure parisienne intemporelle." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/style-rest.css" />
+  <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
+  <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
 </head>
 <body>
 
   <header class="site-header">
     <div class="wrap">
       <a href="#top" class="brand">
-        <span class="brand-ae">ÆE</span>
         <span class="brand-name">Ælen</span>
         <span class="brand-sub">P A R I S</span>
       </a>
@@ -23,20 +26,61 @@
         <a href="#collection">Collection</a>
         <a href="#maison">La Maison</a>
         <a href="#contact">Contact</a>
+        <button type="button" class="nav-account-btn" id="nav-account-toggle">Mon compte</button>
       </nav>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+      <div class="header-actions">
+        <button class="cart-toggle" id="account-toggle" aria-label="Mon compte">Compte</button>
+        <button class="cart-toggle" id="cart-toggle" aria-label="Voir le panier">
+          Panier <span class="cart-count" id="cart-count" hidden>0</span>
+        </button>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
   </header>
 
   <main id="top">
-    <section class="hero">
-      <div class="hero-inner">
-        <p class="hero-eyebrow">Nouvelle collection</p>
-        <h1>L'allure parisienne, <br />pièce après pièce.</h1>
-        <p>Trenchs, vestes courtes et mailles conçus à Paris — des silhouettes structurées, des matières nobles, pensées pour durer bien au-delà d'une saison.</p>
-        <a href="#collection" class="btn btn-solid">Découvrir la collection</a>
+    <section class="hero-video" id="hero-video">
+      <div class="hero-video-sticky">
+        <img
+          class="hero-poster"
+          src="assets/video/hero-poster.jpg"
+          alt=""
+          width="1890"
+          height="1080"
+          fetchpriority="high"
+          decoding="async"
+        />
+        <video
+          id="hero-video-el"
+          class="hero-video-el"
+          muted
+          playsinline
+          preload="auto"
+          poster="assets/video/hero-poster.jpg"
+        ></video>
+        <script>
+          (function () {
+            var v = document.getElementById("hero-video-el");
+            if (!v) return;
+            var mobile = window.matchMedia("(max-width: 860px)").matches;
+            var s = document.createElement("source");
+            /* PC = paysage HQ | mobile = portrait */
+            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-hq.mp4";
+            s.type = "video/mp4";
+            v.appendChild(s);
+            v.load();
+          })();
+        </script>
+        <div class="hero-video-scrim"></div>
+        <div class="hero-inner">
+          <p class="hero-eyebrow">Nouvelle collection</p>
+          <h1>L'allure parisienne, <br />pièce après pièce.</h1>
+          <p>Trenchs, vestes courtes et mailles conçus à Paris — des silhouettes structurées, des matières nobles, pensées pour durer bien au-delà d'une saison.</p>
+          <a href="#collection" class="btn btn-solid">Découvrir la collection</a>
+        </div>
+        <div class="hero-scroll-hint">Faites défiler</div>
       </div>
     </section>
 
@@ -44,8 +88,8 @@
       <div class="wrap">
         <div class="section-head">
           <p class="section-eyebrow">La collection</p>
-          <h2>Cinq pièces signature</h2>
-          <p>Chaque pièce est présentée ici avec une illustration provisoire — les photos définitives seront ajoutées prochainement.</p>
+          <h2>Sept pièces signature</h2>
+          <p>Chaque pièce est photographiée en studio et sur le pavé parisien pour révéler sa coupe, sa matière et sa tenue au porter.</p>
         </div>
         <div class="collection-grid" id="collection-grid">
           <!-- Généré dynamiquement par main.js à partir de products-data.js -->
@@ -56,7 +100,11 @@
     <section class="section section-alt" id="maison">
       <div class="wrap about-grid">
         <div class="about-visual">
-          <span class="monogram">ÆE</span>
+          <img src="assets/img/about-paris.jpg" alt="Rue haussmannienne à Paris" />
+          <div class="about-visual-mark">
+            <span class="brand-name">Ælen</span>
+            <span class="brand-sub">P A R I S</span>
+          </div>
         </div>
         <div class="about-copy">
           <p class="section-eyebrow">La maison</p>
@@ -77,6 +125,17 @@
           <button type="submit">S'inscrire</button>
         </form>
         <p class="form-note" id="form-note"></p>
+
+        <div class="contact-form-block">
+          <h3>Une question ? Écrivez-nous</h3>
+          <form class="contact-form" id="contact-form">
+            <input type="text" name="name" required placeholder="Votre nom" aria-label="Nom" />
+            <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+            <textarea name="message" required placeholder="Votre message" aria-label="Message" rows="4"></textarea>
+            <button type="submit">Envoyer le message</button>
+          </form>
+          <p class="form-note" id="contact-form-note"></p>
+        </div>
       </div>
     </section>
   </main>
@@ -106,7 +165,7 @@
       </div>
       <div class="footer-bottom">
         <span>© <span id="year"></span> AElen Paris. Tous droits réservés.</span>
-        <span>Site en construction — images définitives à venir.</span>
+        <span>Paris, France</span>
       </div>
     </div>
   </footer>
@@ -116,18 +175,85 @@
       <button class="modal-close" id="modal-close" aria-label="Fermer">✕</button>
       <div class="modal-image">
         <img id="modal-image" src="" alt="" />
+        <div class="modal-thumbs" id="modal-thumbs"></div>
       </div>
       <div class="modal-body">
         <p class="cat" id="modal-cat"></p>
         <h3 id="modal-title"></h3>
+        <p class="price" id="modal-price"></p>
         <p class="desc" id="modal-desc"></p>
         <ul id="modal-details"></ul>
-        <a href="#contact" class="btn btn-solid" id="modal-cta">Nous contacter</a>
+        <div class="size-picker" id="modal-sizes"></div>
+        <button type="button" class="btn btn-solid" id="modal-add-cart">Ajouter au panier</button>
+        <button type="button" class="btn btn-fitting" id="modal-fitting-btn">Essayer en cabine</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-overlay" id="cart-overlay" hidden>
+    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+      <div class="cart-head">
+        <h3 id="cart-title">Votre panier</h3>
+        <button class="modal-close" id="cart-close" aria-label="Fermer le panier">✕</button>
+      </div>
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-empty" id="cart-empty">Votre panier est vide.</div>
+      <div class="cart-suggestions" id="cart-suggestions" hidden>
+        <p class="cart-suggestions-title">Vous aimerez aussi</p>
+        <div class="cart-suggest-list" id="cart-suggest-list"></div>
+      </div>
+      <div class="cart-footer">
+        <div class="cart-subtotal">
+          <span>Sous-total</span>
+          <strong id="cart-subtotal">0 €</strong>
+        </div>
+        <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Passer commande</button>
+        <p class="cart-note">Livraison et taxes calculées à l'étape suivante.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-overlay" id="account-overlay" hidden>
+    <div class="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="account-title">
+      <div class="cart-head">
+        <h3 id="account-title">Mon compte</h3>
+        <button class="modal-close" id="account-close" aria-label="Fermer mon compte">✕</button>
+      </div>
+      <div class="account-body" id="account-body"></div>
+    </div>
+  </div>
+
+  <div class="fitting-overlay" id="fitting-overlay" hidden>
+    <div class="fitting-curtain fitting-curtain-left"></div>
+    <div class="fitting-curtain fitting-curtain-right"></div>
+    <button class="fitting-close" id="fitting-close" aria-label="Fermer la cabine">✕</button>
+    <div class="fitting-stage">
+      <p class="fitting-eyebrow">Cabine d'essayage</p>
+      <h3 id="fitting-title"></h3>
+      <p class="fitting-color" id="fitting-color"></p>
+      <div class="fitting-figure" id="fitting-figure">
+        <img id="fitting-photo" src="" alt="" />
+        <img id="fitting-photo-b" src="" alt="" />
+        <button type="button" class="spin-arrow spin-arrow-left" id="spin-prev" aria-label="Tourner vers la gauche">‹</button>
+        <button type="button" class="spin-arrow spin-arrow-right" id="spin-next" aria-label="Tourner vers la droite">›</button>
+        <div class="spin-hint" id="spin-hint">↔ Glissez pour faire tourner</div>
+      </div>
+      <p class="fitting-note" id="fitting-note"></p>
+      <div class="fitting-controls" id="fitting-controls">
+        <div class="fitting-group">
+          <span class="fitting-label">Silhouette</span>
+          <div class="fitting-choices">
+            <button type="button" data-size="s">Fine</button>
+            <button type="button" data-size="m">Classique</button>
+            <button type="button" data-size="l">Généreuse</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="assets/js/products-data.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/fitting-desktop.js"></script>
 </body>
 </html>

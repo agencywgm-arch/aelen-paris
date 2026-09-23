@@ -1,0 +1,285 @@
+/* ---------- Espace staff : dashboard admin ---------- */
+
+.admin-body {
+  font-family: var(--sans);
+  color: var(--ink);
+}
+
+/* ----- Écran de connexion ----- */
+.admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.admin-login[hidden], .admin-app[hidden] { display: none; }
+
+.admin-login-card {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 40px 32px;
+}
+
+.admin-login-card .brand-name {
+  display: block;
+  font-family: var(--serif);
+  font-size: 28px;
+}
+
+.admin-login-card .brand-sub {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--taupe);
+  margin-bottom: 24px;
+}
+
+.admin-login-card h1 {
+  font-family: var(--serif);
+  font-size: 20px;
+  margin: 0 0 20px;
+}
+
+.admin-login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-login-card input {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+
+.admin-login-card button {
+  padding: 12px 14px;
+  background: var(--ink);
+  color: var(--ivory);
+  border: none;
+  border-radius: 2px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-login-card button:hover { background: var(--ink-soft); }
+
+.admin-note { font-size: 13px; color: var(--ink-soft); margin: 0 0 16px; }
+.admin-error { color: #b3261e; font-size: 13px; margin-top: 12px; }
+
+/* ----- Dashboard ----- */
+.admin-app { min-height: 100vh; }
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.admin-header .brand-name { font-family: var(--serif); font-size: 20px; margin-right: 4px; }
+.admin-header .brand-sub { font-size: 10px; letter-spacing: 2px; color: var(--taupe); margin-right: 14px; }
+.admin-header-tag {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--ivory-deep);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.admin-btn {
+  padding: 9px 16px;
+  border-radius: 2px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--ivory);
+}
+
+.admin-btn-ghost { background: transparent; color: var(--ink); }
+.admin-btn-ghost:hover { background: var(--ivory-deep); }
+
+.admin-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+.admin-btn-small:hover { border-color: var(--taupe); }
+
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 28px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.admin-tab {
+  padding: 14px 16px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.admin-tab.active { color: var(--ink); border-bottom-color: var(--taupe); font-weight: 700; }
+.admin-tab:hover { color: var(--ink); }
+
+.admin-main { padding: 28px; max-width: 1180px; margin: 0 auto; }
+
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+
+.admin-panel h2 {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin: 0 0 20px;
+}
+
+.admin-empty { color: var(--ink-soft); font-size: 14px; padding: 20px 0; }
+.admin-loading { color: var(--ink-soft); font-size: 14px; padding: 20px 0; }
+
+/* ----- KPI tiles (statistiques) ----- */
+.admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.admin-kpi {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+.admin-kpi-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+
+.admin-kpi-value { font-family: var(--serif); font-size: 28px; }
+
+.admin-subhead { font-size: 15px; font-weight: 700; margin: 0 0 14px; }
+
+/* ----- Tables ----- */
+.admin-table-wrap {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+.admin-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: var(--ivory-deep);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.admin-table tr.is-unread td { font-weight: 700; }
+
+.admin-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--ivory-deep);
+  color: var(--ink-soft);
+}
+
+.admin-badge.status-paid, .admin-badge.status-delivered { background: #e4efe1; color: #2f5b2a; }
+.admin-badge.status-shipped, .admin-badge.status-processing { background: #e6edf5; color: #2a4a6b; }
+.admin-badge.status-cancelled, .admin-badge.status-unpaid { background: #f5e4e1; color: #7a2f2a; }
+
+.admin-order-row td { border-top: 1px solid var(--line); }
+.admin-order-items { font-size: 12px; color: var(--ink-soft); }
+.admin-order-items div { margin-bottom: 2px; }
+
+.admin-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.admin-inline-form select,
+.admin-inline-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+.admin-inline-form input[type="text"] { width: 140px; }
+
+.admin-save-note {
+  font-size: 12px;
+  color: var(--taupe);
+  margin-left: 6px;
+}
+
+/* ----- Produits ----- */
+.admin-product-row .admin-inline-form { margin-top: 10px; }
+.admin-size-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.admin-size-toggle input { margin: 0; }
+.admin-size-toggle.is-out { border-color: #b3261e; color: #b3261e; }
+
+@media (max-width: 720px) {
+  .admin-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
+  .admin-tabs { padding: 0 16px; }
+  .admin-main { padding: 18px; }
+}
