@@ -3,6 +3,8 @@
 // fonctions du plan Hobby. Chaque sous-route garde exactement le même
 // chemin public (/api/staff/orders, /api/staff/login, ...), seule
 // l'organisation des fichiers source change.
+const { firstPathSegment } = require("../../lib/catchAllRoute.js");
+
 const handlers = {
   login: require("../../lib/handlers/staff/login.js"),
   logout: require("../../lib/handlers/staff/logout.js"),
@@ -15,8 +17,7 @@ const handlers = {
 };
 
 module.exports = async (req, res) => {
-  const segments = req.query.action;
-  const name = Array.isArray(segments) ? segments[0] : segments;
+  const name = firstPathSegment(req, "/api/staff/");
   const handler = handlers[name];
   if (!handler) {
     res.status(404).json({ error: "not_found" });
