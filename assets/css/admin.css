@@ -1,5 +1,10 @@
 /* ---------- Espace staff : dashboard admin ---------- */
 
+/* Garde-fou global : l'attribut [hidden] doit toujours l'emporter, même
+   face à une règle de classe plus tardive (ex. display:flex sur .admin-inline-form) —
+   sans ça, un élément avec `hidden` reste visible à cause de la cascade. */
+[hidden] { display: none !important; }
+
 .admin-body {
   font-family: var(--sans);
   color: var(--ink);
@@ -13,8 +18,6 @@
   justify-content: center;
   padding: 24px;
 }
-
-.admin-login[hidden], .admin-app[hidden] { display: none; }
 
 .admin-login-card {
   width: 100%;

@@ -35,17 +35,21 @@ module.exports = async (req, res) => {
 
   // Surcharges prix/stock définies depuis le dashboard staff (si la base
   // est configurée) — c'est la seule source de vérité pour le montant
-  // facturé, jamais les valeurs envoyées par le client.
-  let overrides = {};
+  // facturé et le stock disponible, jamais les valeurs envoyées par le client.
+  let priceOverrides = {};
+  let stockByKey = {}; // "productId|size" -> quantité restante, absent = non suivi (illimité)
   if (isConfigured()) {
     try {
       const sql = await getSql();
-      const { rows } = await sql`SELECT product_id, price, out_of_stock_sizes FROM product_overrides;`;
-      rows.forEach((r) => {
-        overrides[r.product_id] = {
-          price: r.price === null ? null : Number(r.price),
-          outOfStockSizes: r.out_of_stock_sizes || [],
-        };
+      const [{ rows: priceRows }, { rows: stockRows }] = await Promise.all([
+        sql`SELECT product_id, price FROM product_overrides;`,
+        sql`SELECT product_id, size, quantity FROM product_stock;`,
+      ]);
+      priceRows.forEach((r) => {
+        priceOverrides[r.product_id] = r.price === null ? null : Number(r.price);
+      });
+      stockRows.forEach((r) => {
+        stockByKey[`${r.product_id}|${r.size}`] = r.quantity;
       });
     } catch (err) {
       // En cas d'erreur on continue avec les prix statiques du catalogue.
@@ -58,12 +62,13 @@ module.exports = async (req, res) => {
     if (!product || typeof product.price !== "number") continue;
 
     const size = typeof entry.size === "string" ? entry.size.slice(0, 10) : "";
-    const override = overrides[product.id];
-    if (override && override.outOfStockSizes.includes(size)) continue;
+    const trackedStock = stockByKey[`${product.id}|${size}`];
+    if (trackedStock !== undefined && trackedStock <= 0) continue;
 
-    const qty = Math.max(1, Math.min(20, parseInt(entry.qty, 10) || 1));
+    let qty = Math.max(1, Math.min(20, parseInt(entry.qty, 10) || 1));
+    if (trackedStock !== undefined) qty = Math.min(qty, trackedStock);
     const image = absoluteImageUrl(product);
-    const unitPrice = override && override.price != null ? override.price : product.price;
+    const unitPrice = priceOverrides[product.id] != null ? priceOverrides[product.id] : product.price;
 
     line_items.push({
       quantity: qty,

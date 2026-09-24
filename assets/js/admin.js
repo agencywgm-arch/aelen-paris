@@ -12,6 +12,7 @@
   const panels = {
     stats: document.getElementById("admin-panel-stats"),
     orders: document.getElementById("admin-panel-orders"),
+    returns: document.getElementById("admin-panel-returns"),
     customers: document.getElementById("admin-panel-customers"),
     messages: document.getElementById("admin-panel-messages"),
     products: document.getElementById("admin-panel-products"),
@@ -136,6 +137,7 @@
   function loadTab(name) {
     if (name === "stats") return loadStats();
     if (name === "orders") return loadOrders();
+    if (name === "returns") return loadReturns();
     if (name === "customers") return loadCustomers();
     if (name === "messages") return loadMessages();
     if (name === "products") return loadProducts();
@@ -235,6 +237,16 @@
                   <span class="admin-save-note" hidden>Enregistré ✓</span>
                 </form>
               </td>
+              <td>
+                <a class="admin-btn-small" href="/api/staff/invoice?orderId=${o.id}" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none; margin-bottom:6px;">Facture</a>
+                <button type="button" class="admin-btn-small admin-toggle-return">+ Retour</button>
+                <form class="admin-inline-form admin-return-form" hidden>
+                  <input type="text" name="reason" placeholder="Motif (optionnel)" style="width:160px;" />
+                  <input type="number" step="0.01" min="0" name="refundAmount" placeholder="Montant € (par défaut : total)" style="width:170px;" />
+                  <button type="submit" class="admin-btn-small">Créer le retour</button>
+                  <span class="admin-save-note" hidden>Créé ✓</span>
+                </form>
+              </td>
             </tr>
           `;
         })
@@ -244,11 +256,53 @@
         <h2>Commandes</h2>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Statut</th><th>Suivi</th></tr></thead>
+            <thead><tr><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Statut</th><th>Suivi</th><th>Actions</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
       `;
+
+      panel.querySelectorAll(".admin-toggle-return").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const form = btn.closest("td").querySelector(".admin-return-form");
+          form.hidden = !form.hidden;
+        });
+      });
+
+      panel.querySelectorAll(".admin-return-form").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const row = form.closest(".admin-order-row");
+          const orderId = Number(row.dataset.orderId);
+          const btn = form.querySelector("button[type=submit]");
+          const note = form.querySelector(".admin-save-note");
+          btn.disabled = true;
+          try {
+            const resp = await fetch("/api/staff/returns", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId,
+                reason: form.reason.value,
+                refundAmount: form.refundAmount.value === "" ? null : form.refundAmount.value,
+              }),
+            });
+            if (resp.ok) {
+              note.hidden = false;
+              setTimeout(() => {
+                note.hidden = true;
+                form.hidden = true;
+                form.reset();
+              }, 1500);
+              delete loaded.returns;
+            }
+          } catch (err) {
+            // silencieux
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
 
       panel.querySelectorAll(".admin-order-form").forEach((form) => {
         form.addEventListener("submit", async (e) => {
@@ -285,6 +339,112 @@
       });
     } catch (err) {
       panel.innerHTML = `<h2>Commandes</h2><p class="admin-empty">${errorMessage()}</p>`;
+    }
+  }
+
+  // ---- Retours ----
+
+  const RETURN_STATUS_LABELS = {
+    requested: "Demandé",
+    received: "Reçu",
+    refunded: "Remboursé",
+    rejected: "Refusé",
+  };
+
+  async function loadReturns() {
+    const panel = panels.returns;
+    panel.innerHTML = `<h2>Retours</h2><p class="admin-loading">Chargement…</p>`;
+    try {
+      const resp = await fetch("/api/staff/returns");
+      const data = await resp.json();
+      if (!resp.ok) {
+        panel.innerHTML = `<h2>Retours</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
+        return;
+      }
+      if (data.returns.length === 0) {
+        panel.innerHTML = `<h2>Retours</h2><p class="admin-empty">Aucun retour pour l'instant. Crée-en un depuis l'onglet Commandes.</p>`;
+        return;
+      }
+
+      const rows = data.returns
+        .map((r) => {
+          const status = r.status || "requested";
+          return `
+            <tr class="admin-return-row" data-return-id="${r.id}">
+              <td>${formatDate(r.createdAt)}</td>
+              <td>Commande n°${r.orderId}</td>
+              <td>${escapeHtml(r.customerEmail)}</td>
+              <td>${escapeHtml(r.reason || "—")}</td>
+              <td>${formatCents(r.refundAmount)}</td>
+              <td><span class="admin-badge status-${status === "refunded" ? "delivered" : status === "rejected" ? "cancelled" : "processing"}">${RETURN_STATUS_LABELS[status] || status}</span></td>
+              <td>
+                <form class="admin-inline-form admin-return-status-form">
+                  <select name="status">
+                    ${Object.keys(RETURN_STATUS_LABELS)
+                      .map((s) => `<option value="${s}" ${s === status ? "selected" : ""}>${RETURN_STATUS_LABELS[s]}</option>`)
+                      .join("")}
+                  </select>
+                  <button type="submit" class="admin-btn-small">Enregistrer</button>
+                  <span class="admin-save-note" hidden>Enregistré ✓</span>
+                  <span class="admin-error-note" hidden style="color:#b3261e; font-size:12px;"></span>
+                </form>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      panel.innerHTML = `
+        <h2>Retours</h2>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Date</th><th>Commande</th><th>Client</th><th>Motif</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+
+      panel.querySelectorAll(".admin-return-status-form").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const row = form.closest(".admin-return-row");
+          const returnId = Number(row.dataset.returnId);
+          const btn = form.querySelector("button");
+          const note = form.querySelector(".admin-save-note");
+          const errNote = form.querySelector(".admin-error-note");
+          errNote.hidden = true;
+          btn.disabled = true;
+          try {
+            const resp = await fetch("/api/staff/returns", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ returnId, status: form.status.value }),
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              note.hidden = false;
+              const badge = row.querySelector(".admin-badge");
+              const s = form.status.value;
+              badge.className = `admin-badge status-${s === "refunded" ? "delivered" : s === "rejected" ? "cancelled" : "processing"}`;
+              badge.textContent = RETURN_STATUS_LABELS[s] || s;
+              setTimeout(() => (note.hidden = true), 2500);
+            } else {
+              errNote.textContent =
+                data.error === "refund_failed"
+                  ? "Le remboursement Stripe a échoué (vérifiez STRIPE_SECRET_KEY)."
+                  : "Erreur, réessayez.";
+              errNote.hidden = false;
+            }
+          } catch (err) {
+            errNote.textContent = "Erreur, réessayez.";
+            errNote.hidden = false;
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (err) {
+      panel.innerHTML = `<h2>Retours</h2><p class="admin-empty">${errorMessage()}</p>`;
     }
   }
 
@@ -409,13 +569,14 @@
 
       const rows = data.products
         .map((p) => {
-          const sizeToggles = p.sizes
+          const sizeInputs = p.sizes
             .map((s) => {
-              const isOut = p.outOfStockSizes.includes(s);
+              const qty = p.stock[s];
+              const isOut = qty !== null && qty <= 0;
               return `
-                <label class="admin-size-toggle ${isOut ? "is-out" : ""}">
-                  <input type="checkbox" value="${s}" ${isOut ? "checked" : ""} />
-                  ${s}
+                <label class="admin-size-toggle ${isOut ? "is-out" : ""}" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px 10px;">
+                  <span style="font-size:11px; color:var(--ink-soft);">${s}</span>
+                  <input type="number" min="0" step="1" name="stock-${s}" value="${qty === null ? "" : qty}" placeholder="illimité" style="width:64px; border:none; padding:0; font-size:13px;" />
                 </label>
               `;
             })
@@ -430,7 +591,7 @@
                     <input type="number" step="0.01" min="0" name="price" value="${p.price}" style="width:90px;" />
                     €
                   </label>
-                  <span class="admin-sizes">${sizeToggles}</span>
+                  <span class="admin-sizes" style="display:inline-flex; gap:6px;">${sizeInputs}</span>
                   <button type="submit" class="admin-btn-small">Enregistrer</button>
                   <span class="admin-save-note" hidden>Enregistré ✓</span>
                 </form>
@@ -443,8 +604,9 @@
       panel.innerHTML = `
         <h2>Produits</h2>
         <p style="color:var(--ink-soft); font-size:13px; margin-top:-10px;">
-          Cochez une taille pour la marquer en rupture de stock (elle devient indisponible sur la boutique).
-          Laissez le prix vide pour revenir au prix catalogue.
+          Indique une quantité par taille pour suivre le stock (0 = rupture, la taille devient indisponible
+          sur la boutique et se décrémente automatiquement à chaque vente). Laisse le champ vide pour un
+          stock illimité (non suivi). Laisse le prix vide pour revenir au prix catalogue.
         </p>
         <div class="admin-table-wrap">
           <table class="admin-table">
@@ -460,9 +622,11 @@
           const productId = row.dataset.productId;
           const btn = form.querySelector("button");
           const note = form.querySelector(".admin-save-note");
-          const outOfStockSizes = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map(
-            (cb) => cb.value
-          );
+          const stock = {};
+          form.querySelectorAll('input[name^="stock-"]').forEach((input) => {
+            const size = input.name.replace("stock-", "");
+            stock[size] = input.value === "" ? null : input.value;
+          });
           btn.disabled = true;
           try {
             const resp = await fetch("/api/staff/products", {
@@ -471,14 +635,15 @@
               body: JSON.stringify({
                 productId,
                 price: form.price.value === "" ? null : form.price.value,
-                outOfStockSizes,
+                stock,
               }),
             });
             if (resp.ok) {
               note.hidden = false;
-              form.querySelectorAll(".admin-size-toggle").forEach((label) => {
-                const cb = label.querySelector("input");
-                label.classList.toggle("is-out", cb.checked);
+              form.querySelectorAll('input[name^="stock-"]').forEach((input) => {
+                const label = input.closest(".admin-size-toggle");
+                const qty = input.value === "" ? null : Number(input.value);
+                label.classList.toggle("is-out", qty !== null && qty <= 0);
               });
               setTimeout(() => (note.hidden = true), 2500);
             }

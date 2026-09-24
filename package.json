@@ -3,7 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "dependencies": {
-    "stripe": "^16.12.0",
-    "@vercel/postgres": "^0.10.0"
+    "@vercel/postgres": "^0.10.0",
+    "pdfkit": "^0.20.2",
+    "stripe": "^16.12.0"
   }
 }

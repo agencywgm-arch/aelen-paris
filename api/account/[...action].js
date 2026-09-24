@@ -5,6 +5,7 @@ const { firstPathSegment } = require("../../lib/catchAllRoute.js");
 const handlers = {
   me: require("../../lib/handlers/account/me.js"),
   orders: require("../../lib/handlers/account/orders.js"),
+  invoice: require("../../lib/handlers/account/invoice.js"),
 };
 
 module.exports = async (req, res) => {
