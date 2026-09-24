@@ -309,6 +309,22 @@
 }
 .admin-hint { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0; }
 
+/* ----- Barre d'actions de panneau (ex : commande de test) ----- */
+.admin-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.admin-panel-actions .admin-hint { margin: 0; }
+.admin-badge-test {
+  background: #f0e6d2;
+  color: var(--taupe);
+  font-size: 10px;
+  padding: 2px 8px;
+  margin-left: 4px;
+}
+
 @media (max-width: 720px) {
   .admin-header { padding: 14px 16px; flex-wrap: wrap; gap: 10px; }
   .admin-tabs { padding: 0 16px; }

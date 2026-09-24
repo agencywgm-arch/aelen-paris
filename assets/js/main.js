@@ -508,6 +508,24 @@
   const countdownEl = document.getElementById("countdown");
   const waitlistForm = document.getElementById("waitlist-form");
   const waitlistNote = document.getElementById("waitlist-note");
+  const waitlistInner = document.getElementById("waitlist-inner");
+
+  if (waitlistInner) {
+    if (reduceMotion) {
+      waitlistInner.classList.add("is-visible");
+    } else {
+      const waitlistObserver = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            waitlistInner.classList.add("is-visible");
+            waitlistObserver.disconnect();
+          }
+        },
+        { threshold: 0.25 }
+      );
+      waitlistObserver.observe(waitlistInner);
+    }
+  }
 
   function startCountdown(targetMs) {
     if (!countdownEl) return;
@@ -591,6 +609,250 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && overlay && !overlay.hidden) closeModal();
   });
+
+  // ---- Cabine d'essayage (rotation 360°) ----
+  const fittingOverlay = document.getElementById("fitting-overlay");
+  const fittingClose = document.getElementById("fitting-close");
+  const fittingFigure = document.getElementById("fitting-figure");
+  const fittingPhoto = document.getElementById("fitting-photo");
+  const fittingPhotoB = document.getElementById("fitting-photo-b");
+  const fittingTitle = document.getElementById("fitting-title");
+  const fittingColorEl = document.getElementById("fitting-color");
+  const fittingNote = document.getElementById("fitting-note");
+  const fittingControls = document.getElementById("fitting-controls");
+  const spinHint = document.getElementById("spin-hint");
+  const spinPrevBtn = document.getElementById("spin-prev");
+  const spinNextBtn = document.getElementById("spin-next");
+
+  if (fittingOverlay && fittingClose && fittingFigure && fittingPhoto && fittingPhotoB) {
+    // Les pièces rephotographiées en studio pour la cabine (mannequin
+    // virtuel, 3 carrures S/M/L). Chacune a son jeu de frames à 360°.
+    const FITTING_PRODUCT_IDS = [
+      "trench-chocolat",
+      "trench-beige",
+      "veste-croco-beige",
+      "cardigan-bordeaux",
+      "veste-foulard-marron",
+      "pull-raye-beige",
+      "pull-raye-rouge",
+    ];
+
+    const SPIN_FRAME_COUNT = 32;
+    const SPIN_SIZES = ["s", "m", "l"];
+    const SPIN_FRAMES = {};
+    FITTING_PRODUCT_IDS.forEach((id) => {
+      SPIN_FRAMES[id] = {};
+      SPIN_SIZES.forEach((size) => {
+        SPIN_FRAMES[id][size] = Array.from(
+          { length: SPIN_FRAME_COUNT },
+          (_, i) => `assets/img/spin360/${id}/${size}/frame_${String(i).padStart(2, "0")}.webp`
+        );
+      });
+    });
+
+    let fittingSize = "m";
+    let spinIndex = 0;
+    let spinFramesCache = {};
+    let spinFrontEl = null; // calque image actuellement au premier plan
+    let spinDragging = false;
+    let spinDragStartX = 0;
+    let spinDragStartIndex = 0;
+    let spinIntroTimer = null;
+    let spinInertiaTimer = null;
+    let spinLastMoveX = 0;
+    let spinLastMoveT = 0;
+    let spinVelocity = 0; // frames par seconde, signé
+    const SPIN_FRAMES_PER_STEP = 8; // px de glisse pour avancer d'une frame
+
+    function setFittingSize(size) {
+      fittingSize = size;
+      fittingControls.querySelectorAll("button[data-size]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.size === size);
+      });
+      if (!currentProduct || !SPIN_FRAMES[currentProduct.id]) return;
+      preloadSpinFrames(currentProduct.id, size);
+      showSpinFrame(spinIndex);
+    }
+
+    function preloadSpinFrames(id, size) {
+      const key = `${id}_${size}`;
+      if (spinFramesCache[key]) return spinFramesCache[key];
+      const imgs = (SPIN_FRAMES[id][size] || []).map((src) => {
+        const img = new Image();
+        img.src = src;
+        return img;
+      });
+      spinFramesCache[key] = imgs;
+      return imgs;
+    }
+
+    // Fait défiler vers `index` en faisant apparaître la nouvelle frame en
+    // fondu (~90ms) sur un second calque, plutôt qu'un remplacement net du
+    // src — ça gomme la coupure "flipbook" entre deux angles.
+    function showSpinFrame(index) {
+      const frames = spinFramesCache[`${currentProduct.id}_${fittingSize}`];
+      if (!frames || frames.length === 0) return;
+      spinIndex = ((index % frames.length) + frames.length) % frames.length;
+      const back = spinFrontEl === fittingPhoto ? fittingPhotoB : fittingPhoto;
+      back.src = frames[spinIndex].src;
+      back.classList.add("is-visible", "is-active");
+      if (spinFrontEl) spinFrontEl.classList.remove("is-active");
+      spinFrontEl = back;
+    }
+
+    function stopSpinIntro() {
+      if (spinIntroTimer) {
+        clearInterval(spinIntroTimer);
+        spinIntroTimer = null;
+      }
+    }
+
+    function stopSpinInertia() {
+      if (spinInertiaTimer) {
+        cancelAnimationFrame(spinInertiaTimer);
+        spinInertiaTimer = null;
+      }
+    }
+
+    function playSpinIntro() {
+      stopSpinIntro();
+      let step = 0;
+      spinIntroTimer = setInterval(() => {
+        step += 1;
+        showSpinFrame(step);
+        if (step >= SPIN_FRAME_COUNT) stopSpinIntro();
+      }, 45);
+    }
+
+    function openFittingSpin(product) {
+      fittingPhoto.classList.remove("is-visible", "is-active");
+      fittingPhotoB.classList.remove("is-visible", "is-active");
+      fittingPhoto.alt = product.name;
+      fittingPhotoB.alt = product.name;
+      spinFrontEl = null;
+      spinIndex = 0;
+      if (fittingNote) fittingNote.textContent = "";
+      if (spinHint) spinHint.classList.add("is-visible");
+      preloadSpinFrames(product.id, fittingSize);
+      showSpinFrame(0);
+      playSpinIntro();
+    }
+
+    function spinPointerDown(e) {
+      if (e.target.closest(".spin-arrow")) return;
+      spinDragging = true;
+      spinDragStartX = e.clientX;
+      spinDragStartIndex = spinIndex;
+      spinLastMoveX = e.clientX;
+      spinLastMoveT = performance.now();
+      spinVelocity = 0;
+      stopSpinIntro();
+      stopSpinInertia();
+      if (spinHint) spinHint.classList.remove("is-visible");
+      fittingFigure.classList.add("is-dragging");
+      fittingFigure.setPointerCapture(e.pointerId);
+    }
+
+    function spinPointerMove(e) {
+      if (!spinDragging) return;
+      const dx = e.clientX - spinDragStartX;
+      const delta = Math.round(-dx / SPIN_FRAMES_PER_STEP);
+      showSpinFrame(spinDragStartIndex + delta);
+
+      const now = performance.now();
+      const dt = now - spinLastMoveT;
+      if (dt > 0) {
+        const framesMoved = -(e.clientX - spinLastMoveX) / SPIN_FRAMES_PER_STEP;
+        spinVelocity = (framesMoved / dt) * 1000; // frames/s, lissé par le dernier segment
+      }
+      spinLastMoveX = e.clientX;
+      spinLastMoveT = now;
+    }
+
+    function spinPointerUp() {
+      spinDragging = false;
+      fittingFigure.classList.remove("is-dragging");
+
+      // Inertie courte façon "flick" : la rotation continue un instant puis
+      // ralentit, pour un rendu plus fluide qu'un arrêt net au relâchement.
+      if (Math.abs(spinVelocity) > 0.5) {
+        let velocity = Math.max(-14, Math.min(14, spinVelocity));
+        let position = spinIndex;
+        let lastT = performance.now();
+        const friction = 0.94; // décroissance par frame d'animation
+
+        const step = () => {
+          const now = performance.now();
+          const dt = Math.min(48, now - lastT);
+          lastT = now;
+          position += (velocity * dt) / 1000;
+          showSpinFrame(Math.round(position));
+          velocity *= friction;
+          if (Math.abs(velocity) > 0.4) {
+            spinInertiaTimer = requestAnimationFrame(step);
+          } else {
+            spinInertiaTimer = null;
+          }
+        };
+        spinInertiaTimer = requestAnimationFrame(step);
+      }
+    }
+
+    function spinStep(direction) {
+      stopSpinIntro();
+      stopSpinInertia();
+      if (spinHint) spinHint.classList.remove("is-visible");
+      showSpinFrame(spinIndex + direction);
+    }
+
+    function openFittingRoom(product) {
+      if (!SPIN_FRAMES[product.id]) return;
+      if (fittingTitle) fittingTitle.textContent = product.name;
+      if (fittingColorEl) fittingColorEl.textContent = `${product.category} — ${product.color}`;
+      openFittingSpin(product);
+      fittingOverlay.hidden = false;
+      // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => fittingOverlay.classList.add("is-open"));
+      });
+    }
+
+    function closeFittingRoom() {
+      stopSpinIntro();
+      stopSpinInertia();
+      fittingOverlay.classList.remove("is-open");
+      setTimeout(() => {
+        fittingOverlay.hidden = true;
+      }, 700);
+    }
+
+    if (modalFittingBtn) {
+      modalFittingBtn.addEventListener("click", () => {
+        if (currentProduct) openFittingRoom(currentProduct);
+      });
+    }
+
+    fittingClose.addEventListener("click", closeFittingRoom);
+    fittingOverlay.addEventListener("click", (e) => {
+      if (e.target === fittingOverlay) closeFittingRoom();
+    });
+    if (fittingControls) {
+      fittingControls.addEventListener("click", (e) => {
+        const sizeBtn = e.target.closest("button[data-size]");
+        if (sizeBtn) setFittingSize(sizeBtn.dataset.size);
+      });
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
+    });
+
+    fittingFigure.addEventListener("pointerdown", spinPointerDown);
+    fittingFigure.addEventListener("pointermove", spinPointerMove);
+    fittingFigure.addEventListener("pointerup", spinPointerUp);
+    fittingFigure.addEventListener("pointercancel", spinPointerUp);
+    if (spinPrevBtn) spinPrevBtn.addEventListener("click", () => spinStep(-1));
+    if (spinNextBtn) spinNextBtn.addEventListener("click", () => spinStep(1));
+  }
 
   // ---- Nav mobile ----
   const navToggle = document.getElementById("nav-toggle");

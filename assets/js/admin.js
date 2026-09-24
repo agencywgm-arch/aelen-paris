@@ -195,6 +195,37 @@
     cancelled: "Annulée",
   };
 
+  const TEST_ORDER_BAR = `
+    <div class="admin-panel-actions">
+      <button type="button" class="admin-btn-small" id="admin-create-test-order">+ Commande de test</button>
+      <span class="admin-hint">Crée une commande factice (aucun paiement réel) pour tester le suivi et les retours.</span>
+    </div>
+  `;
+
+  function wireTestOrderButton(panel) {
+    const btn = panel.querySelector("#admin-create-test-order");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Création…";
+      try {
+        const resp = await fetch("/api/staff/test-order", { method: "POST" });
+        if (resp.ok) {
+          delete loaded.orders;
+          loadOrders();
+        } else {
+          btn.textContent = "Erreur, réessayez";
+          setTimeout(() => (btn.textContent = "+ Commande de test"), 2000);
+        }
+      } catch (err) {
+        btn.textContent = "Erreur, réessayez";
+        setTimeout(() => (btn.textContent = "+ Commande de test"), 2000);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   async function loadOrders() {
     const panel = panels.orders;
     panel.innerHTML = `<h2>Commandes</h2><p class="admin-loading">Chargement…</p>`;
@@ -206,7 +237,8 @@
         return;
       }
       if (data.orders.length === 0) {
-        panel.innerHTML = `<h2>Commandes</h2><p class="admin-empty">Aucune commande pour l'instant.</p>`;
+        panel.innerHTML = `<h2>Commandes</h2>${TEST_ORDER_BAR}<p class="admin-empty">Aucune commande pour l'instant.</p>`;
+        wireTestOrderButton(panel);
         return;
       }
 
@@ -219,9 +251,10 @@
             )
             .join("");
           const status = o.status || "paid";
+          const isTest = typeof o.stripeSessionId === "string" && o.stripeSessionId.indexOf("test_") === 0;
           return `
             <tr class="admin-order-row" data-order-id="${o.id}">
-              <td>${formatDate(o.createdAt)}</td>
+              <td>${formatDate(o.createdAt)}${isTest ? ` <span class="admin-badge admin-badge-test">Test</span>` : ""}</td>
               <td>${escapeHtml(o.customerEmail)}</td>
               <td class="admin-order-items">${itemsHtml}</td>
               <td>${formatCents(o.amountTotal)}</td>
@@ -256,6 +289,7 @@
 
       panel.innerHTML = `
         <h2>Commandes</h2>
+        ${TEST_ORDER_BAR}
         <div class="admin-table-wrap">
           <table class="admin-table">
             <thead><tr><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Statut</th><th>Suivi</th><th>Actions</th></tr></thead>
@@ -263,6 +297,8 @@
           </table>
         </div>
       `;
+
+      wireTestOrderButton(panel);
 
       panel.querySelectorAll(".admin-toggle-return").forEach((btn) => {
         btn.addEventListener("click", () => {
