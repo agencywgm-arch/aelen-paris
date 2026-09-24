@@ -16,6 +16,7 @@
     customers: document.getElementById("admin-panel-customers"),
     messages: document.getElementById("admin-panel-messages"),
     products: document.getElementById("admin-panel-products"),
+    waitlist: document.getElementById("admin-panel-waitlist"),
   };
 
   const loaded = {};
@@ -141,6 +142,7 @@
     if (name === "customers") return loadCustomers();
     if (name === "messages") return loadMessages();
     if (name === "products") return loadProducts();
+    if (name === "waitlist") return loadWaitlist();
   }
 
   // ---- Statistiques ----
@@ -657,6 +659,85 @@
     } catch (err) {
       panel.innerHTML = `<h2>Produits</h2><p class="admin-empty">${errorMessage()}</p>`;
     }
+  }
+
+  // ---- Liste d'attente ----
+
+  async function loadWaitlist() {
+    const panel = panels.waitlist;
+    panel.innerHTML = `<h2>Liste d'attente</h2><p class="admin-loading">Chargement…</p>`;
+    try {
+      const resp = await fetch("/api/staff/waitlist");
+      const data = await resp.json();
+      if (!resp.ok) {
+        panel.innerHTML = `<h2>Liste d'attente</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
+        return;
+      }
+
+      const launchValue = data.launchAt ? toLocalDatetimeInputValue(data.launchAt) : "";
+      const rows = data.entries
+        .map((e) => `<tr><td>${formatDate(e.createdAt)}</td><td>${escapeHtml(e.email)}</td></tr>`)
+        .join("");
+
+      panel.innerHTML = `
+        <h2>Liste d'attente</h2>
+        <div class="admin-waitlist-launch">
+          <form id="admin-waitlist-launch-form">
+            <label for="admin-waitlist-launch-input">Date de lancement (compte à rebours du site)</label>
+            <input type="datetime-local" id="admin-waitlist-launch-input" name="launchAt" value="${launchValue}" />
+            <button type="submit" class="admin-btn-small">Enregistrer</button>
+            <button type="button" class="admin-btn-small" id="admin-waitlist-clear">Effacer</button>
+            <span class="admin-save-note" hidden>Enregistré ✓</span>
+          </form>
+          <p class="admin-hint">${data.launchAt ? "Le compte à rebours est actif sur le site." : "Aucune date définie : le compte à rebours reste masqué sur le site."}</p>
+        </div>
+        <h3>${data.count} inscrit${data.count > 1 ? "s" : ""}</h3>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Date</th><th>E-mail</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="2" class="admin-empty">Aucune inscription pour l'instant.</td></tr>`}</tbody>
+          </table>
+        </div>
+      `;
+
+      const launchForm = document.getElementById("admin-waitlist-launch-form");
+      const saveWaitlistLaunch = async (launchAt) => {
+        const btn = launchForm.querySelector('button[type="submit"]');
+        const note = launchForm.querySelector(".admin-save-note");
+        btn.disabled = true;
+        try {
+          const resp = await fetch("/api/staff/waitlist", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ launchAt }),
+          });
+          if (resp.ok) {
+            note.hidden = false;
+            delete loaded.waitlist;
+            setTimeout(() => (note.hidden = true), 2000);
+          }
+        } catch (err) {
+          // silencieux
+        } finally {
+          btn.disabled = false;
+        }
+      };
+      launchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const input = document.getElementById("admin-waitlist-launch-input");
+        const launchAt = input.value ? new Date(input.value).toISOString() : "";
+        saveWaitlistLaunch(launchAt);
+      });
+      document.getElementById("admin-waitlist-clear").addEventListener("click", () => saveWaitlistLaunch(""));
+    } catch (err) {
+      panel.innerHTML = `<h2>Liste d'attente</h2><p class="admin-empty">${errorMessage()}</p>`;
+    }
+  }
+
+  function toLocalDatetimeInputValue(isoString) {
+    const d = new Date(isoString);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   checkSession();

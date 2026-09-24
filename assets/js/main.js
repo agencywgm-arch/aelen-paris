@@ -361,6 +361,217 @@
   });
   renderCart();
 
+  // ---- Compte client (connexion par lien magique) ----
+  const accountOverlay = document.getElementById("account-overlay");
+  const accountBody = document.getElementById("account-body");
+  const accountClose = document.getElementById("account-close");
+  const accountToggle = document.getElementById("account-toggle");
+  const navAccountToggle = document.getElementById("nav-account-toggle");
+
+  const ACCOUNT_STATUS_LABELS = {
+    paid: "Payée", unpaid: "Non payée", processing: "En préparation",
+    shipped: "Expédiée", delivered: "Livrée", cancelled: "Annulée",
+  };
+
+  function renderAccountLoggedOut(note) {
+    if (!accountBody) return;
+    accountBody.innerHTML = `
+      <p class="account-intro">Connectez-vous avec votre e-mail pour retrouver votre historique de commandes. Nous vous envoyons un lien de connexion, sans mot de passe.</p>
+      <form id="account-login-form">
+        <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+        <button type="submit" class="btn btn-solid">Recevoir mon lien de connexion</button>
+      </form>
+      <p class="form-note" id="account-login-note">${note ? note : ""}</p>
+    `;
+    const form = document.getElementById("account-login-form");
+    const noteEl = document.getElementById("account-login-note");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      const btn = form.querySelector("button");
+      btn.disabled = true;
+      noteEl.textContent = "Envoi en cours…";
+      try {
+        const resp = await fetch("/api/auth/request-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await resp.json();
+        if (resp.ok && data.ok) {
+          noteEl.textContent = "Un e-mail vient de vous être envoyé. Cliquez sur le lien pour vous connecter.";
+          form.reset();
+        } else if (data.error === "email_not_configured" || data.error === "db_not_configured") {
+          noteEl.textContent = "La connexion n'est pas encore disponible sur ce site. Contactez-nous à contact@aelenparis.fr.";
+        } else {
+          noteEl.textContent = "Une erreur est survenue, réessayez.";
+        }
+      } catch (err) {
+        noteEl.textContent = "Erreur réseau, réessayez.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  async function renderAccountLoggedIn(email) {
+    if (!accountBody) return;
+    accountBody.innerHTML = `
+      <div class="account-loggedin">
+        <p class="account-email">Connecté·e en tant que <strong>${email}</strong></p>
+        <button type="button" class="btn" id="account-logout-btn">Se déconnecter</button>
+        <h4 class="account-orders-title">Historique de commandes</h4>
+        <div id="account-orders-list"><p class="account-intro">Chargement…</p></div>
+      </div>
+    `;
+    document.getElementById("account-logout-btn").addEventListener("click", async () => {
+      try { await fetch("/api/auth/logout", { method: "POST" }); } catch (err) {}
+      renderAccountLoggedOut();
+    });
+
+    const list = document.getElementById("account-orders-list");
+    try {
+      const resp = await fetch("/api/account/orders");
+      const data = resp.ok ? await resp.json() : { orders: [] };
+      const orders = data.orders || [];
+      if (orders.length === 0) {
+        list.innerHTML = `<p class="account-intro">Vous n'avez pas encore de commande.</p>`;
+        return;
+      }
+      list.innerHTML = orders
+        .map(
+          (o) => `
+            <div class="account-order">
+              <div class="account-order-head">
+                <span>Commande n°${o.id} — ${new Date(o.createdAt).toLocaleDateString("fr-FR")}</span>
+                <span>${(o.amountTotal / 100).toFixed(2)} €</span>
+              </div>
+              <ul class="account-order-items">
+                ${o.items.map((it) => `<li>${it.qty} × ${it.product_name}${it.size ? ` (${it.size})` : ""}</li>`).join("")}
+              </ul>
+              <span class="account-order-status">${ACCOUNT_STATUS_LABELS[o.status] || o.status}</span>
+              <a class="account-order-invoice" href="/api/account/invoice?orderId=${o.id}" target="_blank" rel="noopener">Télécharger la facture</a>
+            </div>
+          `
+        )
+        .join("");
+    } catch (err) {
+      list.innerHTML = `<p class="account-intro">Impossible de charger vos commandes pour le moment.</p>`;
+    }
+  }
+
+  async function checkAccountSession() {
+    try {
+      const resp = await fetch("/api/account/me");
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.email) {
+          await renderAccountLoggedIn(data.email);
+          return;
+        }
+      }
+    } catch (err) {}
+    renderAccountLoggedOut();
+  }
+
+  function openAccount(forceLoggedOutNote) {
+    if (!accountOverlay) return;
+    if (forceLoggedOutNote) renderAccountLoggedOut(forceLoggedOutNote);
+    else checkAccountSession();
+    accountOverlay.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => accountOverlay.classList.add("is-open")));
+  }
+  function closeAccount() {
+    if (!accountOverlay) return;
+    accountOverlay.classList.remove("is-open");
+    setTimeout(() => { accountOverlay.hidden = true; }, 400);
+  }
+  if (accountToggle) accountToggle.addEventListener("click", () => openAccount());
+  if (navAccountToggle) navAccountToggle.addEventListener("click", () => openAccount());
+  if (accountClose) accountClose.addEventListener("click", closeAccount);
+  if (accountOverlay) accountOverlay.addEventListener("click", (e) => { if (e.target === accountOverlay) closeAccount(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && accountOverlay && !accountOverlay.hidden) closeAccount();
+  });
+
+  // Retour depuis le lien magique reçu par e-mail (?account=1 ou =expired).
+  const acctParam = new URLSearchParams(window.location.search).get("account");
+  if (acctParam === "1") {
+    openAccount();
+    window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+  } else if (acctParam === "expired") {
+    openAccount("Votre lien de connexion a expiré ou est invalide. Redemandez-en un ci-dessous.");
+    window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+  }
+
+  // ---- Liste d'attente + compte à rebours ----
+  const countdownEl = document.getElementById("countdown");
+  const waitlistForm = document.getElementById("waitlist-form");
+  const waitlistNote = document.getElementById("waitlist-note");
+
+  function startCountdown(targetMs) {
+    if (!countdownEl) return;
+    countdownEl.hidden = false;
+    const daysEl = document.getElementById("cd-days");
+    const hoursEl = document.getElementById("cd-hours");
+    const minutesEl = document.getElementById("cd-minutes");
+    const secondsEl = document.getElementById("cd-seconds");
+    function tick() {
+      const diff = Math.max(0, targetMs - Date.now());
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      if (daysEl) daysEl.textContent = String(days).padStart(2, "0");
+      if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+      if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, "0");
+      if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, "0");
+      if (diff > 0) setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  async function initWaitlist() {
+    if (!countdownEl && !waitlistForm) return;
+    try {
+      const resp = await fetch("/api/waitlist");
+      const data = await resp.json();
+      if (data.launchAt) {
+        const targetMs = new Date(data.launchAt).getTime();
+        if (!Number.isNaN(targetMs) && targetMs > Date.now()) startCountdown(targetMs);
+      }
+    } catch (err) {}
+  }
+  initWaitlist();
+
+  if (waitlistForm) {
+    waitlistForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = waitlistForm.email.value.trim();
+      const btn = waitlistForm.querySelector("button");
+      btn.disabled = true;
+      if (waitlistNote) waitlistNote.textContent = "Inscription en cours…";
+      try {
+        const resp = await fetch("/api/waitlist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await resp.json();
+        if (resp.ok && data.ok) {
+          if (waitlistNote) waitlistNote.textContent = "Merci ! Vous êtes inscrit·e sur la liste d'attente.";
+          waitlistForm.reset();
+        } else {
+          if (waitlistNote) waitlistNote.textContent = "Une erreur est survenue, réessayez.";
+        }
+      } catch (err) {
+        if (waitlistNote) waitlistNote.textContent = "Erreur réseau, réessayez.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   // ---- Events ----
   if (grid) {
     renderGrid();
