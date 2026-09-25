@@ -729,14 +729,25 @@ a { color: inherit; }
   color: var(--ivory);
 }
 
-.waitlist-media { position: absolute; inset: 0; z-index: 0; }
+.waitlist-media { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
 
-.waitlist-bg {
+/* La collection réelle, floutée en arrière-plan : une vitrine qu'on
+   devine sans pouvoir encore l'ouvrir. */
+.waitlist-preview-grid {
+  position: absolute;
+  inset: -24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  filter: blur(20px) saturate(0.85) brightness(0.8);
+  transform: scale(1.06);
+}
+
+.waitlist-preview-grid img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 22%;
-  opacity: 0.55;
+  display: block;
 }
 
 .waitlist-scrim {
@@ -744,9 +755,9 @@ a { color: inherit; }
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(28, 25, 23, 0.78) 0%,
-    rgba(28, 25, 23, 0.55) 42%,
-    rgba(28, 25, 23, 0.92) 100%
+    rgba(28, 25, 23, 0.82) 0%,
+    rgba(28, 25, 23, 0.62) 42%,
+    rgba(28, 25, 23, 0.94) 100%
   );
 }
 
@@ -763,7 +774,9 @@ a { color: inherit; }
 .waitlist-inner.is-visible { opacity: 1; transform: translateY(0); }
 
 .waitlist-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 20px;
   border: 1px solid rgba(246, 242, 234, 0.35);
   border-radius: 20px;
@@ -773,6 +786,8 @@ a { color: inherit; }
   color: var(--taupe-light);
   margin-bottom: 28px;
 }
+
+.waitlist-lock-icon { flex-shrink: 0; }
 
 .waitlist-section .section-eyebrow { color: var(--taupe-light); margin-bottom: 14px; }
 

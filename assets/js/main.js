@@ -509,6 +509,13 @@
   const waitlistForm = document.getElementById("waitlist-form");
   const waitlistNote = document.getElementById("waitlist-note");
   const waitlistInner = document.getElementById("waitlist-inner");
+  const waitlistPreviewGrid = document.getElementById("waitlist-preview-grid");
+
+  if (waitlistPreviewGrid && typeof PRODUCTS !== "undefined") {
+    waitlistPreviewGrid.innerHTML = PRODUCTS.map(
+      (p) => `<img src="${imgSrc(p.images[0])}" alt="" loading="lazy" />`
+    ).join("");
+  }
 
   if (waitlistInner) {
     if (reduceMotion) {
