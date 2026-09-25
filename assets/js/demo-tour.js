@@ -40,15 +40,6 @@
         body: "Cette visite guidée montre, étape par étape, comment un·e client·e découvre et achète sur le site — de l'arrivée jusqu'à son espace personnel. Cliquez sur « Suivant » pour commencer.",
       },
       {
-        title: "Une entrée cinématique",
-        body: "La page d'accueil s'ouvre sur une vidéo qui se déroule au fil du défilement — une première impression immersive avant même de voir la collection.",
-        async enter() {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          await wait(650);
-          return document.querySelector(".hero-video-sticky");
-        },
-      },
-      {
         title: "Précommande & liste d'attente",
         body: "Avant le lancement, les visiteurs peuvent rejoindre la liste d'attente. Le compte à rebours se configure depuis le tableau de bord staff, onglet « Liste d'attente ».",
         async enter() {
