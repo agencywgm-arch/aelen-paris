@@ -707,6 +707,208 @@ a { color: inherit; }
   color: var(--taupe);
 }
 
+.account-order-invoice {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--taupe);
+  text-decoration: underline;
+}
+
+/* ---------- Liste d'attente / compte à rebours ---------- */
+.waitlist-section {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 130px 24px;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--ivory);
+}
+
+.waitlist-media { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+
+/* La collection réelle, floutée en arrière-plan : une vitrine qu'on
+   devine sans pouvoir encore l'ouvrir. */
+.waitlist-preview-grid {
+  position: absolute;
+  inset: -24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  filter: blur(20px) saturate(0.85) brightness(0.8);
+  transform: scale(1.06);
+}
+
+.waitlist-preview-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.waitlist-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(28, 25, 23, 0.82) 0%,
+    rgba(28, 25, 23, 0.62) 42%,
+    rgba(28, 25, 23, 0.94) 100%
+  );
+}
+
+.waitlist-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 1s ease, transform 1s ease;
+}
+
+.waitlist-inner.is-visible { opacity: 1; transform: translateY(0); }
+
+.waitlist-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border: 1px solid rgba(246, 242, 234, 0.35);
+  border-radius: 20px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--taupe-light);
+  margin-bottom: 28px;
+}
+
+.waitlist-lock-icon { flex-shrink: 0; }
+
+.waitlist-section .section-eyebrow { color: var(--taupe-light); margin-bottom: 14px; }
+
+.waitlist-section h2 {
+  font-family: var(--serif);
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1.12;
+  margin: 0 0 24px;
+  color: var(--ivory);
+}
+
+.waitlist-section h2 em { font-style: italic; color: var(--taupe-light); }
+
+.waitlist-lead {
+  color: rgba(246, 242, 234, 0.78);
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 560px;
+  margin: 0 auto 46px;
+}
+
+.countdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 42px;
+}
+
+.countdown[hidden] { display: none; }
+
+.countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 76px;
+  padding: 18px 10px;
+  border: 1px solid rgba(246, 242, 234, 0.2);
+  background: rgba(246, 242, 234, 0.06);
+  backdrop-filter: blur(6px);
+  border-radius: 4px;
+}
+
+.countdown-unit span {
+  font-family: var(--serif);
+  font-size: clamp(30px, 5vw, 40px);
+  color: var(--ivory);
+  line-height: 1;
+}
+
+.countdown-unit small {
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--taupe-light);
+}
+
+.countdown-divider {
+  font-family: var(--serif);
+  font-size: 28px;
+  color: rgba(246, 242, 234, 0.3);
+}
+
+.waitlist-form {
+  display: flex;
+  max-width: 440px;
+  margin: 0 auto;
+  border: 1px solid rgba(246, 242, 234, 0.35);
+  background: rgba(246, 242, 234, 0.06);
+  backdrop-filter: blur(6px);
+  border-radius: 2px;
+}
+
+.waitlist-form input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 17px 20px;
+  color: var(--ivory);
+  font-size: 14px;
+  font-family: var(--sans);
+}
+
+.waitlist-form input::placeholder { color: rgba(246, 242, 234, 0.5); }
+.waitlist-form input:focus { outline: none; }
+
+.waitlist-form button {
+  border: none;
+  border-left: 1px solid rgba(246, 242, 234, 0.35);
+  background: var(--ivory);
+  color: var(--ink);
+  padding: 0 26px;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.waitlist-form button:hover { background: var(--taupe-light); }
+
+.waitlist-trust {
+  margin-top: 18px;
+  font-size: 12px;
+  color: rgba(246, 242, 234, 0.55);
+}
+
+.waitlist-section .form-note { color: var(--taupe-light); margin-top: 14px; }
+
+@media (max-width: 640px) {
+  .waitlist-section { min-height: auto; padding: 96px 20px; }
+  .waitlist-form { flex-direction: column; border: none; gap: 10px; background: none; backdrop-filter: none; }
+  .waitlist-form input { border: 1px solid rgba(246, 242, 234, 0.35); background: rgba(246, 242, 234, 0.06); }
+  .waitlist-form button { padding: 15px; border: none; }
+  .countdown { gap: 8px; }
+  .countdown-unit { min-width: 58px; padding: 12px 6px; }
+  .countdown-divider { display: none; }
+}
+
 .site-footer {
   background: var(--ivory-deep);
   border-top: 1px solid var(--line);
@@ -715,7 +917,7 @@ a { color: inherit; }
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
   gap: 40px;
   margin-bottom: 40px;
 }

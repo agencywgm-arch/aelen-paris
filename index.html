@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/style-rest.css" />
+  <link rel="stylesheet" href="assets/css/demo-tour.css" />
   <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
   <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
 </head>
@@ -81,6 +82,40 @@
           <a href="#collection" class="btn btn-solid">Découvrir la collection</a>
         </div>
         <div class="hero-scroll-hint">Faites défiler</div>
+      </div>
+    </section>
+
+    <section class="waitlist-section" id="waitlist">
+      <div class="waitlist-media">
+        <div class="waitlist-preview-grid" id="waitlist-preview-grid"></div>
+        <div class="waitlist-scrim"></div>
+      </div>
+      <div class="wrap waitlist-inner" id="waitlist-inner">
+        <span class="waitlist-badge">
+          <svg class="waitlist-lock-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="5" y="11" width="14" height="9" rx="1.5" />
+            <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          Collection verrouillée — précommande &amp; accès prioritaire
+        </span>
+        <p class="section-eyebrow">La prochaine collection</p>
+        <h2>L'attente devient <em>désir</em>.</h2>
+        <p class="waitlist-lead">Rejoignez la liste d'attente pour réserver votre place avant tout le monde&nbsp;: accès anticipé, sélection prioritaire sur les tailles, et une invitation à découvrir la collection avant son lancement officiel.</p>
+        <div class="countdown" id="countdown" hidden>
+          <div class="countdown-unit"><span id="cd-days">00</span><small>Jours</small></div>
+          <div class="countdown-divider">:</div>
+          <div class="countdown-unit"><span id="cd-hours">00</span><small>Heures</small></div>
+          <div class="countdown-divider">:</div>
+          <div class="countdown-unit"><span id="cd-minutes">00</span><small>Min</small></div>
+          <div class="countdown-divider">:</div>
+          <div class="countdown-unit"><span id="cd-seconds">00</span><small>Sec</small></div>
+        </div>
+        <form class="waitlist-form" id="waitlist-form">
+          <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+          <button type="submit">Rejoindre la liste d'attente</button>
+        </form>
+        <p class="form-note" id="waitlist-note"></p>
+        <p class="waitlist-trust">Sans engagement · Vos données restent confidentielles</p>
       </div>
     </section>
 
@@ -160,6 +195,13 @@
           <ul>
             <li><a href="mailto:contact@aelenparis.fr">contact@aelenparis.fr</a></li>
             <li>Paris, France</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Suivez-nous</h4>
+          <ul>
+            <li><a href="https://www.instagram.com/aelenparis" target="_blank" rel="noopener">Instagram</a></li>
+            <li><a href="https://www.tiktok.com/@aelenparis" target="_blank" rel="noopener">TikTok</a></li>
           </ul>
         </div>
       </div>
@@ -252,8 +294,13 @@
     </div>
   </div>
 
+  <button type="button" class="tour-fab" id="tour-fab">
+    <span class="tour-fab-icon">▶</span> Visite guidée
+  </button>
+
   <script src="assets/js/products-data.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/fitting-desktop.js"></script>
+  <script src="assets/js/demo-tour.js"></script>
 </body>
 </html>
