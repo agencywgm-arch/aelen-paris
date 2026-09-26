@@ -28,6 +28,20 @@
     const fab = document.getElementById("tour-fab");
     if (!fab) return;
 
+    // Le bouton ne reste visible que sur la vidéo d'accueil : une fois
+    // celle-ci défilée, il disparaît pour ne pas rester en permanence
+    // sur le reste du site.
+    const heroSection = document.getElementById("hero-video");
+    if (heroSection) {
+      const fabObserver = new IntersectionObserver(
+        (entries) => {
+          fab.classList.toggle("is-hidden", !entries[0].isIntersecting);
+        },
+        { threshold: 0 }
+      );
+      fabObserver.observe(heroSection);
+    }
+
     let overlay = null;
     let spotlightEl = null;
     let cardEl = null;

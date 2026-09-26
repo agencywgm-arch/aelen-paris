@@ -16,9 +16,15 @@
   letter-spacing: 0.5px;
   cursor: pointer;
   box-shadow: 0 8px 24px rgba(28, 25, 23, 0.28);
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.3s ease, visibility 0.3s ease;
 }
 .tour-fab:hover { background: var(--taupe); transform: translateY(-2px); }
+.tour-fab.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  pointer-events: none;
+}
 .tour-fab-icon {
   display: inline-flex;
   align-items: center;
