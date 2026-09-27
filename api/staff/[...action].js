@@ -16,6 +16,8 @@ const handlers = {
   products: require("../../lib/handlers/staff/products.js"),
   returns: require("../../lib/handlers/staff/returns.js"),
   invoice: require("../../lib/handlers/staff/invoice.js"),
+  waitlist: require("../../lib/handlers/staff/waitlist.js"),
+  "test-order": require("../../lib/handlers/staff/testOrder.js"),
 };
 
 module.exports = async (req, res) => {
