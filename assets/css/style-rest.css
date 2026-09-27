@@ -274,8 +274,30 @@
     );
 }
 
-.fitting-overlay.is-open .fitting-curtain-left { transform: translateX(-102%); }
-.fitting-overlay.is-open .fitting-curtain-right { transform: translateX(102%); }
+/* Les rideaux restent partiellement tirés, comme dans une vraie cabine
+   d'essayage de magasin, au lieu de disparaître complètement de l'écran. */
+.fitting-overlay.is-open .fitting-curtain-left { transform: translateX(-72%); }
+.fitting-overlay.is-open .fitting-curtain-right { transform: translateX(72%); }
+
+.fitting-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  z-index: 4;
+  background: linear-gradient(180deg, #d8c7a3 0%, #a68a64 48%, #7d654a 100%);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.fitting-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(28, 25, 23, 0.4) 2px, transparent 2.5px);
+  background-size: 34px 14px;
+  background-position: 17px center;
+}
 
 .fitting-close {
   position: absolute;
