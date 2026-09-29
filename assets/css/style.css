@@ -437,12 +437,40 @@ a { color: inherit; }
   overflow: hidden;
 }
 
+.product-card .price { margin: 0 0 10px; }
+
 .product-card .view-link {
   font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--ink);
   border-bottom: 1px solid var(--taupe);
+}
+
+.price-now {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink);
+  margin-right: 8px;
+}
+
+.price-was {
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+
+.price-off {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: #8a2e26;
+  background: #f5e4e1;
+  padding: 2px 8px;
+  border-radius: 20px;
+  vertical-align: middle;
 }
 
 .about-grid {
@@ -1071,11 +1099,10 @@ a { color: inherit; }
 }
 
 .modal-body .price {
-  font-family: var(--serif);
-  font-size: 18px;
-  color: var(--ink-soft);
   margin: 0 0 16px;
 }
+
+.modal-body .price .price-now { font-size: 19px; }
 
 .modal-body .desc {
   color: var(--ink-soft);

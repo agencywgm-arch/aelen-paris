@@ -1,14 +1,12 @@
 // Catalogue AElen Paris — données produits
-//
-// PRIX : valeurs provisoires (en euros) à corriger avant mise en ligne
-// réelle — voir le message de livraison pour la liste à vérifier.
 const PRODUCTS = [
   {
     id: "trench-chocolat",
     name: "Trench Chocolat",
     category: "Manteaux",
     color: "Chocolat",
-    price: 290,
+    price: 75,
+    originalPrice: 93.75,
     sizes: ["S", "M", "L"],
     description:
       "Trench long croisé en coton, col cranté et ceinture à nouer. Une pièce intemporelle façon boulevard parisien, portée ici sur une tenue total look noir.",
@@ -29,7 +27,8 @@ const PRODUCTS = [
     name: "Trench Camel",
     category: "Manteaux",
     color: "Camel",
-    price: 290,
+    price: 75,
+    originalPrice: 93.75,
     sizes: ["S", "M", "L"],
     description:
       "Trench long camel, coupe classique croisée, épaulettes structurées et manches à patte boutonnée. L'essentiel parisien à porter en toute saison.",
@@ -50,7 +49,8 @@ const PRODUCTS = [
     name: "Veste Courte — Col Croco",
     category: "Vestes",
     color: "Beige doré",
-    price: 190,
+    price: 65,
+    originalPrice: 81.25,
     sizes: ["S", "M", "L"],
     description:
       "Version beige de notre veste courte signature, avec col et poignets en effet croco doré. Un contraste de matières pensé pour sublimer une tenue simple.",
@@ -94,7 +94,8 @@ const PRODUCTS = [
     name: "Veste Courte — Col Foulard Écossais",
     category: "Vestes",
     color: "Marron",
-    price: 210,
+    price: 106,
+    originalPrice: 132.5,
     sizes: ["S", "M", "L"],
     description:
       "Veste courte en coton marron, large col cape doublé d'un tartan bleu et brun, à nouer en foulard sur le devant. Poignets et poche à rabat assortis au tartan.",
@@ -115,7 +116,8 @@ const PRODUCTS = [
     name: "Pull Col Polo Rayé Beige",
     category: "Mailles",
     color: "Beige",
-    price: 130,
+    price: 35,
+    originalPrice: 43.75,
     sizes: ["S", "M", "L"],
     description:
       "Pull en maille épaisse à rayures beige et brun, col polo boutonné et cordon de resserre à l'ourlet. Une pièce chaude et décontractée pour l'entre-saison.",
@@ -135,7 +137,8 @@ const PRODUCTS = [
     name: "Pull Col Polo Rayé Rouge",
     category: "Mailles",
     color: "Rouge",
-    price: 130,
+    price: 35,
+    originalPrice: 43.75,
     sizes: ["S", "M", "L"],
     description:
       "Version rouge et gris chiné de notre pull rayé signature, col polo boutonné et cordon de resserre à l'ourlet. Un contraste vif pour twister une tenue simple.",

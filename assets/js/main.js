@@ -138,7 +138,18 @@
   const grid = document.getElementById("collection-grid");
   function imgSrc(entry) { return typeof entry === "string" ? entry : entry.src; }
   function imgFit(entry, product) { return typeof entry === "string" ? product.fit : entry.fit || product.fit; }
-  function formatPrice(value) { return `${value} €`; }
+  function formatPrice(value) {
+    const hasCents = Math.round(value * 100) % 100 !== 0;
+    return `${value.toLocaleString("fr-FR", { minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: 2 })} €`;
+  }
+
+  function priceMarkup(product) {
+    if (product.originalPrice && product.originalPrice > product.price) {
+      const pct = Math.round((1 - product.price / product.originalPrice) * 100);
+      return `<span class="price-now">${formatPrice(product.price)}</span><span class="price-was">${formatPrice(product.originalPrice)}</span><span class="price-off">-${pct}%</span>`;
+    }
+    return `<span class="price-now">${formatPrice(product.price)}</span>`;
+  }
 
   function renderGrid() {
     if (!grid || typeof PRODUCTS === "undefined") return;
@@ -151,7 +162,8 @@
           <p class="cat">${p.category}</p>
           <h3>${p.name}</h3>
           <p class="desc">${p.description}</p>
-          <span class="view-link">${formatPrice(p.price)} — Voir la pièce</span>
+          <p class="price">${priceMarkup(p)}</p>
+          <span class="view-link">Voir la pièce</span>
         </div>
       </article>`).join("");
   }
@@ -188,7 +200,7 @@
     currentProduct = product;
     modalCat.textContent = `${product.category} — ${product.color}`;
     modalTitle.textContent = product.name;
-    modalPrice.textContent = formatPrice(product.price);
+    modalPrice.innerHTML = priceMarkup(product);
     modalDesc.textContent = product.description;
     modalDetails.innerHTML = product.details.map((d) => `<li>${d}</li>`).join("");
     const sizes = product.sizes || [];
