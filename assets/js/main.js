@@ -144,10 +144,6 @@
   }
 
   function priceMarkup(product) {
-    if (product.originalPrice && product.originalPrice > product.price) {
-      const pct = Math.round((1 - product.price / product.originalPrice) * 100);
-      return `<span class="price-now">${formatPrice(product.price)}</span><span class="price-was">${formatPrice(product.originalPrice)}</span><span class="price-off">-${pct}%</span>`;
-    }
     return `<span class="price-now">${formatPrice(product.price)}</span>`;
   }
 
