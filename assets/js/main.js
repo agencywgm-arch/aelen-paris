@@ -525,7 +525,7 @@
 
   if (waitlistPreviewGrid && typeof PRODUCTS !== "undefined") {
     waitlistPreviewGrid.innerHTML = PRODUCTS.map(
-      (p) => `<img src="${imgSrc(p.images[0])}" alt="" loading="lazy" />`
+      (p) => `<img src="${imgSrc(p.images[0])}" alt="" fetchpriority="high" />`
     ).join("");
   }
 
@@ -540,7 +540,7 @@
             waitlistObserver.disconnect();
           }
         },
-        { threshold: 0.25 }
+        { threshold: 0.05 }
       );
       waitlistObserver.observe(waitlistInner);
     }
