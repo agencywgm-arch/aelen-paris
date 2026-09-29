@@ -473,6 +473,46 @@ a { color: inherit; }
   vertical-align: middle;
 }
 
+/* ---------- Épuisé ---------- */
+.soldout-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(28, 25, 23, 0.32);
+  color: var(--ivory);
+  pointer-events: none;
+}
+
+.soldout-overlay[hidden] { display: none; }
+
+.soldout-overlay svg {
+  width: 30px;
+  height: 30px;
+}
+
+.soldout-overlay span {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border: 1px solid rgba(246, 242, 234, 0.6);
+  border-radius: 20px;
+  background: rgba(28, 25, 23, 0.4);
+}
+
+.product-card.is-soldout .view-link { opacity: 0.6; }
+
+#modal-add-cart:disabled {
+  background: var(--line);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -151,12 +151,23 @@
     return `<span class="price-now">${formatPrice(product.price)}</span>`;
   }
 
+  function isSoldOut(p) {
+    const sizes = p.sizes || [];
+    const outOfStock = p.outOfStockSizes || [];
+    return sizes.length > 0 && sizes.every((s) => outOfStock.includes(s));
+  }
+
+  const LOCK_ICON_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1.5" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>`;
+
   function renderGrid() {
     if (!grid || typeof PRODUCTS === "undefined") return;
-    grid.innerHTML = PRODUCTS.map((p) => `
-      <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
+    grid.innerHTML = PRODUCTS.map((p) => {
+      const soldOut = isSoldOut(p);
+      return `
+      <article class="product-card${soldOut ? " is-soldout" : ""}" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
         <div class="thumb${imgFit(p.images[0], p) === "contain" ? " thumb-contain" : ""}">
           <img src="${imgSrc(p.images[0])}" alt="${p.name}" loading="lazy" />
+          ${soldOut ? `<div class="soldout-overlay">${LOCK_ICON_SVG}<span>Épuisé</span></div>` : ""}
         </div>
         <div class="info">
           <p class="cat">${p.category}</p>
@@ -165,12 +176,14 @@
           <p class="price">${priceMarkup(p)}</p>
           <span class="view-link">Voir la pièce</span>
         </div>
-      </article>`).join("");
+      </article>`;
+    }).join("");
   }
 
   // ---- Modal ----
   const overlay = document.getElementById("modal-overlay");
   const modalImage = document.getElementById("modal-image");
+  const modalSoldout = document.getElementById("modal-soldout");
   const modalCat = document.getElementById("modal-cat");
   const modalTitle = document.getElementById("modal-title");
   const modalDesc = document.getElementById("modal-desc");
@@ -205,7 +218,8 @@
     modalDetails.innerHTML = product.details.map((d) => `<li>${d}</li>`).join("");
     const sizes = product.sizes || [];
     const outOfStock = product.outOfStockSizes || [];
-    const firstAvailable = sizes.find((s) => !outOfStock.includes(s)) || sizes[0] || null;
+    const soldOut = isSoldOut(product);
+    const firstAvailable = sizes.find((s) => !outOfStock.includes(s)) || null;
     selectedSize = firstAvailable;
     modalSizes.innerHTML = sizes.map((s) => {
       const isOut = outOfStock.includes(s);
@@ -218,6 +232,14 @@
         modalSizes.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === btn));
       });
     });
+    if (modalSoldout) {
+      modalSoldout.hidden = !soldOut;
+      if (soldOut) modalSoldout.innerHTML = `${LOCK_ICON_SVG}<span>Épuisé</span>`;
+    }
+    if (modalAddCart) {
+      modalAddCart.disabled = soldOut;
+      modalAddCart.textContent = soldOut ? "Épuisé" : "Ajouter au panier";
+    }
     modalThumbs.innerHTML = product.images.length > 1
       ? product.images.map((entry, i) => `<img src="${imgSrc(entry)}" alt="${product.name} — vue ${i + 1}" data-index="${i}" />`).join("")
       : "";
