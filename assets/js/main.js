@@ -751,6 +751,7 @@
     let spinVelocity = 0; // frames par seconde, signé
     const SPIN_FRAMES_PER_STEP = 8; // px de glisse pour avancer d'une frame
 
+    let morphTimer = null;
     function setFittingSize(size) {
       fittingSize = size;
       syncFittingSizeButtons();
@@ -758,9 +759,13 @@
       preloadSpinFrames(currentProduct.id, size);
       showSpinFrame(spinIndex);
       // Petit fondu visuel pendant le changement de silhouette.
+      // La classe doit être retirée juste après : sinon l'animation se rejoue
+      // sur chaque image affichée pendant la rotation.
       fittingFigure.classList.remove("is-morphing");
       void fittingFigure.offsetWidth;
       fittingFigure.classList.add("is-morphing");
+      clearTimeout(morphTimer);
+      morphTimer = setTimeout(() => fittingFigure.classList.remove("is-morphing"), 200);
     }
 
     function preloadSpinFrames(id, size) {

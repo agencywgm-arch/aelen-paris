@@ -388,7 +388,7 @@
 }
 
 /* Changement de silhouette : fondu très léger. */
-.fitting-figure.is-morphing img.is-active { animation: cabin-morph 0.5s ease; }
+.fitting-figure.is-morphing img.is-active { animation: cabin-morph 0.18s ease-out; }
 
 .spin-hint {
   position: absolute;
@@ -543,8 +543,8 @@
   to { opacity: 1; }
 }
 @keyframes cabin-morph {
-  0% { opacity: 0.55; filter: blur(3px); }
-  100% { opacity: 1; filter: blur(0); }
+  from { opacity: 0.7; }
+  to { opacity: 1; }
 }
 
 /* ---------- Petits écrans en hauteur ---------- */
