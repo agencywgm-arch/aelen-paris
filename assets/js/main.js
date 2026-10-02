@@ -353,6 +353,7 @@
   }
   function openCart() {
     renderCart();
+    if (typeof showPreorderStep === "function") showPreorderStep("cart");
     cartOverlay.hidden = false;
     requestAnimationFrame(() => requestAnimationFrame(() => cartOverlay.classList.add("is-open")));
   }
@@ -360,6 +361,8 @@
     cartOverlay.classList.remove("is-open");
     setTimeout(() => { cartOverlay.hidden = true; }, 400);
   }
+  // Le panier peut être modifié hors de ce module (ex. restauration en fin de visite guidée).
+  document.addEventListener("aelen:cart-changed", renderCart);
   if (cartToggle) cartToggle.addEventListener("click", openCart);
   if (cartClose) cartClose.addEventListener("click", closeCart);
   if (cartOverlay) cartOverlay.addEventListener("click", (e) => { if (e.target === cartOverlay) closeCart(); });
@@ -372,25 +375,126 @@
     addToCart(currentProduct.id, selectedSize, 1);
     openCart();
   });
-  if (cartCheckoutBtn) cartCheckoutBtn.addEventListener("click", async () => {
+  // ---- Précommande (sans paiement) ----
+  // Le client laisse nom / e-mail / téléphone ; la commande est enregistrée
+  // côté staff (statut « Précommande ») et un e-mail de confirmation part.
+  const cartDrawer = cartOverlay ? cartOverlay.querySelector(".cart-drawer") : null;
+  const preorderForm = document.getElementById("preorder-form");
+  const preorderSubmit = document.getElementById("preorder-submit");
+  const preorderBack = document.getElementById("preorder-back");
+  const preorderError = document.getElementById("preorder-error");
+  const preorderDone = document.getElementById("preorder-done");
+  const preorderDoneText = document.getElementById("preorder-done-text");
+  const cartNote = document.getElementById("cart-note");
+  const PREORDER_CONTACT_KEY = "aelen-preorder-contact";
+
+  function showPreorderStep(step) {
+    // step : "cart" | "form" | "done"
+    if (cartCheckoutBtn) cartCheckoutBtn.hidden = step !== "cart";
+    if (preorderForm) preorderForm.hidden = step !== "form";
+    if (preorderDone) preorderDone.hidden = step !== "done";
+    if (cartNote) cartNote.hidden = step === "done";
+    if (cartDrawer) cartDrawer.classList.toggle("is-preordering", step === "form");
+    if (preorderError) preorderError.hidden = true;
+  }
+  function setPreorderError(message) {
+    if (!preorderError) return;
+    preorderError.textContent = message;
+    preorderError.hidden = !message;
+  }
+  const PREORDER_ERRORS = {
+    invalid_name: ["name", "Indiquez votre nom complet."],
+    invalid_email: ["email", "Adresse e-mail invalide."],
+    invalid_phone: ["phone", "Numéro de téléphone invalide."],
+    empty_cart: [null, "Votre panier est vide."],
+    no_valid_items: [null, "Les articles de votre panier ne sont plus disponibles."],
+  };
+
+  if (cartCheckoutBtn) cartCheckoutBtn.addEventListener("click", () => {
+    if (cartLines().length === 0) return;
+    showPreorderStep("form");
+    if (preorderForm) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PREORDER_CONTACT_KEY) || "null");
+        if (saved) ["name", "email", "phone"].forEach((k) => {
+          if (saved[k] && !preorderForm.elements[k].value) preorderForm.elements[k].value = saved[k];
+        });
+      } catch (e) {}
+      const firstEmpty = ["name", "email", "phone"].map((k) => preorderForm.elements[k]).find((el) => !el.value);
+      if (firstEmpty && window.matchMedia("(hover: hover)").matches) firstEmpty.focus();
+      preorderForm.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  });
+  if (preorderBack) preorderBack.addEventListener("click", () => showPreorderStep("cart"));
+
+  if (preorderForm) preorderForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
     const lines = cartLines();
-    if (lines.length === 0) return;
-    cartCheckoutBtn.disabled = true;
-    cartCheckoutBtn.textContent = "Redirection…";
+    if (lines.length === 0) { showPreorderStep("cart"); return; }
+
+    const fields = {
+      name: preorderForm.elements.name.value.trim(),
+      email: preorderForm.elements.email.value.trim(),
+      phone: preorderForm.elements.phone.value.trim(),
+    };
+    ["name", "email", "phone"].forEach((k) => preorderForm.elements[k].removeAttribute("aria-invalid"));
+    const invalid =
+      fields.name.length < 2 ? "invalid_name"
+      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email) ? "invalid_email"
+      : fields.phone.replace(/\D/g, "").length < 6 ? "invalid_phone"
+      : null;
+    if (invalid) {
+      const [field, message] = PREORDER_ERRORS[invalid];
+      preorderForm.elements[field].setAttribute("aria-invalid", "true");
+      preorderForm.elements[field].focus();
+      setPreorderError(message);
+      return;
+    }
+
+    setPreorderError("");
+    preorderSubmit.disabled = true;
+    preorderSubmit.textContent = "Envoi…";
     try {
-      const response = await fetch("/api/create-checkout-session", {
+      const response = await fetch("/api/preorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: lines.map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty })) }),
+        body: JSON.stringify({
+          ...fields,
+          website: preorderForm.elements.website.value,
+          items: lines.map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty })),
+        }),
       });
-      if (!response.ok) throw new Error("checkout_failed");
-      const data = await response.json();
-      if (data.url) window.location.href = data.url;
-      else throw new Error("no_url");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (data.error === "unavailable" && Array.isArray(data.items)) {
+          const names = data.items.map((it) => `${it.name || "Article"}${it.size ? ` (${it.size})` : ""}`).join(", ");
+          setPreorderError(`Plus disponible en quantité suffisante : ${names}. Ajustez votre panier puis réessayez.`);
+        } else if (PREORDER_ERRORS[data.error]) {
+          const [field, message] = PREORDER_ERRORS[data.error];
+          if (field) preorderForm.elements[field].setAttribute("aria-invalid", "true");
+          setPreorderError(message);
+        } else {
+          setPreorderError("Une erreur est survenue. Réessayez dans un instant ou écrivez-nous via le formulaire de contact.");
+        }
+        return;
+      }
+      try { localStorage.setItem(PREORDER_CONTACT_KEY, JSON.stringify(fields)); } catch (err) {}
+      saveCart([]);
+      renderCart();
+      if (preorderDoneText) {
+        preorderDoneText.textContent =
+          `Votre précommande n°${data.orderId} (${formatPrice(data.total / 100)}) est enregistrée. ` +
+          (data.emailSent
+            ? `Un e-mail de confirmation a été envoyé à ${fields.email}.`
+            : "Notre équipe vous recontacte très vite pour la finaliser.");
+      }
+      showPreorderStep("done");
+      document.dispatchEvent(new CustomEvent("aelen:preorder-placed", { detail: { orderId: data.orderId } }));
     } catch (err) {
-      cartCheckoutBtn.disabled = false;
-      cartCheckoutBtn.textContent = "Passer commande";
-      alert("Le paiement n'est pas encore configuré. Contactez-nous pour finaliser votre commande.");
+      setPreorderError("Erreur réseau. Vérifiez votre connexion puis réessayez.");
+    } finally {
+      preorderSubmit.disabled = false;
+      preorderSubmit.textContent = "Confirmer la précommande";
     }
   });
   renderCart();
@@ -403,7 +507,7 @@
   const navAccountToggle = document.getElementById("nav-account-toggle");
 
   const ACCOUNT_STATUS_LABELS = {
-    paid: "Payée", unpaid: "Non payée", processing: "En préparation",
+    preorder: "Précommande enregistrée", paid: "Payée", unpaid: "Non payée", processing: "En préparation",
     shipped: "Expédiée", delivered: "Livrée", cancelled: "Annulée",
   };
 
@@ -664,6 +768,9 @@
   const spinHint = document.getElementById("spin-hint");
   const spinPrevBtn = document.getElementById("spin-prev");
   const spinNextBtn = document.getElementById("spin-next");
+  const fittingReflection = document.getElementById("fitting-reflection");
+  const fittingColorsEl = document.getElementById("fitting-colors");
+  const fittingSwatchesEl = document.getElementById("fitting-swatches");
 
   if (fittingOverlay && fittingClose && fittingFigure && fittingPhoto && fittingPhotoB) {
     // Les pièces rephotographiées en studio pour la cabine (mannequin
@@ -707,12 +814,14 @@
 
     function setFittingSize(size) {
       fittingSize = size;
-      fittingControls.querySelectorAll("button[data-size]").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.size === size);
-      });
+      syncFittingSizeButtons();
       if (!currentProduct || !SPIN_FRAMES[currentProduct.id]) return;
       preloadSpinFrames(currentProduct.id, size);
       showSpinFrame(spinIndex);
+      // Petit fondu visuel pendant le changement de silhouette.
+      fittingFigure.classList.remove("is-morphing");
+      void fittingFigure.offsetWidth;
+      fittingFigure.classList.add("is-morphing");
     }
 
     function preloadSpinFrames(id, size) {
@@ -739,6 +848,8 @@
       back.classList.add("is-visible", "is-active");
       if (spinFrontEl) spinFrontEl.classList.remove("is-active");
       spinFrontEl = back;
+      // Reflet dans le miroir : même image (déjà en cache), inversée en CSS.
+      if (fittingReflection) fittingReflection.src = back.src;
     }
 
     function stopSpinIntro() {
@@ -846,11 +957,48 @@
       showSpinFrame(spinIndex + direction);
     }
 
-    function openFittingRoom(product) {
-      if (!SPIN_FRAMES[product.id]) return;
+    // Coloris : pastilles affichées seulement si le produit existe en
+    // plusieurs couleurs (produits partageant le même `colorGroup`).
+    function renderFittingColors(product) {
+      if (!fittingColorsEl || !fittingSwatchesEl) return;
+      const variants = product.colorGroup
+        ? PRODUCTS.filter((p) => p.colorGroup === product.colorGroup && SPIN_FRAMES[p.id])
+        : [];
+      fittingColorsEl.hidden = variants.length < 2;
+      fittingSwatchesEl.innerHTML = variants.length < 2 ? "" : variants.map((v) => `
+        <button type="button" class="fitting-swatch${v.id === product.id ? " active" : ""}" data-product-id="${v.id}"
+          style="--swatch:${v.swatch || "#888"}" aria-label="${v.color}" aria-pressed="${v.id === product.id}" title="${v.color}"></button>`).join("");
+    }
+
+    function syncFittingSizeButtons() {
+      fittingControls.querySelectorAll("button[data-size]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.size === fittingSize);
+        btn.setAttribute("aria-pressed", String(btn.dataset.size === fittingSize));
+      });
+    }
+
+    function showFittingProduct(product) {
+      syncFittingSizeButtons();
       if (fittingTitle) fittingTitle.textContent = product.name;
       if (fittingColorEl) fittingColorEl.textContent = `${product.category} — ${product.color}`;
+      renderFittingColors(product);
       openFittingSpin(product);
+    }
+
+    if (fittingSwatchesEl) {
+      fittingSwatchesEl.addEventListener("click", (e) => {
+        const swatch = e.target.closest(".fitting-swatch");
+        if (!swatch || !currentProduct || swatch.dataset.productId === currentProduct.id) return;
+        // Met aussi à jour la fiche produit derrière la cabine (prix, tailles,
+        // ajout au panier) pour rester cohérent avec le coloris essayé.
+        openModal(swatch.dataset.productId);
+        if (currentProduct && SPIN_FRAMES[currentProduct.id]) showFittingProduct(currentProduct);
+      });
+    }
+
+    function openFittingRoom(product) {
+      if (!SPIN_FRAMES[product.id]) return;
+      showFittingProduct(product);
       fittingOverlay.hidden = false;
       // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
       requestAnimationFrame(() => {
@@ -918,7 +1066,7 @@
       const email = newsletterForm.querySelector("input[type=email]").value;
       if (formNote) formNote.textContent = "Inscription en cours…";
       try {
-        const r = await fetch("/api/newsletter", {
+        const r = await fetch("/api/waitlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),

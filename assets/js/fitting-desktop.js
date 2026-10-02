@@ -76,7 +76,8 @@
       btn.addEventListener("pointercancel", stopHold);
     });
 
-    if (hint) {
+    // Sur mobile (pas de molette), on garde le texte « Glissez pour faire tourner ».
+    if (hint && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       hint.textContent = "↔ Glissez ou utilisez la molette";
     }
   });

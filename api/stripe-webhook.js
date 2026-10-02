@@ -2,9 +2,6 @@ const Stripe = require("stripe");
 const { isConfigured, getSql } = require("../lib/db.js");
 const { sendMail } = require("../lib/mailer.js");
 
-// Stripe a besoin du corps brut (non parsé) pour vérifier la signature.
-module.exports.config = { api: { bodyParser: false } };
-
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -122,3 +119,7 @@ module.exports = async (req, res) => {
     res.status(500).json({ error: "server_error" });
   }
 };
+
+// Stripe a besoin du corps brut (non parsé) pour vérifier la signature.
+// Doit être déclaré APRÈS `module.exports = ...`, sinon il est écrasé.
+module.exports.config = { api: { bodyParser: false } };

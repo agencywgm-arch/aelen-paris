@@ -187,6 +187,7 @@
   // ---- Commandes ----
 
   const STATUS_LABELS = {
+    preorder: "Précommande",
     paid: "Payée",
     unpaid: "Non payée",
     processing: "En préparation",
@@ -252,10 +253,14 @@
             .join("");
           const status = o.status || "paid";
           const isTest = typeof o.stripeSessionId === "string" && o.stripeSessionId.indexOf("test_") === 0;
+          const contactHtml = [o.customerName, o.customerPhone]
+            .filter(Boolean)
+            .map((v) => `<div class="admin-order-contact">${escapeHtml(v)}</div>`)
+            .join("");
           return `
             <tr class="admin-order-row" data-order-id="${o.id}">
               <td>${formatDate(o.createdAt)}${isTest ? ` <span class="admin-badge admin-badge-test">Test</span>` : ""}</td>
-              <td>${escapeHtml(o.customerEmail)}</td>
+              <td>${escapeHtml(o.customerEmail)}${contactHtml}</td>
               <td class="admin-order-items">${itemsHtml}</td>
               <td>${formatCents(o.amountTotal)}</td>
               <td><span class="admin-badge status-${status}">${STATUS_LABELS[status] || status}</span></td>

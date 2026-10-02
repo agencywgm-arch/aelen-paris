@@ -25,6 +25,19 @@
   transform: translateY(12px);
   pointer-events: none;
 }
+/* Jamais par-dessus un panneau ouvert (panier, compte, fiche, cabine). */
+body:has(.cart-overlay:not([hidden])) .tour-fab,
+body:has(.modal-overlay:not([hidden])) .tour-fab,
+body:has(.fitting-overlay:not([hidden])) .tour-fab,
+body.tour-active .tour-fab {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Le mode démo garde la page figée sous le projecteur, même quand une
+   fiche produit se ferme et réinitialise le style inline du body. */
+body.tour-active { overflow: hidden !important; }
+
 .tour-fab-icon {
   display: inline-flex;
   align-items: center;
@@ -161,6 +174,10 @@
 .tour-btn-solid:hover { background: var(--taupe); border-color: var(--taupe); }
 
 @media (max-width: 560px) {
-  .tour-fab { right: 14px; bottom: 14px; padding: 12px 16px 12px 13px; }
+  .tour-fab {
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    padding: 12px 16px 12px 13px;
+  }
   .tour-card { width: calc(100vw - 32px); padding: 20px 20px 18px; }
 }

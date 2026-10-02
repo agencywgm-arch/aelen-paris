@@ -1,0 +1,574 @@
+/* ==========================================================================
+   Cabine d'essayage — décor de boutique de luxe, 100 % HTML/CSS
+   (dégradés, ombres, flous, pseudo-éléments). Aucune image de décor :
+   seules les photos du mannequin (frames 360°) sont des images.
+   Mobile first : 100dvh, zones de sécurité iOS, commandes au pouce.
+   ========================================================================== */
+
+.fitting-overlay {
+  --cab-wall: #1d130d;
+  --cab-wall-deep: #120b07;
+  --cab-wood: #2a1b12;
+  --cab-led: #fff1d6;
+  --cab-led-glow: rgba(255, 206, 150, 0.55);
+  --cab-cream: #ddd1c1;
+  --cab-text: #f6f0e6;
+  --cab-text-soft: rgba(238, 224, 204, 0.72);
+  --cab-glass: rgba(28, 18, 12, 0.42);
+  --cab-glass-border: rgba(255, 238, 214, 0.16);
+  --curtain-peek: clamp(22px, 6.5vw, 120px);
+
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--cab-wall-deep);
+  color: var(--cab-text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fitting-overlay[hidden] { display: none; }
+
+/* Vignette douce par-dessus le décor ET le mannequin, sous l'interface :
+   unifie l'éclairage pour que la photo appartienne à la pièce. */
+.fitting-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 78% 70% at 50% 46%, transparent 58%, rgba(6, 4, 2, 0.55) 100%),
+    linear-gradient(180deg, rgba(6, 4, 2, 0.35) 0%, transparent 16%, transparent 82%, rgba(6, 4, 2, 0.4) 100%);
+}
+
+/* ---------- Décor ---------- */
+.cabin {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Murs chocolat très sombres, grands panneaux verticaux moulurés,
+   lumière latérale chaude. */
+.cabin-wall {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 60% at 0% 42%, rgba(255, 184, 120, 0.1), transparent 70%),
+    radial-gradient(ellipse 38% 60% at 100% 42%, rgba(255, 184, 120, 0.08), transparent 70%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.32) 0,
+      rgba(0, 0, 0, 0.32) 1px,
+      rgba(255, 226, 190, 0.035) 1px,
+      rgba(255, 226, 190, 0.035) 2px,
+      transparent 2px,
+      transparent calc(100% / 7)
+    ),
+    linear-gradient(180deg, #24170f 0%, var(--cab-wall) 45%, #160e09 100%);
+}
+
+/* Plinthe sombre au pied des murs. */
+.cabin-wall::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22%;
+  height: 10px;
+  background: linear-gradient(180deg, rgba(255, 226, 190, 0.08), rgba(0, 0, 0, 0.5));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Spot chaud venant du plafond, dirigé sur le mannequin. */
+.cabin-downlight {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 34% 46% at 50% 0%, rgba(255, 220, 178, 0.28), transparent 72%),
+    radial-gradient(ellipse 50% 30% at 50% 74%, rgba(255, 214, 168, 0.14), transparent 70%);
+}
+
+/* Grand miroir lumineux à droite, cadre laiton fin + halo LED. */
+.cabin-mirror {
+  position: absolute;
+  top: 15%;
+  bottom: 27%;
+  right: 3%;
+  width: 24%;
+  border-radius: 999px 999px 6px 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 34%, transparent 52%, rgba(255, 255, 255, 0.07) 78%, rgba(255, 255, 255, 0.02) 100%),
+    linear-gradient(180deg, #3a2b22 0%, #261a13 60%, #1c130d 100%);
+  border: 1.5px solid rgba(203, 170, 120, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(20, 12, 8, 0.65),
+    0 0 26px 2px rgba(255, 210, 160, 0.22),
+    inset 0 0 30px rgba(255, 226, 190, 0.12),
+    inset 0 0 2px rgba(255, 240, 220, 0.5);
+}
+
+/* Reflet léger sur la glace (diagonale). */
+.cabin-mirror::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.1) 46%, transparent 54%);
+}
+
+/* Reflet du mannequin : même URL que la frame affichée (déjà en cache),
+   inversée, atténuée — aucun fichier supplémentaire. */
+.cabin-reflection {
+  position: absolute;
+  left: -30%;
+  bottom: 0;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 900 / 1117;
+  transform: scaleX(-1);
+  opacity: 0;
+  filter: brightness(0.62) sepia(0.25) saturate(0.85) blur(0.6px);
+  -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 32%, #000 68%, transparent 92%);
+  mask-image: linear-gradient(90deg, transparent 8%, #000 32%, #000 68%, transparent 92%);
+  transition: opacity 0.6s ease 0.5s;
+}
+.cabin-reflection[src=""] { display: none; }
+.fitting-overlay.is-open .cabin-reflection { opacity: 0.32; }
+
+/* Sol discret beige / marbre, en perspective. */
+.cabin-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 23%;
+  background:
+    linear-gradient(180deg, rgba(18, 11, 7, 0.55) 0%, transparent 18%),
+    radial-gradient(ellipse 46% 70% at 50% 0%, rgba(222, 208, 190, 0.45), transparent 75%),
+    repeating-linear-gradient(118deg, transparent 0 46px, rgba(255, 246, 232, 0.035) 46px 47px, transparent 47px 120px),
+    repeating-linear-gradient(64deg, transparent 0 80px, rgba(255, 246, 232, 0.025) 80px 81px, transparent 81px 170px),
+    linear-gradient(180deg, #6f5a48 0%, #4a3a2e 38%, #2a1e16 100%);
+  box-shadow: inset 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* Tringle en haut de la cabine. */
+.cabin-rail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 7px;
+  z-index: 2;
+  background: linear-gradient(180deg, #8c7354 0%, #4d3c2b 60%, #2a1f16 100%);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* Rideaux en tissu sombre : plis en dégradés, ouverture à l'arrivée. */
+.cabin-curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 51%;
+  background:
+    linear-gradient(180deg, rgba(255, 228, 196, 0.07) 0%, transparent 22%, rgba(0, 0, 0, 0.35) 100%),
+    repeating-linear-gradient(
+      90deg,
+      #160d08 0,
+      #2b1b12 2.2%,
+      #3b281c 3.6%,
+      #26180f 5.4%,
+      #160d08 7.2%
+    );
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.25, 1);
+  will-change: transform;
+}
+.cabin-curtain-left {
+  left: 0;
+  box-shadow: inset -18px 0 26px rgba(0, 0, 0, 0.55), 10px 0 30px rgba(0, 0, 0, 0.55);
+}
+.cabin-curtain-right {
+  right: 0;
+  box-shadow: inset 18px 0 26px rgba(0, 0, 0, 0.55), -10px 0 30px rgba(0, 0, 0, 0.55);
+}
+.fitting-overlay.is-open .cabin-curtain-left { transform: translateX(calc(-100% + var(--curtain-peek))); }
+.fitting-overlay.is-open .cabin-curtain-right { transform: translateX(calc(100% - var(--curtain-peek))); }
+
+/* ---------- En-tête ---------- */
+.fitting-head {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  padding: calc(12px + env(safe-area-inset-top)) 64px 2px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s;
+}
+.fitting-overlay.is-open .fitting-head { opacity: 1; transform: none; }
+
+.fitting-eyebrow {
+  margin: 0 0 4px;
+  font-size: 9.5px;
+  letter-spacing: 4.5px;
+  text-transform: uppercase;
+  color: var(--cab-text-soft);
+}
+.fitting-head h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(23px, 6.4vw, 40px);
+  line-height: 1.12;
+  color: var(--cab-text);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  overflow-wrap: anywhere;
+}
+.fitting-color {
+  margin: 3px 0 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--cab-text-soft);
+}
+
+/* Bouton fermer : rond, translucide. */
+.fitting-close {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--cab-glass-border);
+  background: rgba(255, 244, 228, 0.08);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--cab-text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.fitting-close:hover { background: rgba(255, 244, 228, 0.16); border-color: rgba(255, 238, 214, 0.35); }
+
+/* ---------- Scène centrale : le mannequin ---------- */
+.fitting-stage {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px 0 0;
+}
+
+.fitting-figure {
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  max-width: calc(100% - 64px);
+  aspect-ratio: 0.7;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  transition: opacity 0.8s ease 0.35s, transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.35s;
+}
+.fitting-overlay.is-open .fitting-figure { opacity: 1; transform: none; }
+.fitting-figure.is-dragging { cursor: grabbing; }
+
+/* Panneau rétroéclairé derrière le mannequin : même teinte que le fond
+   des photos, pour que la prise de vue se fonde dans la cabine. */
+.fitting-figure::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -2.5% 0 0;
+  border-radius: 14px 14px 0 0;
+  background:
+    linear-gradient(180deg, #b9a58f 0%, #c9b8a3 38%, #c3b19c 74%, #b19d87 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 246, 232, 0.25),
+    inset 0 -40px 60px rgba(90, 66, 46, 0.18),
+    0 0 50px rgba(255, 206, 150, 0.12);
+}
+
+/* Bandes LED verticales blanc chaud de part et d'autre du panneau. */
+.fitting-figure::after {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  top: -2.5%;
+  bottom: 0;
+  left: -3px;
+  right: -3px;
+  border-left: 2px solid var(--cab-led);
+  border-right: 2px solid var(--cab-led);
+  border-radius: 16px 16px 0 0;
+  box-shadow:
+    -6px 0 16px -3px var(--cab-led-glow),
+    6px 0 16px -3px var(--cab-led-glow),
+    -18px 0 40px -6px rgba(255, 190, 120, 0.25),
+    18px 0 40px -6px rgba(255, 190, 120, 0.25);
+  animation: cabin-led-breathe 5.5s ease-in-out infinite alternate;
+}
+
+.fitting-figure img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  transition: opacity 0.05s linear;
+  /* Teinte réchauffée et légèrement assombrie : la photo studio prend la
+     lumière de la cabine au lieu de ressortir comme une carte blanche. */
+  filter: brightness(0.86) sepia(0.14) saturate(1.02) contrast(1.04);
+  /* Bords fondus vers le panneau : plus de « cadre photo » visible. */
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, #000 13%, #000 87%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 5%, #000 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0%, #000 13%, #000 87%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, #000 5%, #000 93%, transparent 100%);
+  mask-composite: intersect;
+}
+.fitting-figure img[src=""] { display: none; }
+.fitting-figure img.is-visible.is-active { opacity: 1; z-index: 1; }
+.fitting-figure img.is-visible:not(.is-active) { opacity: 0; z-index: 0; }
+
+/* Chute de lumière du spot : centre éclairé, haut et côtés plus sombres.
+   Posée sur la photo ET le panneau pour un éclairage commun. */
+.fitting-light {
+  position: absolute;
+  z-index: 2;
+  inset: -2.5% 0 0;
+  pointer-events: none;
+  border-radius: 14px 14px 0 0;
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 44%, transparent 40%, rgba(40, 24, 14, 0.42) 100%),
+    linear-gradient(180deg, rgba(36, 22, 13, 0.4) 0%, transparent 24%, transparent 80%, rgba(36, 22, 13, 0.28) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Changement de silhouette : fondu très léger. */
+.fitting-figure.is-morphing img.is-active { animation: cabin-morph 0.5s ease; }
+
+.spin-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 9%;
+  z-index: 3;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--cab-text);
+  background: rgba(24, 15, 10, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.spin-hint.is-visible { opacity: 1; }
+
+/* Flèches de rotation : rondes, en verre, posées sur la scène. */
+.spin-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  width: 46px;
+  height: 46px;
+  margin-top: -23px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--cab-glass-border);
+  background: rgba(255, 244, 228, 0.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  color: var(--cab-text);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.spin-arrow:hover { background: rgba(255, 244, 228, 0.2); }
+.spin-arrow:active { transform: scale(0.94); }
+.spin-arrow-left { left: 10px; }
+.spin-arrow-right { right: 10px; }
+
+/* ---------- Panneau flottant (verre dépoli) ---------- */
+.fitting-panel {
+  position: relative;
+  z-index: 3;
+  width: min(calc(100% - 24px), 520px);
+  margin: -26px auto calc(10px + env(safe-area-inset-bottom));
+  padding: 9px 10px 10px;
+  border-radius: 22px;
+  border: 1px solid var(--cab-glass-border);
+  background: var(--cab-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  backdrop-filter: blur(18px) saturate(1.25);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease 0.55s, transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s;
+}
+.fitting-overlay.is-open .fitting-panel { opacity: 1; transform: none; }
+
+.fitting-note { margin: 0 0 8px; font-size: 12.5px; color: var(--cab-text-soft); text-align: center; }
+.fitting-note:empty { display: none; }
+
+.fitting-label {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 9.5px;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--cab-text-soft);
+}
+
+.fitting-choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.fitting-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 54px;
+  padding: 6px 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 238, 214, 0.1);
+  background: rgba(255, 244, 228, 0.04);
+  color: rgba(246, 240, 230, 0.7);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+.fitting-choices button svg {
+  width: 16px;
+  height: 21px;
+  fill: currentColor;
+  opacity: 0.85;
+}
+.fitting-choices button:hover { border-color: rgba(255, 238, 214, 0.3); color: var(--cab-text); }
+.fitting-choices button.active {
+  border-color: rgba(255, 236, 210, 0.72);
+  background: rgba(255, 236, 210, 0.1);
+  color: #fffaf2;
+  box-shadow: 0 0 0 1px rgba(255, 236, 210, 0.12), 0 0 22px rgba(255, 205, 150, 0.22), inset 0 0 12px rgba(255, 220, 180, 0.08);
+}
+.fitting-choices button.active svg { opacity: 1; }
+
+/* Sélecteur de couleur : affiché uniquement si le produit a plusieurs coloris. */
+.fitting-colors {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 238, 214, 0.08);
+}
+.fitting-colors[hidden] { display: none; }
+.fitting-colors .fitting-label { margin: 0; }
+.fitting-swatches { display: flex; gap: 10px; }
+.fitting-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(20, 12, 8, 0.8);
+  background: var(--swatch, #888);
+  box-shadow: 0 0 0 1px rgba(255, 238, 214, 0.25);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+.fitting-swatch:hover { transform: scale(1.06); }
+.fitting-swatch.active { box-shadow: 0 0 0 1.5px rgba(255, 236, 210, 0.85), 0 0 14px rgba(255, 205, 150, 0.35); }
+
+/* ---------- Animations ---------- */
+@keyframes cabin-led-breathe {
+  from { opacity: 0.82; }
+  to { opacity: 1; }
+}
+@keyframes cabin-morph {
+  0% { opacity: 0.55; filter: blur(3px) brightness(0.9) sepia(0.14); }
+  100% { opacity: 1; filter: brightness(0.86) sepia(0.14) saturate(1.02) contrast(1.04); }
+}
+
+/* ---------- Petits écrans en hauteur ---------- */
+@media (max-height: 640px) {
+  .fitting-head { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .fitting-eyebrow { margin-bottom: 3px; }
+  .fitting-head h3 { font-size: 22px; }
+  .fitting-color { display: none; }
+  .fitting-choices button { min-height: 50px; padding: 5px 4px; }
+  .fitting-choices button svg { width: 14px; height: 19px; }
+  .fitting-label { margin-bottom: 5px; }
+  .fitting-panel { padding: 9px 10px; }
+}
+
+/* ---------- Tablette / ordinateur ---------- */
+@media (min-width: 861px) {
+  .fitting-overlay { --curtain-peek: clamp(60px, 9vw, 160px); }
+  .fitting-head { padding-top: 26px; }
+  .fitting-eyebrow { font-size: 11px; letter-spacing: 5px; margin-bottom: 10px; }
+  .fitting-color { font-size: 13.5px; margin-top: 8px; }
+  .fitting-close { top: 22px; right: 22px; width: 48px; height: 48px; }
+  .fitting-stage { padding-top: 14px; }
+  .fitting-figure { aspect-ratio: 900 / 1117; max-width: 46vw; }
+  .fitting-figure::after { left: -4px; right: -4px; }
+  .spin-arrow { width: 54px; height: 54px; margin-top: -27px; }
+  /* Flèches juste à côté du panneau lumineux (largeur ≈ 0,806 × hauteur). */
+  .spin-arrow-left { left: max(var(--curtain-peek), calc(50% - 40.3vh + 50px)); }
+  .spin-arrow-right { right: max(var(--curtain-peek), calc(50% - 40.3vh + 50px)); }
+  .cabin-mirror { right: calc(var(--curtain-peek) + 1.5%); width: 17%; top: 13%; }
+  .fitting-panel { width: 540px; margin-top: -24px; margin-bottom: 22px; padding: 14px 16px; }
+  .fitting-choices button { min-height: 66px; font-size: 12px; }
+}
+
+/* ---------- Accessibilité : mouvements réduits ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cabin-curtain,
+  .fitting-head,
+  .fitting-figure,
+  .fitting-panel,
+  .cabin-reflection {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+  }
+  .fitting-figure::after,
+  .fitting-figure.is-morphing img.is-active {
+    animation: none !important;
+  }
+}

@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/style-rest.css" />
+  <link rel="stylesheet" href="assets/css/fitting-cabin.css" />
   <link rel="stylesheet" href="assets/css/demo-tour.css" />
   <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
   <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
@@ -250,8 +251,31 @@
           <span>Sous-total</span>
           <strong id="cart-subtotal">0 €</strong>
         </div>
-        <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Passer commande</button>
-        <p class="cart-note">Livraison et taxes calculées à l'étape suivante.</p>
+        <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Précommander</button>
+        <form class="preorder-form" id="preorder-form" hidden novalidate>
+          <p class="preorder-intro">Aucun paiement maintenant : votre pièce est réservée et notre équipe vous recontacte pour finaliser le règlement et la livraison.</p>
+          <label class="preorder-field">
+            <span>Nom complet</span>
+            <input type="text" name="name" autocomplete="name" required maxlength="120" />
+          </label>
+          <label class="preorder-field">
+            <span>E-mail</span>
+            <input type="email" name="email" autocomplete="email" inputmode="email" required maxlength="200" />
+          </label>
+          <label class="preorder-field">
+            <span>Téléphone</span>
+            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required maxlength="30" />
+          </label>
+          <input type="text" name="website" class="preorder-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+          <p class="preorder-error" id="preorder-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn-solid cart-checkout" id="preorder-submit">Confirmer la précommande</button>
+          <button type="button" class="preorder-back" id="preorder-back">Retour au panier</button>
+        </form>
+        <div class="preorder-done" id="preorder-done" hidden>
+          <p class="preorder-done-title">Merci&nbsp;!</p>
+          <p id="preorder-done-text">Votre précommande est enregistrée.</p>
+        </div>
+        <p class="cart-note" id="cart-note">Précommande sans paiement immédiat — règlement à la confirmation.</p>
       </div>
     </div>
   </div>
@@ -266,31 +290,67 @@
     </div>
   </div>
 
-  <div class="fitting-overlay" id="fitting-overlay" hidden>
-    <div class="fitting-curtain fitting-curtain-left"></div>
-    <div class="fitting-curtain fitting-curtain-right"></div>
-    <div class="fitting-rail"></div>
-    <button class="fitting-close" id="fitting-close" aria-label="Fermer la cabine">✕</button>
-    <div class="fitting-stage">
+  <div class="fitting-overlay" id="fitting-overlay" role="dialog" aria-modal="true" aria-labelledby="fitting-title" hidden>
+    <!-- Décor de la cabine : 100 % HTML/CSS (dégradés, ombres, flous), aucune image de fond. -->
+    <div class="cabin" aria-hidden="true">
+      <div class="cabin-wall"></div>
+      <div class="cabin-downlight"></div>
+      <div class="cabin-mirror">
+        <img class="cabin-reflection" id="fitting-reflection" src="" alt="" />
+      </div>
+      <div class="cabin-floor"></div>
+      <div class="cabin-rail"></div>
+      <div class="cabin-curtain cabin-curtain-left"></div>
+      <div class="cabin-curtain cabin-curtain-right"></div>
+    </div>
+
+    <header class="fitting-head">
       <p class="fitting-eyebrow">Cabine d'essayage</p>
       <h3 id="fitting-title"></h3>
       <p class="fitting-color" id="fitting-color"></p>
+    </header>
+    <button class="fitting-close" id="fitting-close" aria-label="Fermer la cabine">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+    </button>
+
+    <div class="fitting-stage">
       <div class="fitting-figure" id="fitting-figure">
         <img id="fitting-photo" src="" alt="" />
         <img id="fitting-photo-b" src="" alt="" />
-        <button type="button" class="spin-arrow spin-arrow-left" id="spin-prev" aria-label="Tourner vers la gauche">‹</button>
-        <button type="button" class="spin-arrow spin-arrow-right" id="spin-next" aria-label="Tourner vers la droite">›</button>
+        <span class="fitting-light" aria-hidden="true"></span>
         <div class="spin-hint" id="spin-hint">↔ Glissez pour faire tourner</div>
       </div>
+      <button type="button" class="spin-arrow spin-arrow-left" id="spin-prev" aria-label="Tourner vers la gauche">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </button>
+      <button type="button" class="spin-arrow spin-arrow-right" id="spin-next" aria-label="Tourner vers la droite">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9.5 5.5L16 12l-6.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </button>
+    </div>
+
+    <div class="fitting-panel">
       <p class="fitting-note" id="fitting-note"></p>
       <div class="fitting-controls" id="fitting-controls">
         <div class="fitting-group">
           <span class="fitting-label">Silhouette</span>
           <div class="fitting-choices">
-            <button type="button" data-size="s">Fine</button>
-            <button type="button" data-size="m">Classique</button>
-            <button type="button" data-size="l">Généreuse</button>
+            <button type="button" data-size="s">
+              <svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="5" r="2.6"/><path d="M10.2 9.4h3.6l1.5 9.8h-1.1L13.8 30h-1.4L12 21.2 11.6 30h-1.4l-.4-10.8H8.7z"/></svg>
+              <span>Fine</span>
+            </button>
+            <button type="button" data-size="m">
+              <svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="5" r="2.8"/><path d="M9.6 9.4h4.8l2.1 9.8h-1.4L14.5 30h-1.8L12 21.6 11.3 30H9.5l-.6-10.8H7.5z"/></svg>
+              <span>Classique</span>
+            </button>
+            <button type="button" data-size="l">
+              <svg viewBox="0 0 24 32" aria-hidden="true"><circle cx="12" cy="5" r="3"/><path d="M8.9 9.4h6.2l2.9 9.8h-1.8L15.4 30h-2.3L12 22.2 10.9 30H8.6l-.8-10.8H6z"/></svg>
+              <span>Généreuse</span>
+            </button>
           </div>
+        </div>
+        <div class="fitting-colors" id="fitting-colors" hidden>
+          <span class="fitting-label">Couleur</span>
+          <div class="fitting-swatches" id="fitting-swatches"></div>
         </div>
       </div>
     </div>

@@ -28,18 +28,48 @@
     const fab = document.getElementById("tour-fab");
     if (!fab) return;
 
-    // Le bouton ne reste visible que sur la vidéo d'accueil : une fois
-    // celle-ci défilée, il disparaît pour ne pas rester en permanence
-    // sur le reste du site.
+    // Le bouton ne reste visible que pendant la vidéo d'accueil : dès que
+    // la section suivante commence à entrer dans l'écran (fin de la vidéo
+    // au défilement), il disparaît pour ne pas recouvrir le reste du site.
     const heroSection = document.getElementById("hero-video");
+    function updateFabVisibility() {
+      if (!heroSection) return;
+      const rect = heroSection.getBoundingClientRect();
+      fab.classList.toggle("is-hidden", rect.bottom < window.innerHeight - 1);
+    }
     if (heroSection) {
-      const fabObserver = new IntersectionObserver(
-        (entries) => {
-          fab.classList.toggle("is-hidden", !entries[0].isIntersecting);
-        },
-        { threshold: 0 }
-      );
-      fabObserver.observe(heroSection);
+      let fabTicking = false;
+      const onScroll = () => {
+        if (fabTicking) return;
+        fabTicking = true;
+        requestAnimationFrame(() => {
+          fabTicking = false;
+          updateFabVisibility();
+        });
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll);
+      updateFabVisibility();
+    }
+
+    // La démo ajoute une vraie pièce au panier : on sauvegarde le panier du
+    // visiteur au lancement et on le restaure à la fin, pour ne rien laisser
+    // derrière nous.
+    const CART_KEY = "aelen-cart";
+    let cartSnapshot = null;
+    function snapshotCart() {
+      try {
+        cartSnapshot = localStorage.getItem(CART_KEY);
+      } catch (e) {
+        cartSnapshot = null;
+      }
+    }
+    function restoreCart() {
+      try {
+        if (cartSnapshot === null) localStorage.removeItem(CART_KEY);
+        else localStorage.setItem(CART_KEY, cartSnapshot);
+      } catch (e) {}
+      document.dispatchEvent(new CustomEvent("aelen:cart-changed"));
     }
 
     let overlay = null;
@@ -55,7 +85,7 @@
       },
       {
         title: "Précommande & liste d'attente",
-        body: "Avant le lancement, les visiteurs peuvent rejoindre la liste d'attente. Le compte à rebours se configure depuis le tableau de bord staff, onglet « Liste d'attente ».",
+        body: "Rejoignez la liste d'attente pour être prévenu·e en priorité de chaque lancement : il suffit de laisser son e-mail, une confirmation arrive aussitôt.",
         async enter() {
           const el = document.getElementById("waitlist");
           if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -77,7 +107,8 @@
         title: "Fiche produit détaillée",
         body: "Description, matières, tailles disponibles et galerie d'images : tout ce qu'il faut pour décider. Les tailles en rupture de stock sont automatiquement désactivées.",
         async enter() {
-          click(".product-card");
+          // Première pièce disponible (une pièce épuisée ne peut pas être ajoutée au panier).
+          if (!click(".product-card:not(.is-soldout)")) click(".product-card");
           await wait(350);
           return document.querySelector("#modal-overlay .modal");
         },
@@ -100,8 +131,8 @@
         },
       },
       {
-        title: "Ajout au panier",
-        body: "Nous venons d'ajouter cette pièce à votre panier pour la démonstration. Le panier s'ouvre automatiquement avec un récapitulatif et des suggestions complémentaires.",
+        title: "Panier & précommande",
+        body: "La pièce est ajoutée au panier (pour la démo seulement : votre panier sera restauré à la fin). Un bouton « Précommander » permet ensuite de réserver avec son nom, son e-mail et son téléphone — sans paiement immédiat.",
         async enter() {
           click("#modal-sizes button:not([disabled])");
           click("#modal-add-cart");
@@ -211,7 +242,9 @@
       } else if (rect.top - margin - cardHeight > 0) {
         top = rect.top - margin - cardHeight;
       } else {
-        top = Math.max(margin, (vh - cardHeight) / 2);
+        // Zone ciblée trop haute (ex. cabine plein écran) : carte calée en
+        // bas de l'écran pour laisser voir le haut de la scène.
+        top = Math.max(margin, vh - cardHeight - margin);
       }
       let left = rect.left + rect.width / 2 - cardWidth / 2;
       left = Math.max(margin, Math.min(left, vw - cardWidth - margin));
@@ -279,11 +312,12 @@
     }
 
     async function startTour() {
+      if (active) return;
       if (!overlay) buildOverlay();
       active = true;
       overlay.hidden = false;
       document.body.classList.add("tour-active");
-      document.body.style.overflow = "hidden";
+      snapshotCart();
       await nextFrame();
       overlay.classList.add("is-open");
       currentStep = -1;
@@ -295,8 +329,8 @@
       active = false;
       overlay.classList.remove("is-open");
       document.body.classList.remove("tour-active");
-      document.body.style.overflow = "";
       forceCloseAll();
+      restoreCart();
       currentStep = -1;
       setTimeout(() => {
         if (!active) overlay.hidden = true;

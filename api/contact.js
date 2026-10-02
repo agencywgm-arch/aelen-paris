@@ -1,5 +1,5 @@
 const { isConfigured, getSql } = require("../lib/db.js");
-const { sendMail } = require("../lib/mailer.js");
+const { sendMail, escapeHtml } = require("../lib/mailer.js");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -35,8 +35,8 @@ module.exports = async (req, res) => {
     if (notifyTo) {
       await sendMail({
         to: notifyTo,
-        subject: `Nouveau message de contact — ${name}`,
-        html: `<p><strong>${name}</strong> (${email}) :</p><p>${message.replace(/\n/g, "<br>")}</p>`,
+        subject: `Nouveau message de contact — ${name.replace(/[\r\n]+/g, " ")}`,
+        html: `<p><strong>${escapeHtml(name)}</strong> (${escapeHtml(email)}) :</p><p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>`,
         replyTo: email,
       });
     }

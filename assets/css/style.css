@@ -615,6 +615,7 @@ a { color: inherit; }
 
 .newsletter-form input {
   flex: 1;
+  min-width: 0; /* sinon l'input impose sa largeur et pousse le bouton hors écran (< 390px) */
   background: transparent;
   border: none;
   padding: 14px 18px;
@@ -636,6 +637,7 @@ a { color: inherit; }
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .form-note {
