@@ -110,7 +110,7 @@ const PRODUCTS = [
       "Poche à rabat, poignets boutonnés assortis",
     ],
     images: [
-      "assets/img/fitting-tryons/veste-foulard-marron-m.webp",
+      "assets/img/fitting-tryons/veste-foulard-marron-cover.webp",
       { src: "assets/img/products/veste-foulard-marron-front.png", fit: "contain" },
       { src: "assets/img/products/veste-foulard-marron-back.png", fit: "contain" },
     ],
@@ -134,7 +134,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      "assets/img/fitting-tryons/pull-raye-beige-m.webp",
+      "assets/img/fitting-tryons/pull-raye-beige-cover.webp",
       { src: "assets/img/products/pull-raye-beige-front.png", fit: "contain" },
     ],
   },
@@ -157,7 +157,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      "assets/img/fitting-tryons/pull-raye-rouge-m.webp",
+      "assets/img/fitting-tryons/pull-raye-rouge-cover.webp",
       { src: "assets/img/products/pull-raye-rouge-front.png", fit: "contain" },
     ],
   },
