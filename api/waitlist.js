@@ -35,6 +35,16 @@ module.exports = async (req, res) => {
       res.status(400).json({ error: "invalid_email" });
       return;
     }
+    // Le téléphone est demandé avec une précommande (pour recontacter le client
+    // et retrouver son historique) ; facultatif pour une simple inscription.
+    const phone = typeof req.body.phone === "string" ? req.body.phone.trim().slice(0, 30) : "";
+    const phoneDigits = phone.replace(/\D/g, "");
+    const phoneValid = /^[+\d\s().-]+$/.test(phone) && phoneDigits.length >= 6 && phoneDigits.length <= 15;
+    const wantsPreorder = Array.isArray(req.body.items) && req.body.items.length > 0;
+    if ((wantsPreorder || phone) && !phoneValid) {
+      res.status(400).json({ error: "invalid_phone" });
+      return;
+    }
     try {
       const sql = await getSql();
 
@@ -53,12 +63,22 @@ module.exports = async (req, res) => {
       }
 
       if (cart) {
-        // Une nouvelle précommande remplace la précédente pour le même e-mail.
+        // Dernier panier + téléphone sur la fiche d'inscription…
         await sql`
-          INSERT INTO waitlist_entries (email, cart, cart_total, cart_updated_at)
-          VALUES (${email}, ${JSON.stringify(cart.lines)}::jsonb, ${cart.total}, now())
+          INSERT INTO waitlist_entries (email, phone, cart, cart_total, cart_updated_at)
+          VALUES (${email}, ${phone}, ${JSON.stringify(cart.lines)}::jsonb, ${cart.total}, now())
           ON CONFLICT (email) DO UPDATE
-            SET cart = EXCLUDED.cart, cart_total = EXCLUDED.cart_total, cart_updated_at = now();
+            SET phone = EXCLUDED.phone, cart = EXCLUDED.cart, cart_total = EXCLUDED.cart_total, cart_updated_at = now();
+        `;
+        // …et une ligne d'historique par précommande (jamais écrasée).
+        await sql`
+          INSERT INTO preorders (email, phone, cart, total)
+          VALUES (${email}, ${phone}, ${JSON.stringify(cart.lines)}::jsonb, ${cart.total});
+        `;
+      } else if (phone) {
+        await sql`
+          INSERT INTO waitlist_entries (email, phone) VALUES (${email}, ${phone})
+          ON CONFLICT (email) DO UPDATE SET phone = EXCLUDED.phone;
         `;
       } else {
         await sql`INSERT INTO waitlist_entries (email) VALUES (${email}) ON CONFLICT (email) DO NOTHING;`;
@@ -78,7 +98,7 @@ module.exports = async (req, res) => {
           <p>Bonjour,</p>
           <p>Merci ! Votre précommande est bien enregistrée avec votre inscription à la liste d'attente :</p>
           ${itemsHtml}
-          <p>Aucun paiement n'a été prélevé. Vous serez averti·e en priorité au lancement pour finaliser votre commande.</p>
+          <p>Aucun paiement n'a été prélevé. Nous vous recontactons par e-mail ou au ${escapeHtml(phone)} pour finaliser votre commande.</p>
           <p>À très vite,<br>L'équipe Ælen Paris</p>
         `
           : `
@@ -95,7 +115,7 @@ module.exports = async (req, res) => {
           ? sendMail({
               to: notifyTo,
               subject: `Nouvelle précommande — ${formatEuros(cart.total)}`,
-              html: `<p><strong>${escapeHtml(email)}</strong> a précommandé :</p>${itemsHtml}<p>À retrouver dans l'espace staff, onglet Liste d'attente.</p>`,
+              html: `<p><strong>${escapeHtml(email)}</strong><br>Tél. : ${escapeHtml(phone)}</p><p>a précommandé :</p>${itemsHtml}<p>À retrouver dans l'espace staff, onglet Précommandes.</p>`,
               replyTo: email,
             })
           : null;

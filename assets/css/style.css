@@ -937,6 +937,12 @@ a { color: inherit; }
   font-family: var(--sans);
 }
 
+.waitlist-form input[hidden] { display: none; }
+/* Précommande : e-mail + téléphone + bouton empilés (même rendu que sur mobile). */
+.waitlist-form.is-preorder { flex-direction: column; border: none; gap: 10px; background: none; backdrop-filter: none; }
+.waitlist-form.is-preorder input { border: 1px solid rgba(246, 242, 234, 0.35); background: rgba(246, 242, 234, 0.06); }
+.waitlist-form.is-preorder button { padding: 15px; border: none; }
+.waitlist-form input[aria-invalid="true"] { border-color: #e0786f !important; }
 .waitlist-form input::placeholder { color: rgba(246, 242, 234, 0.5); }
 .waitlist-form input:focus { outline: none; }
 

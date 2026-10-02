@@ -114,10 +114,11 @@
           <p class="waitlist-cart-title">Votre précommande</p>
           <ul class="waitlist-cart-list" id="waitlist-cart-list"></ul>
           <p class="waitlist-cart-total">Total <strong id="waitlist-cart-total"></strong></p>
-          <p class="waitlist-cart-hint">Laissez votre e-mail : votre panier est enregistré avec votre inscription, sans paiement immédiat.</p>
+          <p class="waitlist-cart-hint">Laissez votre e-mail et votre téléphone : votre panier est enregistré avec votre inscription, sans paiement immédiat.</p>
         </div>
         <form class="waitlist-form" id="waitlist-form">
-          <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
+          <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" autocomplete="email" />
+          <input type="tel" name="phone" id="waitlist-phone" placeholder="Votre numéro de téléphone" aria-label="Numéro de téléphone" autocomplete="tel" inputmode="tel" maxlength="30" hidden />
           <button type="submit">Rejoindre la liste d'attente</button>
         </form>
         <p class="form-note" id="waitlist-note"></p>

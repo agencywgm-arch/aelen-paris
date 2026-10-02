@@ -395,6 +395,10 @@
     totalEl.textContent = formatPrice(lines.reduce((sum, l) => sum + l.product.price * l.item.qty, 0));
     const btn = form && form.querySelector("button[type=submit]");
     if (btn) btn.textContent = lines.length ? "Valider ma précommande" : "Rejoindre la liste d'attente";
+    // Le téléphone n'est demandé qu'avec une précommande.
+    const phone = document.getElementById("waitlist-phone");
+    if (phone) { phone.hidden = lines.length === 0; phone.required = lines.length > 0; }
+    if (form) form.classList.toggle("is-preorder", lines.length > 0);
   }
 
   if (cartCheckoutBtn) cartCheckoutBtn.addEventListener("click", () => {
@@ -635,13 +639,21 @@
       const email = waitlistForm.email.value.trim();
       const btn = waitlistForm.querySelector("button");
       const items = cartLines().map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty }));
+      const phoneInput = waitlistForm.elements.phone;
+      const phone = items.length && phoneInput ? phoneInput.value.trim() : "";
+      if (phoneInput) phoneInput.removeAttribute("aria-invalid");
+      if (items.length && phone.replace(/\D/g, "").length < 6) {
+        if (phoneInput) { phoneInput.setAttribute("aria-invalid", "true"); phoneInput.focus(); }
+        if (waitlistNote) waitlistNote.textContent = "Indiquez un numéro de téléphone valide pour valider votre précommande.";
+        return;
+      }
       btn.disabled = true;
       if (waitlistNote) waitlistNote.textContent = items.length ? "Enregistrement de votre précommande…" : "Inscription en cours…";
       try {
         const resp = await fetch("/api/waitlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(items.length ? { email, items } : { email }),
+          body: JSON.stringify(items.length ? { email, phone, items } : { email }),
         });
         const data = await resp.json().catch(() => ({}));
         if (resp.ok && data.ok) {
@@ -663,6 +675,8 @@
           if (waitlistNote) waitlistNote.textContent = `Plus disponible en quantité suffisante : ${names}. Ajustez votre panier puis réessayez.`;
         } else if (data.error === "invalid_email") {
           if (waitlistNote) waitlistNote.textContent = "Adresse e-mail invalide.";
+        } else if (data.error === "invalid_phone") {
+          if (waitlistNote) waitlistNote.textContent = "Numéro de téléphone invalide.";
         } else if (waitlistNote) {
           waitlistNote.textContent = "Une erreur est survenue, réessayez.";
         }

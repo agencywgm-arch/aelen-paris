@@ -16,6 +16,7 @@
     customers: document.getElementById("admin-panel-customers"),
     messages: document.getElementById("admin-panel-messages"),
     products: document.getElementById("admin-panel-products"),
+    preorders: document.getElementById("admin-panel-preorders"),
     waitlist: document.getElementById("admin-panel-waitlist"),
   };
 
@@ -142,7 +143,98 @@
     if (name === "customers") return loadCustomers();
     if (name === "messages") return loadMessages();
     if (name === "products") return loadProducts();
+    if (name === "preorders") return loadPreorders();
     if (name === "waitlist") return loadWaitlist();
+  }
+
+  // ---- Précommandes (historique complet) ----
+
+  function csvCell(value) {
+    const v = value == null ? "" : String(value);
+    return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  }
+
+  async function loadPreorders() {
+    const panel = panels.preorders;
+    panel.innerHTML = `<h2>Précommandes</h2><p class="admin-loading">Chargement…</p>`;
+    try {
+      const resp = await fetch("/api/staff/preorders");
+      const data = await resp.json();
+      if (!resp.ok) {
+        panel.innerHTML = `<h2>Précommandes</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
+        return;
+      }
+      const list = data.preorders;
+      const totalCents = list.reduce((sum, p) => sum + (p.total || 0), 0);
+      const customers = new Set(list.map((p) => p.email)).size;
+      const itemsCount = list.reduce((sum, p) => sum + p.cart.reduce((n, it) => n + (it.qty || 0), 0), 0);
+
+      panel.innerHTML = `
+        <h2>Précommandes</h2>
+        <div class="admin-kpis">
+          <div class="admin-kpi"><div class="admin-kpi-label">Précommandes</div><div class="admin-kpi-value">${list.length}</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Clients</div><div class="admin-kpi-value">${customers}</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Articles</div><div class="admin-kpi-value">${itemsCount}</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Montant total</div><div class="admin-kpi-value">${formatCents(totalCents)}</div></div>
+        </div>
+        <div class="admin-panel-actions">
+          <input type="search" id="admin-preorder-search" class="admin-search" placeholder="Rechercher un e-mail, un numéro, un article…" />
+          <button type="button" class="admin-btn-small" id="admin-preorder-export">Exporter (CSV)</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>N°</th><th>Date</th><th>E-mail</th><th>Téléphone</th><th>Articles</th><th>Total</th></tr></thead>
+            <tbody id="admin-preorder-rows"></tbody>
+          </table>
+        </div>
+      `;
+
+      const tbody = panel.querySelector("#admin-preorder-rows");
+      const render = (query) => {
+        const q = query.trim().toLowerCase();
+        const rows = list.filter((p) => {
+          if (!q) return true;
+          const hay = [p.email, p.phone, ...p.cart.map((it) => it.productName)].join(" ").toLowerCase();
+          return hay.includes(q) || (p.phone || "").replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\u0000");
+        });
+        tbody.innerHTML = rows.length
+          ? rows.map((p) => `
+            <tr>
+              <td>${p.id}</td>
+              <td>${formatDate(p.createdAt)}</td>
+              <td>${escapeHtml(p.email)}</td>
+              <td>${p.phone ? `<a href="tel:${escapeHtml(p.phone.replace(/[^+\d]/g, ""))}">${escapeHtml(p.phone)}</a>` : `<span class="admin-muted">—</span>`}</td>
+              <td class="admin-order-items">${p.cart.map((it) => `<div>${it.qty} × ${escapeHtml(it.productName)}${it.size ? ` (${escapeHtml(it.size)})` : ""}</div>`).join("")}</td>
+              <td>${formatCents(p.total)}</td>
+            </tr>`).join("")
+          : `<tr><td colspan="6" class="admin-empty">${list.length ? "Aucun résultat." : "Aucune précommande pour l'instant."}</td></tr>`;
+      };
+      render("");
+      panel.querySelector("#admin-preorder-search").addEventListener("input", (e) => render(e.target.value));
+
+      panel.querySelector("#admin-preorder-export").addEventListener("click", () => {
+        const header = ["N°", "Date", "E-mail", "Téléphone", "Articles", "Total (€)"];
+        const lines = list.map((p) => [
+          p.id,
+          new Date(p.createdAt).toLocaleString("fr-FR"),
+          p.email,
+          p.phone || "",
+          p.cart.map((it) => `${it.qty} x ${it.productName}${it.size ? ` (${it.size})` : ""}`).join(" | "),
+          (p.total / 100).toFixed(2).replace(".", ","),
+        ]);
+        const csv = "\uFEFF" + [header, ...lines].map((r) => r.map(csvCell).join(";")).join("\r\n");
+        const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `precommandes-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      panel.innerHTML = `<h2>Précommandes</h2><p class="admin-empty">${errorMessage()}</p>`;
+    }
   }
 
   // ---- Statistiques ----
@@ -726,6 +818,7 @@
           return `<tr${e.cart && e.cart.length ? ' class="has-preorder"' : ""}>
             <td>${formatDate(e.cartUpdatedAt || e.createdAt)}</td>
             <td>${escapeHtml(e.email)}${e.cart && e.cart.length ? ` <span class="admin-badge status-preorder">Précommande</span>` : ""}</td>
+            <td>${e.phone ? escapeHtml(e.phone) : `<span class="admin-muted">—</span>`}</td>
             <td class="admin-order-items">${cartHtml}</td>
             <td>${e.cartTotal ? formatCents(e.cartTotal) : ""}</td>
           </tr>`;
@@ -753,8 +846,8 @@
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Date</th><th>E-mail</th><th>Panier précommandé</th><th>Total</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" class="admin-empty">Aucune inscription pour l'instant.</td></tr>`}</tbody>
+            <thead><tr><th>Date</th><th>E-mail</th><th>Téléphone</th><th>Dernier panier</th><th>Total</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="5" class="admin-empty">Aucune inscription pour l'instant.</td></tr>`}</tbody>
           </table>
         </div>
       `;
