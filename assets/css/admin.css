@@ -237,6 +237,7 @@
 .admin-badge.status-shipped, .admin-badge.status-processing { background: #e6edf5; color: #2a4a6b; }
 .admin-badge.status-cancelled, .admin-badge.status-unpaid { background: #f5e4e1; color: #7a2f2a; }
 .admin-badge.status-preorder { background: #f3ead8; color: #7a5a2a; }
+.admin-muted { color: var(--line); }
 .admin-order-contact { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
 
 .admin-order-row td { border-top: 1px solid var(--line); }

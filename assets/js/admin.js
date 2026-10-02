@@ -717,8 +717,22 @@
 
       const launchValue = data.launchAt ? toLocalDatetimeInputValue(data.launchAt) : "";
       const rows = data.entries
-        .map((e) => `<tr><td>${formatDate(e.createdAt)}</td><td>${escapeHtml(e.email)}</td></tr>`)
+        .map((e) => {
+          const cartHtml = e.cart && e.cart.length
+            ? e.cart
+                .map((it) => `<div>${it.qty} × ${escapeHtml(it.productName)}${it.size ? ` (${escapeHtml(it.size)})` : ""}</div>`)
+                .join("")
+            : `<span class="admin-muted">—</span>`;
+          return `<tr${e.cart && e.cart.length ? ' class="has-preorder"' : ""}>
+            <td>${formatDate(e.cartUpdatedAt || e.createdAt)}</td>
+            <td>${escapeHtml(e.email)}${e.cart && e.cart.length ? ` <span class="admin-badge status-preorder">Précommande</span>` : ""}</td>
+            <td class="admin-order-items">${cartHtml}</td>
+            <td>${e.cartTotal ? formatCents(e.cartTotal) : ""}</td>
+          </tr>`;
+        })
         .join("");
+      const preorders = data.entries.filter((e) => e.cart && e.cart.length);
+      const preorderTotal = preorders.reduce((sum, e) => sum + (e.cartTotal || 0), 0);
 
       panel.innerHTML = `
         <h2>Liste d'attente</h2>
@@ -732,11 +746,15 @@
           </form>
           <p class="admin-hint">${data.launchAt ? "Le compte à rebours est actif sur le site." : "Aucune date définie : le compte à rebours reste masqué sur le site."}</p>
         </div>
-        <h3>${data.count} inscrit${data.count > 1 ? "s" : ""}</h3>
+        <div class="admin-kpis">
+          <div class="admin-kpi"><div class="admin-kpi-label">Inscrits</div><div class="admin-kpi-value">${data.count}</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Précommandes (panier joint)</div><div class="admin-kpi-value">${preorders.length}</div></div>
+          <div class="admin-kpi"><div class="admin-kpi-label">Montant précommandé</div><div class="admin-kpi-value">${formatCents(preorderTotal)}</div></div>
+        </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Date</th><th>E-mail</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="2" class="admin-empty">Aucune inscription pour l'instant.</td></tr>`}</tbody>
+            <thead><tr><th>Date</th><th>E-mail</th><th>Panier précommandé</th><th>Total</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" class="admin-empty">Aucune inscription pour l'instant.</td></tr>`}</tbody>
           </table>
         </div>
       `;

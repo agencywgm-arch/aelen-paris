@@ -967,6 +967,54 @@ a { color: inherit; }
   color: rgba(246, 242, 234, 0.55);
 }
 
+/* Panier joint à l'inscription (précommande depuis le panier). */
+.waitlist-cart {
+  max-width: 440px;
+  margin: 0 auto 18px;
+  padding: 16px 18px 14px;
+  text-align: left;
+  border: 1px solid rgba(246, 242, 234, 0.3);
+  border-radius: 4px;
+  background: rgba(20, 17, 15, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ivory);
+}
+.waitlist-cart[hidden] { display: none; }
+.waitlist-cart { scroll-margin-top: 84px; }
+.waitlist-cart.is-highlighted { animation: waitlist-cart-glow 1.6s ease; }
+@keyframes waitlist-cart-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(203, 183, 151, 0); }
+  30% { box-shadow: 0 0 0 4px rgba(203, 183, 151, 0.45); }
+}
+.waitlist-cart-title {
+  margin: 0 0 10px;
+  font-size: 10.5px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--taupe-light);
+}
+.waitlist-cart-list { list-style: none; margin: 0; padding: 0; }
+.waitlist-cart-list li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.waitlist-cart-list img { width: 40px; height: 50px; object-fit: cover; background: var(--ivory-deep); }
+.waitlist-cart-list small { display: block; color: rgba(246, 242, 234, 0.6); font-size: 11.5px; }
+.waitlist-cart-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(246, 242, 234, 0.18);
+  font-size: 13.5px;
+}
+.waitlist-cart-hint { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: rgba(246, 242, 234, 0.7); }
+
 .waitlist-section .form-note { color: var(--taupe-light); margin-top: 14px; }
 
 @media (max-width: 640px) {

@@ -85,7 +85,7 @@
       },
       {
         title: "Précommande & liste d'attente",
-        body: "Rejoignez la liste d'attente pour être prévenu·e en priorité de chaque lancement : il suffit de laisser son e-mail, une confirmation arrive aussitôt.",
+        body: "Rejoignez la liste d'attente pour être prévenu·e en priorité de chaque lancement. Depuis le panier, la précommande arrive ici : il suffit de laisser son e-mail pour réserver ses pièces.",
         async enter() {
           const el = document.getElementById("waitlist");
           if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -132,7 +132,7 @@
       },
       {
         title: "Panier & précommande",
-        body: "La pièce est ajoutée au panier (pour la démo seulement : votre panier sera restauré à la fin). Un bouton « Précommander » permet ensuite de réserver avec son nom, son e-mail et son téléphone — sans paiement immédiat.",
+        body: "La pièce est ajoutée au panier (pour la démo seulement : votre panier sera restauré à la fin). Le bouton « Précommander » mène à la liste d'attente : le panier est enregistré avec l'inscription, sans paiement immédiat.",
         async enter() {
           click("#modal-sizes button:not([disabled])");
           click("#modal-add-cart");

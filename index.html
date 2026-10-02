@@ -111,6 +111,12 @@
           <div class="countdown-divider">:</div>
           <div class="countdown-unit"><span id="cd-seconds">00</span><small>Sec</small></div>
         </div>
+        <div class="waitlist-cart" id="waitlist-cart" hidden>
+          <p class="waitlist-cart-title">Votre précommande</p>
+          <ul class="waitlist-cart-list" id="waitlist-cart-list"></ul>
+          <p class="waitlist-cart-total">Total <strong id="waitlist-cart-total"></strong></p>
+          <p class="waitlist-cart-hint">Laissez votre e-mail : votre panier est enregistré avec votre inscription, sans paiement immédiat.</p>
+        </div>
         <form class="waitlist-form" id="waitlist-form">
           <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" />
           <button type="submit">Rejoindre la liste d'attente</button>
@@ -252,30 +258,7 @@
           <strong id="cart-subtotal">0 €</strong>
         </div>
         <button type="button" class="btn btn-solid cart-checkout" id="cart-checkout">Précommander</button>
-        <form class="preorder-form" id="preorder-form" hidden novalidate>
-          <p class="preorder-intro">Aucun paiement maintenant : votre pièce est réservée et notre équipe vous recontacte pour finaliser le règlement et la livraison.</p>
-          <label class="preorder-field">
-            <span>Nom complet</span>
-            <input type="text" name="name" autocomplete="name" required maxlength="120" />
-          </label>
-          <label class="preorder-field">
-            <span>E-mail</span>
-            <input type="email" name="email" autocomplete="email" inputmode="email" required maxlength="200" />
-          </label>
-          <label class="preorder-field">
-            <span>Téléphone</span>
-            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required maxlength="30" />
-          </label>
-          <input type="text" name="website" class="preorder-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <p class="preorder-error" id="preorder-error" role="alert" hidden></p>
-          <button type="submit" class="btn btn-solid cart-checkout" id="preorder-submit">Confirmer la précommande</button>
-          <button type="button" class="preorder-back" id="preorder-back">Retour au panier</button>
-        </form>
-        <div class="preorder-done" id="preorder-done" hidden>
-          <p class="preorder-done-title">Merci&nbsp;!</p>
-          <p id="preorder-done-text">Votre précommande est enregistrée.</p>
-        </div>
-        <p class="cart-note" id="cart-note">Précommande sans paiement immédiat — règlement à la confirmation.</p>
+        <p class="cart-note" id="cart-note">Sans paiement immédiat : votre panier est joint à votre inscription sur la liste d'attente.</p>
       </div>
     </div>
   </div>

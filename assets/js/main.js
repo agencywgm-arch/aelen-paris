@@ -343,6 +343,7 @@
         </div>`;
     }).join("");
     lastAddedKey = null;
+    renderWaitlistCart();
     cartItemsEl.querySelectorAll(".cart-item").forEach((el) => {
       const index = Number(el.dataset.index);
       const line = lines.find((l) => l.index === index);
@@ -353,7 +354,6 @@
   }
   function openCart() {
     renderCart();
-    if (typeof showPreorderStep === "function") showPreorderStep("cart");
     cartOverlay.hidden = false;
     requestAnimationFrame(() => requestAnimationFrame(() => cartOverlay.classList.add("is-open")));
   }
@@ -376,126 +376,48 @@
     openCart();
   });
   // ---- Précommande (sans paiement) ----
-  // Le client laisse nom / e-mail / téléphone ; la commande est enregistrée
-  // côté staff (statut « Précommande ») et un e-mail de confirmation part.
-  const cartDrawer = cartOverlay ? cartOverlay.querySelector(".cart-drawer") : null;
-  const preorderForm = document.getElementById("preorder-form");
-  const preorderSubmit = document.getElementById("preorder-submit");
-  const preorderBack = document.getElementById("preorder-back");
-  const preorderError = document.getElementById("preorder-error");
-  const preorderDone = document.getElementById("preorder-done");
-  const preorderDoneText = document.getElementById("preorder-done-text");
-  const cartNote = document.getElementById("cart-note");
-  const PREORDER_CONTACT_KEY = "aelen-preorder-contact";
-
-  function showPreorderStep(step) {
-    // step : "cart" | "form" | "done"
-    if (cartCheckoutBtn) cartCheckoutBtn.hidden = step !== "cart";
-    if (preorderForm) preorderForm.hidden = step !== "form";
-    if (preorderDone) preorderDone.hidden = step !== "done";
-    if (cartNote) cartNote.hidden = step === "done";
-    if (cartDrawer) cartDrawer.classList.toggle("is-preordering", step === "form");
-    if (preorderError) preorderError.hidden = true;
+  // « Précommander » mène à l'inscription sur la liste d'attente : le panier
+  // y est rappelé et sera enregistré avec l'e-mail du visiteur.
+  function renderWaitlistCart() {
+    const box = document.getElementById("waitlist-cart");
+    const list = document.getElementById("waitlist-cart-list");
+    const totalEl = document.getElementById("waitlist-cart-total");
+    const form = document.getElementById("waitlist-form");
+    if (!box || !list || !totalEl) return;
+    const lines = cartLines();
+    box.hidden = lines.length === 0;
+    list.innerHTML = lines.map(({ item, product }) => `
+      <li>
+        <img src="${imgSrc(product.images[0])}" alt="" />
+        <span>${product.name}<small>Taille ${item.size} · Qté ${item.qty}</small></span>
+        <span>${formatPrice(product.price * item.qty)}</span>
+      </li>`).join("");
+    totalEl.textContent = formatPrice(lines.reduce((sum, l) => sum + l.product.price * l.item.qty, 0));
+    const btn = form && form.querySelector("button[type=submit]");
+    if (btn) btn.textContent = lines.length ? "Valider ma précommande" : "Rejoindre la liste d'attente";
   }
-  function setPreorderError(message) {
-    if (!preorderError) return;
-    preorderError.textContent = message;
-    preorderError.hidden = !message;
-  }
-  const PREORDER_ERRORS = {
-    invalid_name: ["name", "Indiquez votre nom complet."],
-    invalid_email: ["email", "Adresse e-mail invalide."],
-    invalid_phone: ["phone", "Numéro de téléphone invalide."],
-    empty_cart: [null, "Votre panier est vide."],
-    no_valid_items: [null, "Les articles de votre panier ne sont plus disponibles."],
-  };
 
   if (cartCheckoutBtn) cartCheckoutBtn.addEventListener("click", () => {
     if (cartLines().length === 0) return;
-    showPreorderStep("form");
-    if (preorderForm) {
-      try {
-        const saved = JSON.parse(localStorage.getItem(PREORDER_CONTACT_KEY) || "null");
-        if (saved) ["name", "email", "phone"].forEach((k) => {
-          if (saved[k] && !preorderForm.elements[k].value) preorderForm.elements[k].value = saved[k];
-        });
-      } catch (e) {}
-      const firstEmpty = ["name", "email", "phone"].map((k) => preorderForm.elements[k]).find((el) => !el.value);
-      if (firstEmpty && window.matchMedia("(hover: hover)").matches) firstEmpty.focus();
-      preorderForm.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-  });
-  if (preorderBack) preorderBack.addEventListener("click", () => showPreorderStep("cart"));
-
-  if (preorderForm) preorderForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const lines = cartLines();
-    if (lines.length === 0) { showPreorderStep("cart"); return; }
-
-    const fields = {
-      name: preorderForm.elements.name.value.trim(),
-      email: preorderForm.elements.email.value.trim(),
-      phone: preorderForm.elements.phone.value.trim(),
-    };
-    ["name", "email", "phone"].forEach((k) => preorderForm.elements[k].removeAttribute("aria-invalid"));
-    const invalid =
-      fields.name.length < 2 ? "invalid_name"
-      : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email) ? "invalid_email"
-      : fields.phone.replace(/\D/g, "").length < 6 ? "invalid_phone"
-      : null;
-    if (invalid) {
-      const [field, message] = PREORDER_ERRORS[invalid];
-      preorderForm.elements[field].setAttribute("aria-invalid", "true");
-      preorderForm.elements[field].focus();
-      setPreorderError(message);
-      return;
-    }
-
-    setPreorderError("");
-    preorderSubmit.disabled = true;
-    preorderSubmit.textContent = "Envoi…";
-    try {
-      const response = await fetch("/api/preorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...fields,
-          website: preorderForm.elements.website.value,
-          items: lines.map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty })),
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        if (data.error === "unavailable" && Array.isArray(data.items)) {
-          const names = data.items.map((it) => `${it.name || "Article"}${it.size ? ` (${it.size})` : ""}`).join(", ");
-          setPreorderError(`Plus disponible en quantité suffisante : ${names}. Ajustez votre panier puis réessayez.`);
-        } else if (PREORDER_ERRORS[data.error]) {
-          const [field, message] = PREORDER_ERRORS[data.error];
-          if (field) preorderForm.elements[field].setAttribute("aria-invalid", "true");
-          setPreorderError(message);
-        } else {
-          setPreorderError("Une erreur est survenue. Réessayez dans un instant ou écrivez-nous via le formulaire de contact.");
-        }
-        return;
+    closeCart();
+    renderWaitlistCart();
+    const section = document.getElementById("waitlist");
+    const inner = document.getElementById("waitlist-inner");
+    const box = document.getElementById("waitlist-cart");
+    if (inner) inner.classList.add("is-visible");
+    // Sur mobile on cible directement le récapitulatif pour que le champ
+    // e-mail soit visible sans défiler.
+    const target = box && !box.hidden ? box : section;
+    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => {
+      if (box) {
+        box.classList.remove("is-highlighted");
+        void box.offsetWidth;
+        box.classList.add("is-highlighted");
       }
-      try { localStorage.setItem(PREORDER_CONTACT_KEY, JSON.stringify(fields)); } catch (err) {}
-      saveCart([]);
-      renderCart();
-      if (preorderDoneText) {
-        preorderDoneText.textContent =
-          `Votre précommande n°${data.orderId} (${formatPrice(data.total / 100)}) est enregistrée. ` +
-          (data.emailSent
-            ? `Un e-mail de confirmation a été envoyé à ${fields.email}.`
-            : "Notre équipe vous recontacte très vite pour la finaliser.");
-      }
-      showPreorderStep("done");
-      document.dispatchEvent(new CustomEvent("aelen:preorder-placed", { detail: { orderId: data.orderId } }));
-    } catch (err) {
-      setPreorderError("Erreur réseau. Vérifiez votre connexion puis réessayez.");
-    } finally {
-      preorderSubmit.disabled = false;
-      preorderSubmit.textContent = "Confirmer la précommande";
-    }
+      const email = document.querySelector("#waitlist-form input[name=email]");
+      if (email && !email.value && window.matchMedia("(hover: hover)").matches) email.focus({ preventScroll: true });
+    }, 700);
   });
   renderCart();
 
@@ -712,20 +634,37 @@
       e.preventDefault();
       const email = waitlistForm.email.value.trim();
       const btn = waitlistForm.querySelector("button");
+      const items = cartLines().map(({ item }) => ({ id: item.id, size: item.size, qty: item.qty }));
       btn.disabled = true;
-      if (waitlistNote) waitlistNote.textContent = "Inscription en cours…";
+      if (waitlistNote) waitlistNote.textContent = items.length ? "Enregistrement de votre précommande…" : "Inscription en cours…";
       try {
         const resp = await fetch("/api/waitlist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify(items.length ? { email, items } : { email }),
         });
-        const data = await resp.json();
+        const data = await resp.json().catch(() => ({}));
         if (resp.ok && data.ok) {
-          if (waitlistNote) waitlistNote.textContent = "Merci ! Vous êtes inscrit·e sur la liste d'attente.";
+          if (data.preorder) {
+            const n = data.preorder.count;
+            if (waitlistNote) {
+              waitlistNote.textContent =
+                `Merci ! Votre précommande (${n} article${n > 1 ? "s" : ""} · ${formatPrice(data.preorder.total / 100)}) est enregistrée avec votre inscription.` +
+                (data.emailSent ? " Un e-mail de confirmation vous a été envoyé." : "");
+            }
+            saveCart([]);
+            renderCart();
+          } else if (waitlistNote) {
+            waitlistNote.textContent = "Merci ! Vous êtes inscrit·e sur la liste d'attente.";
+          }
           waitlistForm.reset();
-        } else {
-          if (waitlistNote) waitlistNote.textContent = "Une erreur est survenue, réessayez.";
+        } else if (resp.status === 409 && Array.isArray(data.items)) {
+          const names = data.items.map((it) => `${it.name || "Article"}${it.size ? ` (${it.size})` : ""}`).join(", ");
+          if (waitlistNote) waitlistNote.textContent = `Plus disponible en quantité suffisante : ${names}. Ajustez votre panier puis réessayez.`;
+        } else if (data.error === "invalid_email") {
+          if (waitlistNote) waitlistNote.textContent = "Adresse e-mail invalide.";
+        } else if (waitlistNote) {
+          waitlistNote.textContent = "Une erreur est survenue, réessayez.";
         }
       } catch (err) {
         if (waitlistNote) waitlistNote.textContent = "Erreur réseau, réessayez.";
