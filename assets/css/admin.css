@@ -30,18 +30,11 @@
   padding: 40px 32px;
 }
 
-.admin-login-card .brand-name {
+.admin-login-card .admin-logo {
   display: block;
-  font-family: var(--serif);
-  font-size: 28px;
-}
-
-.admin-login-card .brand-sub {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 4px;
-  color: var(--taupe);
-  margin-bottom: 24px;
+  width: 150px;
+  height: auto;
+  margin: 0 auto 22px;
 }
 
 .admin-login-card h1 {
@@ -93,8 +86,7 @@
   background: #fff;
 }
 
-.admin-header .brand-name { font-family: var(--serif); font-size: 20px; margin-right: 4px; }
-.admin-header .brand-sub { font-size: 10px; letter-spacing: 2px; color: var(--taupe); margin-right: 14px; }
+.admin-header .admin-logo { height: 44px; width: auto; vertical-align: middle; margin-right: 12px; }
 .admin-header-tag {
   font-size: 11px;
   letter-spacing: 1px;

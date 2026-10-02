@@ -231,7 +231,7 @@
   .main-nav.open {
     display: flex;
     position: absolute;
-    top: 58px;
+    top: var(--header-h);
     left: 0;
     right: 0;
     background: var(--ivory);

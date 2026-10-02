@@ -1,4 +1,5 @@
 :root {
+  --header-h: 74px;
   --ivory: #f6f2ea;
   --ivory-deep: #efe8da;
   --ink: #1c1917;
@@ -49,7 +50,7 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 58px;
+  height: var(--header-h);
 }
 
 .brand {
@@ -61,6 +62,10 @@ a { color: inherit; }
   text-decoration: none;
   color: var(--ink);
 }
+
+/* Logo officiel (monogramme dans son cercle + ÆLEN + PARIS), PNG transparent. */
+.brand-logo { display: block; height: 58px; width: auto; }
+.footer-logo { display: block; height: 96px; width: auto; margin: 0 0 4px; }
 
 .brand .brand-name {
   font-family: var(--serif);
@@ -216,11 +221,11 @@ a { color: inherit; }
 /* Desktop PC : vidéo paysage entière avec marge — tous les mannequins visibles au scroll */
 @media (min-width: 861px) {
   .hero-video {
-    margin-top: 58px;
+    margin-top: var(--header-h);
   }
   .hero-video-sticky {
-    top: 58px;
-    height: calc(100vh - 58px);
+    top: var(--header-h);
+    height: calc(100vh - var(--header-h));
   }
   .hero-poster {
     display: none;
@@ -336,7 +341,7 @@ a { color: inherit; }
 #collection,
 #maison,
 #contact {
-  scroll-margin-top: 59px;
+  scroll-margin-top: calc(var(--header-h) + 1px);
 }
 
 .section-head {
@@ -558,20 +563,10 @@ a { color: inherit; }
   );
 }
 
-.about-visual-mark .brand-name {
-  font-family: var(--serif);
-  font-size: 52px;
-  letter-spacing: 1px;
-  color: var(--ivory);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
-}
-
-.about-visual-mark .brand-sub {
-  font-size: 13px;
-  letter-spacing: 6px;
-  color: var(--taupe-light);
-  margin-top: 6px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+.about-visual-mark .about-logo {
+  width: min(62%, 230px);
+  height: auto;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.5));
 }
 
 .about-copy .section-eyebrow { text-align: left; }
@@ -981,7 +976,7 @@ a { color: inherit; }
   color: var(--ivory);
 }
 .waitlist-cart[hidden] { display: none; }
-.waitlist-cart { scroll-margin-top: 84px; }
+.waitlist-cart { scroll-margin-top: calc(var(--header-h) + 26px); }
 .waitlist-cart.is-highlighted { animation: waitlist-cart-glow 1.6s ease; }
 @keyframes waitlist-cart-glow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(203, 183, 151, 0); }
@@ -1038,11 +1033,6 @@ a { color: inherit; }
   grid-template-columns: 1.4fr 1fr 1fr 1fr;
   gap: 40px;
   margin-bottom: 40px;
-}
-
-.footer-brand .brand-name {
-  font-family: var(--serif);
-  font-size: 24px;
 }
 
 .footer-brand p {
