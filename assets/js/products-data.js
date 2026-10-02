@@ -87,7 +87,7 @@ const PRODUCTS = [
       "Épaulettes à bouton, manches à revers",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/cardigan-bordeaux-m.webp", fit: "cover" },
+      { src: "assets/img/fitting-tryons/cardigan-bordeaux-cover.webp", fit: "cover" },
       "assets/img/products/cardigan-bordeaux-01.png",
       "assets/img/products/cardigan-bordeaux-back.png",
     ],
