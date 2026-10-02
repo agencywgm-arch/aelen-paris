@@ -2,13 +2,13 @@
 const PRODUCTS = [
   {
     id: "trench-chocolat",
-    name: "Trench Chocolat",
+    name: "L'éternel 01",
     category: "Manteaux",
     color: "Chocolat",
     colorGroup: "trench-long",
     swatch: "#4a3123",
-    price: 75,
-    originalPrice: 93.75,
+    price: 65,
+    originalPrice: 81.25,
     sizes: ["S", "M", "L"],
     description:
       "Trench long croisé en coton, col cranté et ceinture à nouer. Une pièce intemporelle façon boulevard parisien, portée ici sur une tenue total look noir.",
@@ -26,13 +26,13 @@ const PRODUCTS = [
   },
   {
     id: "trench-beige",
-    name: "Trench Camel",
+    name: "L'éternel 02",
     category: "Manteaux",
     color: "Camel",
     colorGroup: "trench-long",
     swatch: "#b58a5c",
-    price: 75,
-    originalPrice: 93.75,
+    price: 65,
+    originalPrice: 81.25,
     sizes: ["S", "M", "L"],
     description:
       "Trench long camel, coupe classique croisée, épaulettes structurées et manches à patte boutonnée. L'essentiel parisien à porter en toute saison.",
@@ -50,7 +50,7 @@ const PRODUCTS = [
   },
   {
     id: "veste-croco-beige",
-    name: "Veste Courte — Col Croco",
+    name: "Sienna",
     category: "Vestes",
     color: "Beige doré",
     price: 65,
@@ -95,11 +95,11 @@ const PRODUCTS = [
   },
   {
     id: "veste-foulard-marron",
-    name: "Veste Courte — Col Foulard Écossais",
+    name: "Trench Eleonore",
     category: "Vestes",
     color: "Marron",
-    price: 106,
-    originalPrice: 132.5,
+    price: 85,
+    originalPrice: 106.25,
     sizes: ["S", "M", "L"],
     description:
       "Veste courte en coton marron, large col cape doublé d'un tartan bleu et brun, à nouer en foulard sur le devant. Poignets et poche à rabat assortis au tartan.",
@@ -117,13 +117,13 @@ const PRODUCTS = [
   },
   {
     id: "pull-raye-beige",
-    name: "Pull Col Polo Rayé Beige",
+    name: "Milo 02",
     category: "Mailles",
     color: "Beige",
     colorGroup: "pull-raye",
     swatch: "#cdb48e",
-    price: 35,
-    originalPrice: 43.75,
+    price: 26,
+    originalPrice: 32.5,
     sizes: ["S", "M", "L"],
     description:
       "Pull en maille épaisse à rayures beige et brun, col polo boutonné et cordon de resserre à l'ourlet. Une pièce chaude et décontractée pour l'entre-saison.",
@@ -140,13 +140,13 @@ const PRODUCTS = [
   },
   {
     id: "pull-raye-rouge",
-    name: "Pull Col Polo Rayé Rouge",
+    name: "Milo 01",
     category: "Mailles",
     color: "Rouge",
     colorGroup: "pull-raye",
     swatch: "#9b2a24",
-    price: 35,
-    originalPrice: 43.75,
+    price: 26,
+    originalPrice: 32.5,
     sizes: ["S", "M", "L"],
     description:
       "Version rouge et gris chiné de notre pull rayé signature, col polo boutonné et cordon de resserre à l'ourlet. Un contraste vif pour twister une tenue simple.",
