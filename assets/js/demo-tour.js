@@ -119,7 +119,7 @@
       },
       {
         title: "Cabine d'essayage virtuelle — 360°",
-        body: "Glissez, utilisez la molette ou les flèches pour faire tourner le mannequin à 360°, et changez de silhouette (fine, classique, généreuse).",
+        body: "Glissez, utilisez la molette ou les flèches pour faire tourner le mannequin à 360°, et changez de taille (Small, Medium, Large) pour voir la pièce sur chaque morphologie.",
         async enter() {
           click("#modal-fitting-btn");
           await wait(600);
