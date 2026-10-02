@@ -406,10 +406,22 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.admin-btn-small.is-primary { background: var(--ink); border-color: var(--ink); color: var(--ivory); }
-.admin-btn-small.is-primary:hover { background: var(--ink-soft); }
+/* Boutons secondaires : bordure bien visible, jamais blanc sur blanc. */
+.admin-btn-small { border-color: #cdbfa6; background: #fff; }
+.admin-btn-small:hover { border-color: var(--taupe); background: var(--ivory); }
+/* Boutons d'enregistrement : pleins, sombres, impossible à manquer. */
+.admin-btn-small.is-primary,
+button.admin-btn-small[type="submit"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--ivory);
+  font-weight: 700;
+}
+.admin-btn-small.is-primary:hover,
+button.admin-btn-small[type="submit"]:hover { background: var(--ink-soft); border-color: var(--ink-soft); }
 .admin-btn-small:disabled { opacity: 0.55; cursor: default; }
 
 /* ----- À traiter ----- */
