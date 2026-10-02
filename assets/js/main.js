@@ -782,13 +782,28 @@
       const frames = spinFramesCache[`${currentProduct.id}_${fittingSize}`];
       if (!frames || frames.length === 0) return;
       spinIndex = ((index % frames.length) + frames.length) % frames.length;
+      const frame = frames[spinIndex];
+      // Frame pas encore téléchargée : on garde l'image affichée (sinon un
+      // calque vide passe devant = flash pendant la rotation) et on
+      // l'affiche dès son arrivée si c'est toujours celle demandée.
+      if (spinFrontEl && !(frame.complete && frame.naturalWidth)) {
+        const wanted = spinIndex;
+        frame.addEventListener("load", () => {
+          if (spinFramesCache[`${currentProduct.id}_${fittingSize}`] === frames && spinIndex === wanted) showSpinFrame(wanted);
+        }, { once: true });
+        return;
+      }
       const back = spinFrontEl === fittingPhoto ? fittingPhotoB : fittingPhoto;
-      back.src = frames[spinIndex].src;
-      back.classList.add("is-visible", "is-active");
-      if (spinFrontEl) spinFrontEl.classList.remove("is-active");
-      spinFrontEl = back;
-      // Reflet dans le miroir : même image (déjà en cache), inversée en CSS.
-      if (fittingReflection) fittingReflection.src = back.src;
+      if (back.getAttribute("src") !== frame.src) back.src = frame.src;
+      const reveal = () => {
+        back.classList.add("is-visible", "is-active");
+        if (spinFrontEl && spinFrontEl !== back) spinFrontEl.classList.remove("is-active");
+        spinFrontEl = back;
+        // Reflet dans le miroir : même image (déjà en cache), inversée en CSS.
+        if (fittingReflection) fittingReflection.src = back.src;
+      };
+      if (back.complete || !spinFrontEl) reveal();
+      else back.addEventListener("load", () => { if (frames[spinIndex] === frame) reveal(); }, { once: true });
     }
 
     function stopSpinIntro() {
@@ -831,6 +846,7 @@
 
     function spinPointerDown(e) {
       if (e.target.closest(".spin-arrow")) return;
+      if (!e.isPrimary) return; // un 2e doigt (pincement) ne relance pas la rotation
       spinDragging = true;
       spinDragStartX = e.clientX;
       spinDragStartIndex = spinIndex;
@@ -845,7 +861,9 @@
     }
 
     function spinPointerMove(e) {
-      if (!spinDragging) return;
+      if (!spinDragging || !e.isPrimary) return;
+      // Souris relâchée hors de la fenêtre : on termine proprement le glisser.
+      if (e.pointerType === "mouse" && e.buttons === 0) { spinPointerUp(e); return; }
       const dx = e.clientX - spinDragStartX;
       const delta = Math.round(-dx / SPIN_FRAMES_PER_STEP);
       showSpinFrame(spinDragStartIndex + delta);
@@ -860,9 +878,14 @@
       spinLastMoveT = now;
     }
 
-    function spinPointerUp() {
+    function spinPointerUp(e) {
+      if (!spinDragging) return;
+      if (e && e.isPrimary === false) return;
       spinDragging = false;
       fittingFigure.classList.remove("is-dragging");
+      // Doigt immobile avant d'être levé (ou geste annulé) : pas d'inertie,
+      // sinon le mannequin repartait tout seul avec une vitesse périmée.
+      if (!e || e.type === "pointercancel" || performance.now() - spinLastMoveT > 90) spinVelocity = 0;
 
       // Inertie courte façon "flick" : la rotation continue un instant puis
       // ralentit, pour un rendu plus fluide qu'un arrêt net au relâchement.
@@ -935,10 +958,31 @@
       });
     }
 
+    // Sur mobile, les rideaux ouverts s'arrêtent sur la photo et en
+    // recouvrent 5 % de chaque côté (mesuré sans les transformations
+    // d'animation, via offsetLeft/offsetWidth).
+    const CURTAIN_OVERLAP = 0.05;
+    function layoutFittingCurtains() {
+      if (fittingOverlay.hidden) return;
+      if (!window.matchMedia("(max-width: 860px)").matches) {
+        fittingOverlay.style.removeProperty("--curtain-left");
+        fittingOverlay.style.removeProperty("--curtain-right");
+        return;
+      }
+      const stage = fittingFigure.offsetParent;
+      const left = (stage ? stage.offsetLeft : 0) + fittingFigure.offsetLeft;
+      const width = fittingFigure.offsetWidth;
+      const overlap = width * CURTAIN_OVERLAP;
+      fittingOverlay.style.setProperty("--curtain-left", `${Math.round(left + overlap)}px`);
+      fittingOverlay.style.setProperty("--curtain-right", `${Math.round(fittingOverlay.clientWidth - left - width + overlap)}px`);
+    }
+    window.addEventListener("resize", layoutFittingCurtains);
+
     function openFittingRoom(product) {
       if (!SPIN_FRAMES[product.id]) return;
       showFittingProduct(product);
       fittingOverlay.hidden = false;
+      layoutFittingCurtains();
       // Reflow avant d'ajouter la classe pour que la transition de rideau joue.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => fittingOverlay.classList.add("is-open"));

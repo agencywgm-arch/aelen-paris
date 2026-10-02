@@ -39,16 +39,35 @@
       true
     );
 
-    // Molette = une frame à la fois, fluide
-    figure.addEventListener(
+    // Molette / pavé tactile : on cumule le défilement et on avance d'une
+    // frame tous les WHEEL_STEP px. Avant, chaque petit événement du pavé
+    // tactile (des dizaines par geste) faisait tourner d'une frame : rotation
+    // beaucoup trop rapide et saccadée. Écouté sur toute la cabine pour que
+    // la page derrière ne défile jamais.
+    var WHEEL_STEP = 28;
+    var wheelAccum = 0;
+    var wheelResetTimer = null;
+    if (overlay) overlay.addEventListener(
       "wheel",
       function (e) {
-        if (!overlay || overlay.hidden) return;
+        if (overlay.hidden) return;
         e.preventDefault();
         e.stopPropagation();
         if (hint) hint.classList.remove("is-visible");
-        var btn = e.deltaY > 0 || e.deltaX > 0 ? next : prev;
-        if (btn) btn.click();
+        // Souris classique en « lignes » : on convertit en pixels.
+        var unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+        var delta = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit;
+        wheelAccum += delta;
+        var steps = 0;
+        while (Math.abs(wheelAccum) >= WHEEL_STEP && steps < 4) {
+          var btn = wheelAccum > 0 ? next : prev;
+          if (btn) btn.click();
+          wheelAccum -= wheelAccum > 0 ? WHEEL_STEP : -WHEEL_STEP;
+          steps++;
+        }
+        if (steps === 4) wheelAccum = 0;
+        clearTimeout(wheelResetTimer);
+        wheelResetTimer = setTimeout(function () { wheelAccum = 0; }, 200);
       },
       { passive: false }
     );
@@ -65,10 +84,25 @@
       clearInterval(holdTimer);
       holdTimer = null;
     }
+    // Le pointerdown fait déjà avancer d'une frame : on ignore le « click »
+    // natif qui suit le relâchement, sinon chaque appui tournait de 2 frames.
+    // (Les clics programmés — maintien, molette — et le clavier passent.)
+    var swallowNextClick = false;
     [prev, next].forEach(function (btn) {
+      btn.addEventListener(
+        "click",
+        function (e) {
+          if (e.isTrusted && swallowNextClick) {
+            swallowNextClick = false;
+            e.stopImmediatePropagation();
+          }
+        },
+        true
+      );
       btn.addEventListener("pointerdown", function (e) {
         e.preventDefault();
         e.stopPropagation();
+        swallowNextClick = true;
         startHold(btn);
       });
       btn.addEventListener("pointerup", stopHold);
