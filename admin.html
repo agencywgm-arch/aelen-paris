@@ -28,21 +28,20 @@
 
   <div id="admin-app" class="admin-app" hidden>
     <header class="admin-header">
-      <div>
+      <div class="admin-brand">
         <img class="admin-logo" src="assets/img/brand/logo-aelen-paris.png" alt="Ælen Paris" />
         <span class="admin-header-tag">Espace staff</span>
       </div>
       <button type="button" id="admin-logout" class="admin-btn admin-btn-ghost">Se déconnecter</button>
     </header>
 
-    <nav class="admin-tabs">
-      <button type="button" class="admin-tab active" data-tab="stats">Statistiques</button>
+    <nav class="admin-tabs" role="tablist" aria-label="Sections de l'espace staff">
+      <button type="button" class="admin-tab active" data-tab="stats">Tableau de bord</button>
       <button type="button" class="admin-tab" data-tab="orders">Commandes</button>
       <button type="button" class="admin-tab" data-tab="returns">Retours</button>
       <button type="button" class="admin-tab" data-tab="customers">Clients</button>
       <button type="button" class="admin-tab" data-tab="messages">Messages</button>
       <button type="button" class="admin-tab" data-tab="products">Produits</button>
-      <button type="button" class="admin-tab" data-tab="preorders">Précommandes</button>
       <button type="button" class="admin-tab" data-tab="waitlist">Liste d'attente</button>
     </nav>
 
@@ -53,10 +52,11 @@
       <section id="admin-panel-customers" class="admin-panel"></section>
       <section id="admin-panel-messages" class="admin-panel"></section>
       <section id="admin-panel-products" class="admin-panel"></section>
-      <section id="admin-panel-preorders" class="admin-panel"></section>
       <section id="admin-panel-waitlist" class="admin-panel"></section>
     </main>
   </div>
+
+  <div id="admin-toasts" class="admin-toasts" role="status" aria-live="polite"></div>
 
   <script src="assets/js/admin.js"></script>
 </body>

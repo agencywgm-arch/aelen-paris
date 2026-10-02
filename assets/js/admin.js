@@ -16,7 +16,6 @@
     customers: document.getElementById("admin-panel-customers"),
     messages: document.getElementById("admin-panel-messages"),
     products: document.getElementById("admin-panel-products"),
-    preorders: document.getElementById("admin-panel-preorders"),
     waitlist: document.getElementById("admin-panel-waitlist"),
   };
 
@@ -81,7 +80,9 @@
   function showApp() {
     loginScreen.hidden = true;
     app.hidden = false;
-    activateTab("stats");
+    const { tab, filter } = tabFromHash();
+    activateTab(tab, { filter, scrollTop: false });
+    refreshTabCounts();
   }
 
   loginForm.addEventListener("submit", async (e) => {
@@ -123,17 +124,52 @@
 
   // ---- Tabs ----
 
-  function activateTab(name) {
-    tabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+  const TAB_TITLES = {
+    stats: "Tableau de bord", orders: "Commandes", returns: "Retours", customers: "Clients",
+    messages: "Messages", products: "Produits", waitlist: "Liste d'attente",
+  };
+
+  function activateTab(name, options) {
+    if (!panels[name]) name = "stats";
+    const opts = options || {};
+    if (name === "orders" && opts.filter) setOrderFilter(opts.filter);
+    tabs.forEach((t) => {
+      const on = t.dataset.tab === name;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", String(on));
+      if (on && t.scrollIntoView) t.scrollIntoView({ block: "nearest", inline: "center" });
+    });
     Object.keys(panels).forEach((k) => panels[k].classList.toggle("active", k === name));
+    document.title = `${TAB_TITLES[name]} — Espace Staff Ælen Paris`;
+    // Adresse partageable / bouton Retour : #orders, #orders/preorder…
+    const hash = name === "orders" && ordersState.filter !== "all" ? `#orders/${ordersState.filter}` : `#${name}`;
+    if (location.hash !== hash) history.replaceState(null, "", hash);
     if (!loaded[name]) {
       loaded[name] = true;
       loadTab(name);
     }
+    if (opts.scrollTop !== false) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   tabs.forEach((tab) => {
+    tab.setAttribute("role", "tab");
     tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+  });
+
+  // Tuiles cliquables du tableau de bord : « Commandes » ouvre la liste des commandes, etc.
+  document.addEventListener("click", (ev) => {
+    const link = ev.target.closest("[data-goto]");
+    if (link) activateTab(link.dataset.goto, { filter: link.dataset.filter });
+  });
+
+  function tabFromHash() {
+    const [tab, filter] = location.hash.replace(/^#/, "").split("/");
+    return { tab: panels[tab] ? tab : "stats", filter };
+  }
+  window.addEventListener("hashchange", () => {
+    if (app.hidden) return;
+    const { tab, filter } = tabFromHash();
+    activateTab(tab, { filter, scrollTop: false });
   });
 
   function loadTab(name) {
@@ -143,125 +179,120 @@
     if (name === "customers") return loadCustomers();
     if (name === "messages") return loadMessages();
     if (name === "products") return loadProducts();
-    if (name === "preorders") return loadPreorders();
     if (name === "waitlist") return loadWaitlist();
   }
 
-  // ---- Précommandes (historique complet) ----
+  // ---- Utilitaires UI ----
 
   function csvCell(value) {
     const v = value == null ? "" : String(value);
-    return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    return /[";\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
   }
 
-  async function loadPreorders() {
-    const panel = panels.preorders;
-    panel.innerHTML = `<h2>Précommandes</h2><p class="admin-loading">Chargement…</p>`;
-    try {
-      const resp = await fetch("/api/staff/preorders");
-      const data = await resp.json();
-      if (!resp.ok) {
-        panel.innerHTML = `<h2>Précommandes</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
-        return;
+  function downloadCsv(filename, header, lines) {
+    const csv = "﻿" + [header, ...lines].map((r) => r.map(csvCell).join(";")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  const toastsEl = document.getElementById("admin-toasts");
+  function toast(message, kind) {
+    if (!toastsEl) return;
+    const el = document.createElement("div");
+    el.className = `admin-toast${kind === "error" ? " is-error" : ""}`;
+    el.textContent = message;
+    toastsEl.appendChild(el);
+    requestAnimationFrame(() => el.classList.add("is-in"));
+    setTimeout(() => {
+      el.classList.remove("is-in");
+      setTimeout(() => el.remove(), 300);
+    }, 2600);
+  }
+
+  // Compteurs sur les onglets (à traiter), mis à jour toutes les minutes.
+  const TAB_COUNT_KEYS = { orders: "toShip", returns: "openReturns", messages: "unreadMessages" };
+  function applyTabCounts(stats) {
+    tabs.forEach((tab) => {
+      const key = TAB_COUNT_KEYS[tab.dataset.tab];
+      if (!key) return;
+      let badge = tab.querySelector(".admin-tab-count");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "admin-tab-count";
+        tab.appendChild(badge);
       }
-      const list = data.preorders;
-      const totalCents = list.reduce((sum, p) => sum + (p.total || 0), 0);
-      const customers = new Set(list.map((p) => p.email)).size;
-      const itemsCount = list.reduce((sum, p) => sum + p.cart.reduce((n, it) => n + (it.qty || 0), 0), 0);
-
-      panel.innerHTML = `
-        <h2>Précommandes</h2>
-        <div class="admin-kpis">
-          <div class="admin-kpi"><div class="admin-kpi-label">Précommandes</div><div class="admin-kpi-value">${list.length}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Clients</div><div class="admin-kpi-value">${customers}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Articles</div><div class="admin-kpi-value">${itemsCount}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Montant total</div><div class="admin-kpi-value">${formatCents(totalCents)}</div></div>
-        </div>
-        <div class="admin-panel-actions">
-          <input type="search" id="admin-preorder-search" class="admin-search" placeholder="Rechercher un e-mail, un numéro, un article…" />
-          <button type="button" class="admin-btn-small" id="admin-preorder-export">Exporter (CSV)</button>
-        </div>
-        <div class="admin-table-wrap">
-          <table class="admin-table">
-            <thead><tr><th>N°</th><th>Date</th><th>E-mail</th><th>Téléphone</th><th>Articles</th><th>Total</th></tr></thead>
-            <tbody id="admin-preorder-rows"></tbody>
-          </table>
-        </div>
-      `;
-
-      const tbody = panel.querySelector("#admin-preorder-rows");
-      const render = (query) => {
-        const q = query.trim().toLowerCase();
-        const rows = list.filter((p) => {
-          if (!q) return true;
-          const hay = [p.email, p.phone, ...p.cart.map((it) => it.productName)].join(" ").toLowerCase();
-          return hay.includes(q) || (p.phone || "").replace(/\D/g, "").includes(q.replace(/\D/g, "") || "\u0000");
-        });
-        tbody.innerHTML = rows.length
-          ? rows.map((p) => `
-            <tr>
-              <td>${p.id}</td>
-              <td>${formatDate(p.createdAt)}</td>
-              <td>${escapeHtml(p.email)}</td>
-              <td>${p.phone ? `<a href="tel:${escapeHtml(p.phone.replace(/[^+\d]/g, ""))}">${escapeHtml(p.phone)}</a>` : `<span class="admin-muted">—</span>`}</td>
-              <td class="admin-order-items">${p.cart.map((it) => `<div>${it.qty} × ${escapeHtml(it.productName)}${it.size ? ` (${escapeHtml(it.size)})` : ""}</div>`).join("")}</td>
-              <td>${formatCents(p.total)}</td>
-            </tr>`).join("")
-          : `<tr><td colspan="6" class="admin-empty">${list.length ? "Aucun résultat." : "Aucune précommande pour l'instant."}</td></tr>`;
-      };
-      render("");
-      panel.querySelector("#admin-preorder-search").addEventListener("input", (e) => render(e.target.value));
-
-      panel.querySelector("#admin-preorder-export").addEventListener("click", () => {
-        const header = ["N°", "Date", "E-mail", "Téléphone", "Articles", "Total (€)"];
-        const lines = list.map((p) => [
-          p.id,
-          new Date(p.createdAt).toLocaleString("fr-FR"),
-          p.email,
-          p.phone || "",
-          p.cart.map((it) => `${it.qty} x ${it.productName}${it.size ? ` (${it.size})` : ""}`).join(" | "),
-          (p.total / 100).toFixed(2).replace(".", ","),
-        ]);
-        const csv = "\uFEFF" + [header, ...lines].map((r) => r.map(csvCell).join(";")).join("\r\n");
-        const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `precommandes-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      });
-    } catch (err) {
-      panel.innerHTML = `<h2>Précommandes</h2><p class="admin-empty">${errorMessage()}</p>`;
-    }
+      const n = Number(stats[key]) || 0;
+      badge.textContent = n > 99 ? "99+" : String(n);
+      badge.hidden = n === 0;
+    });
   }
+  async function refreshTabCounts() {
+    try {
+      const resp = await fetch("/api/staff/stats");
+      if (resp.ok) applyTabCounts(await resp.json());
+    } catch (err) {}
+  }
+  setInterval(() => {
+    if (!app.hidden && !document.hidden) refreshTabCounts();
+  }, 60000);
 
-  // ---- Statistiques ----
+  // ---- Tableau de bord ----
 
   async function loadStats() {
     const panel = panels.stats;
-    panel.innerHTML = `<h2>Statistiques</h2><p class="admin-loading">Chargement…</p>`;
+    panel.innerHTML = `<h2>Tableau de bord</h2><p class="admin-loading">Chargement…</p>`;
     try {
       const resp = await fetch("/api/staff/stats");
       const data = await resp.json();
       if (!resp.ok) {
-        panel.innerHTML = `<h2>Statistiques</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
+        panel.innerHTML = `<h2>Tableau de bord</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
         return;
       }
+      applyTabCounts(data);
       const topRows = data.topProducts
-        .map(
-          (p) =>
-            `<tr><td>${escapeHtml(p.productName)}</td><td>${p.totalQty}</td></tr>`
-        )
+        .map((p) => `<tr><td>${escapeHtml(p.productName)}</td><td>${p.totalQty}</td></tr>`)
         .join("");
+      const todo = (n, label, tab, filter, doneText) => `
+        <button type="button" class="admin-todo-card${n ? " has-items" : ""}" data-goto="${tab}" ${filter ? `data-filter="${filter}"` : ""}>
+          <span class="admin-todo-count">${n}</span>
+          <span class="admin-todo-label">${label}</span>
+          <span class="admin-todo-hint">${n ? "Voir la liste →" : doneText}</span>
+        </button>`;
       panel.innerHTML = `
-        <h2>Statistiques</h2>
+        <h2>Tableau de bord</h2>
         <div class="admin-kpis">
-          <div class="admin-kpi"><div class="admin-kpi-label">Chiffre d'affaires</div><div class="admin-kpi-value">${formatCents(data.revenue)}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Commandes</div><div class="admin-kpi-value">${data.orderCount}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Panier moyen</div><div class="admin-kpi-value">${formatCents(data.avgOrderValue)}</div></div>
-          <div class="admin-kpi"><div class="admin-kpi-label">Commandes (30j)</div><div class="admin-kpi-value">${data.ordersLast30Days}</div></div>
+          <button type="button" class="admin-kpi is-link" data-goto="orders" data-filter="all">
+            <div class="admin-kpi-label">Commandes</div>
+            <div class="admin-kpi-value">${data.orderCount}</div>
+            <div class="admin-kpi-sub">Voir toutes les commandes →</div>
+          </button>
+          <button type="button" class="admin-kpi is-link" data-goto="orders" data-filter="preorder">
+            <div class="admin-kpi-label">Précommandes</div>
+            <div class="admin-kpi-value">${data.preorderCount}</div>
+            <div class="admin-kpi-sub">${formatCents(data.preorderTotal)} précommandés →</div>
+          </button>
+          <div class="admin-kpi">
+            <div class="admin-kpi-label">Chiffre d'affaires</div>
+            <div class="admin-kpi-value">${formatCents(data.revenue)}</div>
+            <div class="admin-kpi-sub">Hors tests et annulées</div>
+          </div>
+          <div class="admin-kpi">
+            <div class="admin-kpi-label">Panier moyen</div>
+            <div class="admin-kpi-value">${formatCents(data.avgOrderValue)}</div>
+            <div class="admin-kpi-sub">${data.ordersLast30Days} commande${data.ordersLast30Days > 1 ? "s" : ""} sur 30 jours</div>
+          </div>
+        </div>
+        <p class="admin-subhead">À traiter</p>
+        <div class="admin-todo">
+          ${todo(data.toShip, "Commandes à expédier", "orders", "todo", "Tout est expédié ✓")}
+          ${todo(data.unreadMessages, "Messages non lus", "messages", "", "Aucun message en attente ✓")}
+          ${todo(data.openReturns, "Retours en cours", "returns", "", "Aucun retour en cours ✓")}
         </div>
         <p class="admin-subhead">Produits les plus vendus</p>
         <div class="admin-table-wrap">
@@ -272,11 +303,11 @@
         </div>
       `;
     } catch (err) {
-      panel.innerHTML = `<h2>Statistiques</h2><p class="admin-empty">${errorMessage()}</p>`;
+      panel.innerHTML = `<h2>Tableau de bord</h2><p class="admin-empty">${errorMessage()}</p>`;
     }
   }
 
-  // ---- Commandes ----
+  // ---- Commandes (payées + précommandes) ----
 
   const STATUS_LABELS = {
     preorder: "Précommande",
@@ -287,132 +318,255 @@
     delivered: "Livrée",
     cancelled: "Annulée",
   };
+  const ORDER_STATUS_CHOICES = ["paid", "unpaid", "processing", "shipped", "delivered", "cancelled"];
 
-  const TEST_ORDER_BAR = `
-    <div class="admin-panel-actions">
-      <button type="button" class="admin-btn-small" id="admin-create-test-order">+ Commande de test</button>
-      <span class="admin-hint">Crée une commande factice (aucun paiement réel) pour tester le suivi et les retours.</span>
-    </div>
-  `;
+  const ORDER_FILTERS = [
+    { id: "all", label: "Toutes", test: () => true },
+    { id: "preorder", label: "Précommandes", test: (e) => e.kind === "preorder" },
+    { id: "todo", label: "À traiter", test: (e) => e.kind === "order" && (e.status === "paid" || e.status === "processing") },
+    { id: "shipped", label: "Expédiées", test: (e) => e.kind === "order" && (e.status === "shipped" || e.status === "delivered") },
+    { id: "cancelled", label: "Annulées", test: (e) => e.kind === "order" && (e.status === "cancelled" || e.status === "unpaid") },
+  ];
 
-  function wireTestOrderButton(panel) {
-    const btn = panel.querySelector("#admin-create-test-order");
-    if (!btn) return;
-    btn.addEventListener("click", async () => {
-      btn.disabled = true;
-      btn.textContent = "Création…";
-      try {
-        const resp = await fetch("/api/staff/test-order", { method: "POST" });
-        if (resp.ok) {
-          delete loaded.orders;
-          loadOrders();
-        } else {
-          btn.textContent = "Erreur, réessayez";
-          setTimeout(() => (btn.textContent = "+ Commande de test"), 2000);
-        }
-      } catch (err) {
-        btn.textContent = "Erreur, réessayez";
-        setTimeout(() => (btn.textContent = "+ Commande de test"), 2000);
-      } finally {
-        btn.disabled = false;
-      }
+  const ordersState = { filter: "all", query: "", entries: [] };
+
+  const TEST_ORDER_HINT = "Crée une commande factice (aucun paiement réel) pour tester le suivi et les retours.";
+
+  function normalizeOrders(orders, preorders) {
+    const fromOrders = orders.map((o) => ({
+      kind: "order",
+      id: o.id,
+      number: `N° ${o.id}`,
+      createdAt: o.createdAt,
+      email: o.customerEmail,
+      name: o.customerName || "",
+      phone: o.customerPhone || "",
+      items: o.items.map((it) => ({ qty: it.qty, name: it.product_name, size: it.size })),
+      total: o.amountTotal,
+      status: o.status || "paid",
+      isTest: typeof o.stripeSessionId === "string" && o.stripeSessionId.indexOf("test_") === 0,
+      trackingCarrier: o.trackingCarrier || "",
+      trackingNumber: o.trackingNumber || "",
+    }));
+    const fromPreorders = preorders.map((p) => ({
+      kind: "preorder",
+      id: p.id,
+      number: `Pré-${p.id}`,
+      createdAt: p.createdAt,
+      email: p.email,
+      name: "",
+      phone: p.phone || "",
+      items: p.cart.map((it) => ({ qty: it.qty, name: it.productName, size: it.size })),
+      total: p.total,
+      status: "preorder",
+      isTest: false,
+    }));
+    return [...fromOrders, ...fromPreorders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+
+  function entryMatches(entry, query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    const hay = [entry.number, entry.email, entry.name, entry.phone, STATUS_LABELS[entry.status], ...entry.items.map((i) => i.name)]
+      .join(" ")
+      .toLowerCase();
+    const digits = q.replace(/\D/g, "");
+    return hay.includes(q) || (digits.length >= 3 && entry.phone.replace(/\D/g, "").includes(digits));
+  }
+
+  function orderCardHtml(e) {
+    const itemsHtml = e.items
+      .map((it) => `<li>${it.qty} × ${escapeHtml(it.name)}${it.size ? ` <span class="oc-size">${escapeHtml(it.size)}</span>` : ""}</li>`)
+      .join("");
+    const tel = e.phone ? e.phone.replace(/[^+\d]/g, "") : "";
+    const customer = [
+      e.name ? `<div class="oc-name">${escapeHtml(e.name)}</div>` : "",
+      `<div><a href="mailto:${escapeHtml(e.email)}">${escapeHtml(e.email)}</a></div>`,
+      e.phone ? `<div><a href="tel:${escapeHtml(tel)}">${escapeHtml(e.phone)}</a></div>` : `<div class="admin-muted-text">Téléphone non renseigné</div>`,
+    ].join("");
+
+    let manage;
+    if (e.kind === "preorder") {
+      manage = `
+        <p class="admin-hint">Précommande sans paiement : recontactez le client pour finaliser le règlement et la livraison.</p>
+        <div class="oc-actions">
+          ${e.phone ? `<a class="admin-btn-small is-primary" href="tel:${escapeHtml(tel)}">Appeler</a>` : ""}
+          <a class="admin-btn-small${e.phone ? "" : " is-primary"}" href="mailto:${escapeHtml(e.email)}?subject=${encodeURIComponent("Votre précommande Ælen Paris")}">Écrire un e-mail</a>
+        </div>`;
+    } else {
+      manage = `
+        <form class="admin-inline-form admin-order-form">
+          <select name="status" aria-label="Statut">
+            ${ORDER_STATUS_CHOICES.map((s) => `<option value="${s}" ${s === e.status ? "selected" : ""}>${STATUS_LABELS[s]}</option>`).join("")}
+          </select>
+          <input type="text" name="trackingCarrier" placeholder="Transporteur" value="${escapeHtml(e.trackingCarrier)}" />
+          <input type="text" name="trackingNumber" placeholder="N° de suivi" value="${escapeHtml(e.trackingNumber)}" />
+          <button type="submit" class="admin-btn-small is-primary">Enregistrer</button>
+        </form>
+        <div class="oc-actions">
+          <a class="admin-btn-small" href="/api/staff/invoice?orderId=${e.id}" target="_blank" rel="noopener">Facture (PDF)</a>
+          <button type="button" class="admin-btn-small admin-toggle-return">+ Retour</button>
+        </div>
+        <form class="admin-inline-form admin-return-form" hidden>
+          <input type="text" name="reason" placeholder="Motif (optionnel)" />
+          <input type="number" step="0.01" min="0" name="refundAmount" placeholder="Montant € (défaut : total)" />
+          <button type="submit" class="admin-btn-small is-primary">Créer le retour</button>
+        </form>`;
+    }
+
+    return `
+      <article class="order-card" data-kind="${e.kind}" data-id="${e.id}">
+        <div class="oc-head">
+          <div class="oc-id">
+            <strong>${e.number}</strong>
+            <span class="admin-badge status-${e.status}">${STATUS_LABELS[e.status] || e.status}</span>
+            ${e.isTest ? `<span class="admin-badge admin-badge-test">Test</span>` : ""}
+          </div>
+          <div class="oc-total">${formatCents(e.total)}</div>
+          <div class="oc-date">${formatDate(e.createdAt)}</div>
+        </div>
+        <div class="oc-body">
+          <div class="oc-customer">${customer}</div>
+          <ul class="oc-items">${itemsHtml}</ul>
+        </div>
+        <details class="oc-manage">
+          <summary>${e.kind === "preorder" ? "Contacter le client" : "Gérer la commande"}</summary>
+          <div class="oc-manage-body">${manage}</div>
+        </details>
+      </article>`;
+  }
+
+  function renderOrderList() {
+    const panel = panels.orders;
+    const list = panel.querySelector("#admin-order-list");
+    if (!list) return;
+    const active = ORDER_FILTERS.find((f) => f.id === ordersState.filter) || ORDER_FILTERS[0];
+    const rows = ordersState.entries.filter((e) => active.test(e) && entryMatches(e, ordersState.query));
+    list.innerHTML = rows.length
+      ? rows.map(orderCardHtml).join("")
+      : `<div class="admin-empty-state">
+           <p class="admin-empty-title">${ordersState.entries.length ? "Aucun résultat" : "Aucune commande pour l'instant"}</p>
+           <p>${ordersState.entries.length ? "Essayez un autre filtre ou une autre recherche." : "Les commandes et précommandes de vos clients apparaîtront ici dès leur validation."}</p>
+         </div>`;
+    panel.querySelector("#admin-order-count").textContent =
+      `${rows.length} résultat${rows.length > 1 ? "s" : ""}`;
+    panel.querySelectorAll(".admin-chip").forEach((chip) => {
+      const f = ORDER_FILTERS.find((x) => x.id === chip.dataset.filter);
+      chip.classList.toggle("is-active", chip.dataset.filter === active.id);
+      chip.setAttribute("aria-pressed", String(chip.dataset.filter === active.id));
+      chip.querySelector(".admin-chip-count").textContent = String(ordersState.entries.filter(f.test).length);
     });
+  }
+
+  function setOrderFilter(id) {
+    ordersState.filter = ORDER_FILTERS.some((f) => f.id === id) ? id : "all";
+    if (loaded.orders && panels.orders.querySelector("#admin-order-list")) renderOrderList();
+  }
+
+  async function createTestOrder(btn) {
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = "Création…";
+    try {
+      const resp = await fetch("/api/staff/test-order", { method: "POST" });
+      if (resp.ok) {
+        toast("Commande de test créée");
+        await loadOrders();
+        return;
+      }
+      toast("Impossible de créer la commande de test", "error");
+    } catch (err) {
+      toast("Erreur réseau, réessayez", "error");
+    }
+    btn.disabled = false;
+    btn.textContent = label;
   }
 
   async function loadOrders() {
     const panel = panels.orders;
     panel.innerHTML = `<h2>Commandes</h2><p class="admin-loading">Chargement…</p>`;
     try {
-      const resp = await fetch("/api/staff/orders");
-      const data = await resp.json();
-      if (!resp.ok) {
-        panel.innerHTML = `<h2>Commandes</h2><p class="admin-empty">${errorMessage(data.error)}</p>`;
+      const [ordersResp, preordersResp] = await Promise.all([fetch("/api/staff/orders"), fetch("/api/staff/preorders")]);
+      const ordersData = await ordersResp.json();
+      if (!ordersResp.ok) {
+        panel.innerHTML = `<h2>Commandes</h2><p class="admin-empty">${errorMessage(ordersData.error)}</p>`;
         return;
       }
-      if (data.orders.length === 0) {
-        panel.innerHTML = `<h2>Commandes</h2>${TEST_ORDER_BAR}<p class="admin-empty">Aucune commande pour l'instant.</p>`;
-        wireTestOrderButton(panel);
-        return;
-      }
-
-      const rows = data.orders
-        .map((o) => {
-          const itemsHtml = o.items
-            .map(
-              (it) =>
-                `<div>${it.qty} × ${escapeHtml(it.product_name)}${it.size ? ` (${escapeHtml(it.size)})` : ""}</div>`
-            )
-            .join("");
-          const status = o.status || "paid";
-          const isTest = typeof o.stripeSessionId === "string" && o.stripeSessionId.indexOf("test_") === 0;
-          const contactHtml = [o.customerName, o.customerPhone]
-            .filter(Boolean)
-            .map((v) => `<div class="admin-order-contact">${escapeHtml(v)}</div>`)
-            .join("");
-          return `
-            <tr class="admin-order-row" data-order-id="${o.id}">
-              <td>${formatDate(o.createdAt)}${isTest ? ` <span class="admin-badge admin-badge-test">Test</span>` : ""}</td>
-              <td>${escapeHtml(o.customerEmail)}${contactHtml}</td>
-              <td class="admin-order-items">${itemsHtml}</td>
-              <td>${formatCents(o.amountTotal)}</td>
-              <td><span class="admin-badge status-${status}">${STATUS_LABELS[status] || status}</span></td>
-              <td>
-                <form class="admin-inline-form admin-order-form">
-                  <select name="status">
-                    ${Object.keys(STATUS_LABELS)
-                      .map((s) => `<option value="${s}" ${s === status ? "selected" : ""}>${STATUS_LABELS[s]}</option>`)
-                      .join("")}
-                  </select>
-                  <input type="text" name="trackingCarrier" placeholder="Transporteur" value="${escapeHtml(o.trackingCarrier || "")}" />
-                  <input type="text" name="trackingNumber" placeholder="N° de suivi" value="${escapeHtml(o.trackingNumber || "")}" />
-                  <button type="submit" class="admin-btn-small">Enregistrer</button>
-                  <span class="admin-save-note" hidden>Enregistré ✓</span>
-                </form>
-              </td>
-              <td>
-                <a class="admin-btn-small" href="/api/staff/invoice?orderId=${o.id}" target="_blank" rel="noopener" style="display:inline-block; text-decoration:none; margin-bottom:6px;">Facture</a>
-                <button type="button" class="admin-btn-small admin-toggle-return">+ Retour</button>
-                <form class="admin-inline-form admin-return-form" hidden>
-                  <input type="text" name="reason" placeholder="Motif (optionnel)" style="width:160px;" />
-                  <input type="number" step="0.01" min="0" name="refundAmount" placeholder="Montant € (par défaut : total)" style="width:170px;" />
-                  <button type="submit" class="admin-btn-small">Créer le retour</button>
-                  <span class="admin-save-note" hidden>Créé ✓</span>
-                </form>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
+      // Les précommandes sont un plus : si leur chargement échoue, la liste des commandes reste utilisable.
+      let preorders = [];
+      try {
+        if (preordersResp.ok) preorders = (await preordersResp.json()).preorders || [];
+      } catch (err) {}
+      ordersState.entries = normalizeOrders(ordersData.orders || [], preorders);
 
       panel.innerHTML = `
-        <h2>Commandes</h2>
-        ${TEST_ORDER_BAR}
-        <div class="admin-table-wrap">
-          <table class="admin-table">
-            <thead><tr><th>Date</th><th>Client</th><th>Articles</th><th>Montant</th><th>Statut</th><th>Suivi</th><th>Actions</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+        <div class="admin-panel-head">
+          <h2>Commandes</h2>
+          <div class="admin-panel-head-actions">
+            <button type="button" class="admin-btn-small" id="admin-orders-refresh">Actualiser</button>
+            <button type="button" class="admin-btn-small" id="admin-orders-export">Exporter (CSV)</button>
+            <button type="button" class="admin-btn-small" id="admin-create-test-order" title="${TEST_ORDER_HINT}">+ Commande de test</button>
+          </div>
         </div>
+        <div class="admin-toolbar">
+          <input type="search" id="admin-order-search" class="admin-search" placeholder="Rechercher : e-mail, téléphone, article, n°…" aria-label="Rechercher une commande" value="${escapeHtml(ordersState.query)}" />
+          <span class="admin-toolbar-count" id="admin-order-count"></span>
+        </div>
+        <div class="admin-chips" role="group" aria-label="Filtrer les commandes">
+          ${ORDER_FILTERS.map((f) => `<button type="button" class="admin-chip" data-filter="${f.id}">${f.label} <span class="admin-chip-count">0</span></button>`).join("")}
+        </div>
+        <div id="admin-order-list" class="order-list"></div>
       `;
+      renderOrderList();
 
-      wireTestOrderButton(panel);
-
-      panel.querySelectorAll(".admin-toggle-return").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const form = btn.closest("td").querySelector(".admin-return-form");
-          form.hidden = !form.hidden;
-        });
+      panel.querySelector("#admin-order-search").addEventListener("input", (ev) => {
+        ordersState.query = ev.target.value;
+        renderOrderList();
+      });
+      panel.querySelector(".admin-chips").addEventListener("click", (ev) => {
+        const chip = ev.target.closest(".admin-chip");
+        if (chip) setOrderFilter(chip.dataset.filter);
+      });
+      panel.querySelector("#admin-orders-refresh").addEventListener("click", () => {
+        refreshTabCounts();
+        loadOrders();
+      });
+      panel.querySelector("#admin-create-test-order").addEventListener("click", (ev) => createTestOrder(ev.currentTarget));
+      panel.querySelector("#admin-orders-export").addEventListener("click", () => {
+        const active = ORDER_FILTERS.find((f) => f.id === ordersState.filter) || ORDER_FILTERS[0];
+        const rows = ordersState.entries.filter((e) => active.test(e) && entryMatches(e, ordersState.query));
+        downloadCsv(
+          `commandes-${new Date().toISOString().slice(0, 10)}.csv`,
+          ["N°", "Type", "Date", "Statut", "E-mail", "Téléphone", "Articles", "Total (€)"],
+          rows.map((e) => [
+            e.number,
+            e.kind === "preorder" ? "Précommande" : "Commande",
+            new Date(e.createdAt).toLocaleString("fr-FR"),
+            STATUS_LABELS[e.status] || e.status,
+            e.email,
+            e.phone,
+            e.items.map((i) => `${i.qty} x ${i.name}${i.size ? ` (${i.size})` : ""}`).join(" | "),
+            (e.total / 100).toFixed(2).replace(".", ","),
+          ])
+        );
       });
 
-      panel.querySelectorAll(".admin-return-form").forEach((form) => {
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const row = form.closest(".admin-order-row");
-          const orderId = Number(row.dataset.orderId);
-          const btn = form.querySelector("button[type=submit]");
-          const note = form.querySelector(".admin-save-note");
-          btn.disabled = true;
-          try {
+      // Actions déléguées : elles survivent aux re-rendus de la liste (filtre / recherche).
+      const listEl = panel.querySelector("#admin-order-list");
+      listEl.addEventListener("click", (ev) => {
+        const toggle = ev.target.closest(".admin-toggle-return");
+        if (toggle) toggle.closest(".oc-manage-body").querySelector(".admin-return-form").hidden =
+          !toggle.closest(".oc-manage-body").querySelector(".admin-return-form").hidden;
+      });
+      listEl.addEventListener("submit", async (ev) => {
+        const form = ev.target;
+        ev.preventDefault();
+        const card = form.closest(".order-card");
+        const orderId = Number(card.dataset.id);
+        const submit = form.querySelector("button[type=submit]");
+        submit.disabled = true;
+        try {
+          if (form.classList.contains("admin-return-form")) {
             const resp = await fetch("/api/staff/returns", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -423,31 +577,13 @@
               }),
             });
             if (resp.ok) {
-              note.hidden = false;
-              setTimeout(() => {
-                note.hidden = true;
-                form.hidden = true;
-                form.reset();
-              }, 1500);
+              toast("Retour créé");
+              form.hidden = true;
+              form.reset();
               delete loaded.returns;
-            }
-          } catch (err) {
-            // silencieux
-          } finally {
-            btn.disabled = false;
-          }
-        });
-      });
-
-      panel.querySelectorAll(".admin-order-form").forEach((form) => {
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const row = form.closest(".admin-order-row");
-          const orderId = Number(row.dataset.orderId);
-          const btn = form.querySelector("button");
-          const note = form.querySelector(".admin-save-note");
-          btn.disabled = true;
-          try {
+              refreshTabCounts();
+            } else toast("Impossible de créer le retour", "error");
+          } else {
             const resp = await fetch("/api/staff/orders", {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
@@ -459,18 +595,29 @@
               }),
             });
             if (resp.ok) {
-              note.hidden = false;
-              const badge = row.querySelector(".admin-badge");
+              toast("Commande mise à jour");
+              const entry = ordersState.entries.find((x) => x.kind === "order" && x.id === orderId);
+              if (entry) {
+                entry.status = form.status.value;
+                entry.trackingCarrier = form.trackingCarrier.value;
+                entry.trackingNumber = form.trackingNumber.value;
+              }
+              const badge = card.querySelector(".oc-id .admin-badge");
               badge.className = `admin-badge status-${form.status.value}`;
               badge.textContent = STATUS_LABELS[form.status.value] || form.status.value;
-              setTimeout(() => (note.hidden = true), 2500);
-            }
-          } catch (err) {
-            // silencieux : le staff peut réessayer
-          } finally {
-            btn.disabled = false;
+              // Compteurs des filtres et de l'onglet, sans recharger ni faire sauter la carte.
+              panels.orders.querySelectorAll(".admin-chip").forEach((chip) => {
+                const f = ORDER_FILTERS.find((x) => x.id === chip.dataset.filter);
+                chip.querySelector(".admin-chip-count").textContent = String(ordersState.entries.filter(f.test).length);
+              });
+              refreshTabCounts();
+            } else toast("Impossible d'enregistrer", "error");
           }
-        });
+        } catch (err) {
+          toast("Erreur réseau, réessayez", "error");
+        } finally {
+          submit.disabled = false;
+        }
       });
     } catch (err) {
       panel.innerHTML = `<h2>Commandes</h2><p class="admin-empty">${errorMessage()}</p>`;
@@ -563,6 +710,7 @@
               badge.className = `admin-badge status-${s === "refunded" ? "delivered" : s === "rejected" ? "cancelled" : "processing"}`;
               badge.textContent = RETURN_STATUS_LABELS[s] || s;
               setTimeout(() => (note.hidden = true), 2500);
+              refreshTabCounts();
             } else {
               errNote.textContent =
                 data.error === "refund_failed"
@@ -678,6 +826,7 @@
             if (resp.ok) {
               tr.classList.remove("is-unread");
               btn.remove();
+              refreshTabCounts();
             }
           } catch (err) {
             btn.disabled = false;
