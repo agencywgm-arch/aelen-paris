@@ -721,7 +721,6 @@
   const spinHint = document.getElementById("spin-hint");
   const spinPrevBtn = document.getElementById("spin-prev");
   const spinNextBtn = document.getElementById("spin-next");
-  const fittingReflection = document.getElementById("fitting-reflection");
   const fittingColorsEl = document.getElementById("fitting-colors");
   const fittingSwatchesEl = document.getElementById("fitting-swatches");
 
@@ -818,8 +817,6 @@
         back.classList.add("is-visible", "is-active");
         if (spinFrontEl && spinFrontEl !== back) spinFrontEl.classList.remove("is-active");
         spinFrontEl = back;
-        // Reflet dans le miroir : même image (déjà en cache), inversée en CSS.
-        if (fittingReflection) fittingReflection.src = back.src;
       };
       if (back.complete || !spinFrontEl) reveal();
       else back.addEventListener("load", () => { if (frames[spinIndex] === frame) reveal(); }, { once: true });
