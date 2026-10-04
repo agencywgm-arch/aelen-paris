@@ -257,8 +257,7 @@
      pousser la scène hors de l'écran. */
   max-height: calc((100vw - 64px) / 0.7);
   aspect-ratio: 0.7;
-  touch-action: none;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   -webkit-user-select: none;
   opacity: 0;
@@ -266,7 +265,6 @@
   transition: opacity 0.8s ease 0.35s, transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) 0.35s;
 }
 .fitting-overlay.is-open .fitting-figure { opacity: 1; transform: none; }
-.fitting-figure.is-dragging { cursor: grabbing; }
 
 /* Panneau rétroéclairé derrière le mannequin : même teinte que le fond
    des photos, pour que la prise de vue se fonde dans la cabine. */

@@ -50,6 +50,14 @@
   }
 ]
   </script>
+  <script>
+    // Données publiques demandées tout de suite, en parallèle du chargement de la
+    // page (prix/stock et date de lancement) ; main.js les récupère ici.
+    (function () {
+      function get(u) { return fetch(u).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+      window.__aelenEarly = { overrides: get("/api/product-overrides"), waitlist: get("/api/waitlist") };
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
@@ -342,7 +350,7 @@
         <img id="fitting-photo" src="" alt="" />
         <img id="fitting-photo-b" src="" alt="" />
         <span class="fitting-light" aria-hidden="true"></span>
-        <div class="spin-hint" id="spin-hint">↔ Glissez pour faire tourner</div>
+        <div class="spin-hint" id="spin-hint">Utilisez les flèches pour tourner</div>
       </div>
       <button type="button" class="spin-arrow spin-arrow-left" id="spin-prev" aria-label="Tourner vers la gauche">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>

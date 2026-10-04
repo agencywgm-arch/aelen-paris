@@ -1,20 +1,35 @@
 (async function () {
   "use strict";
 
+  // Requêtes lancées dès le <head> (index.html) : elles avancent pendant que la
+  // page se construit au lieu de démarrer après le chargement de ce script.
+  const early = window.__aelenEarly || {};
+  function fetchJson(url, key) {
+    if (early[key]) return early[key];
+    return fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  }
+
   // ---- Surcharges prix/stock (dashboard staff) ----
+  // Ne bloque JAMAIS l'affichage : la page apparaît tout de suite avec le
+  // catalogue, puis la grille est rafraîchie seulement si le staff a modifié
+  // un prix ou un stock. Renvoie true si quelque chose a changé.
   async function applyProductOverrides() {
     try {
-      const resp = await fetch("/api/product-overrides");
-      if (!resp.ok) return;
-      const data = await resp.json();
+      const data = await fetchJson("/api/product-overrides", "overrides");
       const overrides = (data && data.overrides) || {};
+      let changed = false;
       PRODUCTS.forEach((product) => {
         const o = overrides[product.id];
         if (!o) return;
-        if (o.price != null) product.price = o.price;
-        product.outOfStockSizes = Array.isArray(o.outOfStockSizes) ? o.outOfStockSizes : [];
+        if (o.price != null && o.price !== product.price) { product.price = o.price; changed = true; }
+        const out = Array.isArray(o.outOfStockSizes) ? o.outOfStockSizes : [];
+        if (JSON.stringify(out) !== JSON.stringify(product.outOfStockSizes || [])) { changed = true; }
+        product.outOfStockSizes = out;
       });
-    } catch (err) {}
+      return changed;
+    } catch (err) {
+      return false;
+    }
   }
 
   // ---- Vidéo hero : poster + scrub scroll ----
@@ -107,7 +122,7 @@
     }
   }
 
-  await applyProductOverrides();
+  const overridesReady = applyProductOverrides();
 
   // ---- Parallaxe ----
   const aboutVisual = document.querySelector(".about-visual");
@@ -573,13 +588,6 @@
   const waitlistForm = document.getElementById("waitlist-form");
   const waitlistNote = document.getElementById("waitlist-note");
   const waitlistInner = document.getElementById("waitlist-inner");
-  const waitlistPreviewGrid = document.getElementById("waitlist-preview-grid");
-
-  if (waitlistPreviewGrid && typeof PRODUCTS !== "undefined") {
-    waitlistPreviewGrid.innerHTML = PRODUCTS.map(
-      (p) => `<img src="${imgSrc(p.images[0])}" alt="" fetchpriority="high" />`
-    ).join("");
-  }
 
   if (waitlistInner) {
     if (reduceMotion) {
@@ -592,14 +600,22 @@
             waitlistObserver.disconnect();
           }
         },
-        { threshold: 0.05 }
+        // Marge de 40 % : la section est déjà affichée quand on arrive dessus.
+        { threshold: 0, rootMargin: "0px 0px 40% 0px" }
       );
       waitlistObserver.observe(waitlistInner);
     }
   }
 
+  let countdownTimer = null;
+  function stopCountdown() {
+    clearTimeout(countdownTimer);
+    countdownTimer = null;
+    if (countdownEl) countdownEl.hidden = true;
+  }
   function startCountdown(targetMs) {
     if (!countdownEl) return;
+    clearTimeout(countdownTimer);
     countdownEl.hidden = false;
     const daysEl = document.getElementById("cd-days");
     const hoursEl = document.getElementById("cd-hours");
@@ -615,21 +631,34 @@
       if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
       if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, "0");
       if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, "0");
-      if (diff > 0) setTimeout(tick, 1000);
+      // Un tick par seconde, calé sur le prochain changement de seconde (pas de dérive).
+      if (diff > 0) countdownTimer = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
     }
     tick();
+  }
+
+  // Date de lancement : affichée immédiatement depuis la dernière valeur connue
+  // (navigateur), puis confirmée / corrigée par le serveur dès qu'il répond.
+  const LAUNCH_KEY = "aelen-launch-at";
+  function showLaunchAt(launchAt) {
+    const targetMs = launchAt ? new Date(launchAt).getTime() : NaN;
+    if (!Number.isNaN(targetMs) && targetMs > Date.now()) startCountdown(targetMs);
+    else stopCountdown();
   }
 
   async function initWaitlist() {
     if (!countdownEl && !waitlistForm) return;
     try {
-      const resp = await fetch("/api/waitlist");
-      const data = await resp.json();
-      if (data.launchAt) {
-        const targetMs = new Date(data.launchAt).getTime();
-        if (!Number.isNaN(targetMs) && targetMs > Date.now()) startCountdown(targetMs);
-      }
+      const cached = localStorage.getItem(LAUNCH_KEY);
+      if (cached) showLaunchAt(cached);
     } catch (err) {}
+    const data = await fetchJson("/api/waitlist", "waitlist");
+    if (!data) return;
+    try {
+      if (data.launchAt) localStorage.setItem(LAUNCH_KEY, data.launchAt);
+      else localStorage.removeItem(LAUNCH_KEY);
+    } catch (err) {}
+    showLaunchAt(data.launchAt);
   }
   initWaitlist();
 
@@ -691,6 +720,11 @@
   // ---- Events ----
   if (grid) {
     renderGrid();
+    overridesReady.then((changed) => {
+      if (!changed) return;
+      renderGrid();
+      renderCart();
+    });
     grid.addEventListener("click", (e) => {
       const card = e.target.closest(".product-card");
       if (card) openModal(card.dataset.id);
@@ -754,15 +788,8 @@
     let spinIndex = 0;
     let spinFramesCache = {};
     let spinFrontEl = null; // calque image actuellement au premier plan
-    let spinDragging = false;
-    let spinDragStartX = 0;
-    let spinDragStartIndex = 0;
     let spinIntroTimer = null;
-    let spinInertiaTimer = null;
-    let spinLastMoveX = 0;
-    let spinLastMoveT = 0;
-    let spinVelocity = 0; // frames par seconde, signé
-    const SPIN_FRAMES_PER_STEP = 8; // px de glisse pour avancer d'une frame
+    let preloadOthersTimer = null;
 
     let morphTimer = null;
     function setFittingSize(size) {
@@ -829,20 +856,24 @@
       }
     }
 
-    function stopSpinInertia() {
-      if (spinInertiaTimer) {
-        cancelAnimationFrame(spinInertiaTimer);
-        spinInertiaTimer = null;
-      }
-    }
-
+    // Tour complet à l'ouverture. Avance seulement quand l'image suivante est
+    // arrivée (jamais de saut ni de flash sur une connexion lente) et s'arrête
+    // dès qu'on touche une flèche.
     function playSpinIntro() {
       stopSpinIntro();
+      const frames = spinFramesCache[`${currentProduct.id}_${fittingSize}`];
+      if (!frames || frames.length === 0) return;
       let step = 0;
+      const startedAt = performance.now();
       spinIntroTimer = setInterval(() => {
+        const next = frames[(step + 1) % frames.length];
+        if (!(next.complete && next.naturalWidth)) {
+          if (performance.now() - startedAt > 8000) stopSpinIntro(); // réseau très lent : on abandonne
+          return;
+        }
         step += 1;
         showSpinFrame(step);
-        if (step >= SPIN_FRAME_COUNT) stopSpinIntro();
+        if (step >= frames.length) stopSpinIntro();
       }, 45);
     }
 
@@ -858,79 +889,16 @@
       preloadSpinFrames(product.id, fittingSize);
       showSpinFrame(0);
       playSpinIntro();
-    }
-
-    function spinPointerDown(e) {
-      if (e.target.closest(".spin-arrow")) return;
-      if (!e.isPrimary) return; // un 2e doigt (pincement) ne relance pas la rotation
-      spinDragging = true;
-      spinDragStartX = e.clientX;
-      spinDragStartIndex = spinIndex;
-      spinLastMoveX = e.clientX;
-      spinLastMoveT = performance.now();
-      spinVelocity = 0;
-      stopSpinIntro();
-      stopSpinInertia();
-      if (spinHint) spinHint.classList.remove("is-visible");
-      fittingFigure.classList.add("is-dragging");
-      fittingFigure.setPointerCapture(e.pointerId);
-    }
-
-    function spinPointerMove(e) {
-      if (!spinDragging || !e.isPrimary) return;
-      // Souris relâchée hors de la fenêtre : on termine proprement le glisser.
-      if (e.pointerType === "mouse" && e.buttons === 0) { spinPointerUp(e); return; }
-      const dx = e.clientX - spinDragStartX;
-      const delta = Math.round(-dx / SPIN_FRAMES_PER_STEP);
-      showSpinFrame(spinDragStartIndex + delta);
-
-      const now = performance.now();
-      const dt = now - spinLastMoveT;
-      if (dt > 0) {
-        const framesMoved = -(e.clientX - spinLastMoveX) / SPIN_FRAMES_PER_STEP;
-        spinVelocity = (framesMoved / dt) * 1000; // frames/s, lissé par le dernier segment
-      }
-      spinLastMoveX = e.clientX;
-      spinLastMoveT = now;
-    }
-
-    function spinPointerUp(e) {
-      if (!spinDragging) return;
-      if (e && e.isPrimary === false) return;
-      spinDragging = false;
-      fittingFigure.classList.remove("is-dragging");
-      // Doigt immobile avant d'être levé (ou geste annulé) : pas d'inertie,
-      // sinon le mannequin repartait tout seul avec une vitesse périmée.
-      if (!e || e.type === "pointercancel" || performance.now() - spinLastMoveT > 90) spinVelocity = 0;
-
-      // Inertie courte façon "flick" : la rotation continue un instant puis
-      // ralentit, pour un rendu plus fluide qu'un arrêt net au relâchement.
-      if (Math.abs(spinVelocity) > 0.5) {
-        let velocity = Math.max(-14, Math.min(14, spinVelocity));
-        let position = spinIndex;
-        let lastT = performance.now();
-        const friction = 0.94; // décroissance par frame d'animation
-
-        const step = () => {
-          const now = performance.now();
-          const dt = Math.min(48, now - lastT);
-          lastT = now;
-          position += (velocity * dt) / 1000;
-          showSpinFrame(Math.round(position));
-          velocity *= friction;
-          if (Math.abs(velocity) > 0.4) {
-            spinInertiaTimer = requestAnimationFrame(step);
-          } else {
-            spinInertiaTimer = null;
-          }
-        };
-        spinInertiaTimer = requestAnimationFrame(step);
-      }
+      // Les deux autres tailles se chargent ensuite en arrière-plan : le changement
+      // de taille est alors instantané.
+      clearTimeout(preloadOthersTimer);
+      preloadOthersTimer = setTimeout(() => {
+        SPIN_SIZES.forEach((size) => preloadSpinFrames(product.id, size));
+      }, 1500);
     }
 
     function spinStep(direction) {
       stopSpinIntro();
-      stopSpinInertia();
       if (spinHint) spinHint.classList.remove("is-visible");
       showSpinFrame(spinIndex + direction);
     }
@@ -1007,7 +975,6 @@
 
     function closeFittingRoom() {
       stopSpinIntro();
-      stopSpinInertia();
       fittingOverlay.classList.remove("is-open");
       setTimeout(() => {
         fittingOverlay.hidden = true;
@@ -1034,10 +1001,6 @@
       if (e.key === "Escape" && !fittingOverlay.hidden) closeFittingRoom();
     });
 
-    fittingFigure.addEventListener("pointerdown", spinPointerDown);
-    fittingFigure.addEventListener("pointermove", spinPointerMove);
-    fittingFigure.addEventListener("pointerup", spinPointerUp);
-    fittingFigure.addEventListener("pointercancel", spinPointerUp);
     if (spinPrevBtn) spinPrevBtn.addEventListener("click", () => spinStep(-1));
     if (spinNextBtn) spinNextBtn.addEventListener("click", () => spinStep(1));
   }

@@ -796,23 +796,13 @@ a { color: inherit; }
 
 .waitlist-media { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
 
-/* La collection réelle, floutée en arrière-plan : une vitrine qu'on
-   devine sans pouvoir encore l'ouvrir. */
+/* La collection réelle, floutée en arrière-plan : une vitrine qu'on devine sans
+   pouvoir encore l'ouvrir. Image unique DÉJÀ floutée (≈ 20 Ko) au lieu de sept
+   photos plein format + un flou CSS recalculé au défilement. */
 .waitlist-preview-grid {
   position: absolute;
-  inset: -24px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 1fr;
-  filter: blur(20px) saturate(0.85) brightness(0.8);
-  transform: scale(1.06);
-}
-
-.waitlist-preview-grid img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+  inset: 0;
+  background: #1c1917 url("../img/brand/waitlist-bg.webp") center / 100% 100% no-repeat;
 }
 
 .waitlist-scrim {
@@ -832,8 +822,8 @@ a { color: inherit; }
   max-width: 720px;
   margin: 0 auto;
   opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateY(18px);
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
 }
 
 .waitlist-inner.is-visible { opacity: 1; transform: translateY(0); }

@@ -17,7 +17,9 @@ module.exports = async (req, res) => {
     try {
       const sql = await getSql();
       const { rows } = await sql`SELECT value FROM site_settings WHERE key = 'waitlist_launch_at';`;
-      res.setHeader("Cache-Control", "public, max-age=30");
+      // Servi depuis le cache du CDN Vercel (rapide partout), rafraîchi en arrière-plan :
+      // un changement de date depuis l'espace staff est visible en moins d'une minute.
+      res.setHeader("Cache-Control", "public, max-age=20, s-maxage=30, stale-while-revalidate=300");
       res.status(200).json({ launchAt: rows[0] ? rows[0].value : null });
     } catch (err) {
       res.status(200).json({ launchAt: null });

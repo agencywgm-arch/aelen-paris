@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
       if (r.quantity <= 0) overrides[r.product_id].outOfStockSizes.push(r.size);
     });
 
-    res.setHeader("Cache-Control", "public, max-age=30");
+    res.setHeader("Cache-Control", "public, max-age=20, s-maxage=30, stale-while-revalidate=300");
     res.status(200).json({ overrides });
   } catch (err) {
     res.status(200).json({ overrides: {} });

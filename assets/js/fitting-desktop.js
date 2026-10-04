@@ -1,9 +1,8 @@
 /**
- * Améliore la rotation 360° de la cabine sur PC :
- * - bloque le drag natif des images
- * - molette souris
- * - maintien des flèches = rotation continue
- * (le glisser-déposer existe déjà dans main.js)
+ * Commandes de rotation de la cabine sur ordinateur.
+ * Il n'y a plus de glissé / molette : on tourne avec les flèches de l'écran
+ * (un appui = une vue, maintien = rotation continue) ou avec les touches ← / →.
+ * La rotation elle-même est dans main.js (clics sur #spin-prev / #spin-next).
  */
 (function () {
   "use strict";
@@ -13,80 +12,39 @@
   }
 
   ready(function () {
-    var figure = document.getElementById("fitting-figure");
-    var photo = document.getElementById("fitting-photo");
-    var photoB = document.getElementById("fitting-photo-b");
     var prev = document.getElementById("spin-prev");
     var next = document.getElementById("spin-next");
     var overlay = document.getElementById("fitting-overlay");
     var hint = document.getElementById("spin-hint");
-    if (!figure || !prev || !next) return;
+    if (!prev || !next || !overlay) return;
 
-    // Bloque le drag HTML5 des images (principal blocage desktop).
-    figure.addEventListener("dragstart", function (e) { e.preventDefault(); });
-    [photo, photoB].forEach(function (img) {
-      if (img) img.addEventListener("dragstart", function (e) { e.preventDefault(); });
-    });
-
-    // Empêche la sélection / drag pendant le pointerdown sur la figure
-    // (renforce main.js sans le remplacer).
-    figure.addEventListener(
-      "pointerdown",
-      function (e) {
-        if (e.target.closest && e.target.closest(".spin-arrow")) return;
-        e.preventDefault();
-      },
-      true
-    );
-
-    // Molette / pavé tactile : on cumule le défilement et on avance d'une
-    // frame tous les WHEEL_STEP px. Avant, chaque petit événement du pavé
-    // tactile (des dizaines par geste) faisait tourner d'une frame : rotation
-    // beaucoup trop rapide et saccadée. Écouté sur toute la cabine pour que
-    // la page derrière ne défile jamais.
-    var WHEEL_STEP = 28;
-    var wheelAccum = 0;
-    var wheelResetTimer = null;
-    if (overlay) overlay.addEventListener(
-      "wheel",
-      function (e) {
-        if (overlay.hidden) return;
-        e.preventDefault();
-        e.stopPropagation();
-        if (hint) hint.classList.remove("is-visible");
-        // Souris classique en « lignes » : on convertit en pixels.
-        var unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
-        var delta = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit;
-        wheelAccum += delta;
-        var steps = 0;
-        while (Math.abs(wheelAccum) >= WHEEL_STEP && steps < 4) {
-          var btn = wheelAccum > 0 ? next : prev;
-          if (btn) btn.click();
-          wheelAccum -= wheelAccum > 0 ? WHEEL_STEP : -WHEEL_STEP;
-          steps++;
-        }
-        if (steps === 4) wheelAccum = 0;
-        clearTimeout(wheelResetTimer);
-        wheelResetTimer = setTimeout(function () { wheelAccum = 0; }, 200);
-      },
-      { passive: false }
-    );
-
-    // Maintien flèche = rotation continue
-    var holdTimer = null;
-    function startHold(btn) {
+    function hideHint() {
       if (hint) hint.classList.remove("is-visible");
+    }
+
+    // Maintien d'une flèche = rotation continue.
+    var holdTimer = null;
+    var holdDelay = null;
+    function startHold(btn) {
+      hideHint();
       btn.click();
+      clearTimeout(holdDelay);
       clearInterval(holdTimer);
-      holdTimer = setInterval(function () { btn.click(); }, 45);
+      // Petit délai avant la répétition : un simple appui ne tourne que d'une vue.
+      holdDelay = setTimeout(function () {
+        holdTimer = setInterval(function () { btn.click(); }, 45);
+      }, 260);
     }
     function stopHold() {
+      clearTimeout(holdDelay);
       clearInterval(holdTimer);
+      holdDelay = null;
       holdTimer = null;
     }
-    // Le pointerdown fait déjà avancer d'une frame : on ignore le « click »
-    // natif qui suit le relâchement, sinon chaque appui tournait de 2 frames.
-    // (Les clics programmés — maintien, molette — et le clavier passent.)
+
+    // Le pointerdown fait déjà avancer d'une vue : on ignore le « click » natif qui
+    // suit le relâchement, sinon chaque appui tournait de 2 vues. (Les clics
+    // programmés — maintien, clavier — passent.)
     var swallowNextClick = false;
     [prev, next].forEach(function (btn) {
       btn.addEventListener(
@@ -110,9 +68,16 @@
       btn.addEventListener("pointercancel", stopHold);
     });
 
-    // Sur mobile (pas de molette), on garde le texte « Glissez pour faire tourner ».
+    // Clavier : ← / → font tourner (la touche maintenue répète toute seule).
+    document.addEventListener("keydown", function (e) {
+      if (overlay.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); hideHint(); prev.click(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); hideHint(); next.click(); }
+    });
+
+    // Sur ordinateur, on le dit aussi avec le clavier.
     if (hint && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-      hint.textContent = "↔ Glissez ou utilisez la molette";
+      hint.textContent = "‹ › Flèches ou touches ← →";
     }
   });
 })();
