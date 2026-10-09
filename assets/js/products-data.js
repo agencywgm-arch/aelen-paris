@@ -65,7 +65,7 @@ const PRODUCTS = [
       "Doublure interne soignée",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/veste-croco-beige-m.webp", fit: "cover" },
+      { src: "assets/img/fitting-tryons/veste-croco-beige-cover.webp", fit: "cover" },
       "assets/img/products/veste-croco-beige-01.png",
       "assets/img/products/veste-croco-beige-back.png",
     ],
@@ -110,7 +110,7 @@ const PRODUCTS = [
       "Poche à rabat, poignets boutonnés assortis",
     ],
     images: [
-      "assets/img/fitting-tryons/veste-foulard-marron-cover.webp",
+      "assets/img/fitting-tryons/veste-foulard-marron-cover-v2.webp",
       { src: "assets/img/products/veste-foulard-marron-front.png", fit: "contain" },
       { src: "assets/img/products/veste-foulard-marron-back.png", fit: "contain" },
     ],
