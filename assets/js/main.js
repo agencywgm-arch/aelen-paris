@@ -174,15 +174,27 @@
 
   const LOCK_ICON_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1.5" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>`;
 
+  const COUNT_WORDS = ["Zéro", "Une", "Deux", "Trois", "Quatre", "Cinq", "Six", "Sept", "Huit", "Neuf", "Dix"];
+
+  // Les pièces épuisées (toutes les tailles à 0 dans l'espace staff) ne sont
+  // plus affichées du tout sur la page.
   function renderGrid() {
     if (!grid || typeof PRODUCTS === "undefined") return;
-    grid.innerHTML = PRODUCTS.map((p) => {
-      const soldOut = isSoldOut(p);
-      return `
-      <article class="product-card${soldOut ? " is-soldout" : ""}" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
+    const available = PRODUCTS.filter((p) => !isSoldOut(p));
+    const title = document.getElementById("collection-title");
+    if (title) {
+      title.textContent = available.length === 0
+        ? "La collection"
+        : `${COUNT_WORDS[available.length] || available.length} pièce${available.length > 1 ? "s" : ""} signature`;
+    }
+    if (available.length === 0) {
+      grid.innerHTML = `<p class="grid-empty">Toute la collection est actuellement épuisée.<br />Rejoignez la liste d'attente pour être prévenu·e en priorité du prochain lancement.</p>`;
+      return;
+    }
+    grid.innerHTML = available.map((p) => `
+      <article class="product-card" data-id="${p.id}" tabindex="0" role="button" aria-label="Voir ${p.name}">
         <div class="thumb${imgFit(p.images[0], p) === "contain" ? " thumb-contain" : ""}">
           <img src="${imgSrc(p.images[0])}" alt="${p.name}" loading="lazy" />
-          ${soldOut ? `<div class="soldout-overlay">${LOCK_ICON_SVG}<span>Épuisé</span></div>` : ""}
         </div>
         <div class="info">
           <p class="cat">${p.category}</p>
@@ -191,8 +203,7 @@
           <p class="price">${priceMarkup(p)}</p>
           <span class="view-link">Voir la pièce</span>
         </div>
-      </article>`;
-    }).join("");
+      </article>`).join("");
   }
 
   // ---- Modal ----
@@ -719,7 +730,11 @@
 
   // ---- Events ----
   if (grid) {
-    renderGrid();
+    // Première apparition : on laisse jusqu'à 0,5 s aux prix/stocks pour arriver, afin qu'une
+    // pièce épuisée n'apparaisse pas une fraction de seconde avant de disparaître. La grille est
+    // sous la vidéo d'accueil : personne ne la voit pendant ce temps. Si le serveur est plus
+    // lent, elle s'affiche quand même, puis se corrige à l'arrivée des données.
+    Promise.race([overridesReady, new Promise((resolve) => setTimeout(resolve, 500))]).then(renderGrid);
     overridesReady.then((changed) => {
       if (!changed) return;
       renderGrid();
@@ -908,7 +923,7 @@
     function renderFittingColors(product) {
       if (!fittingColorsEl || !fittingSwatchesEl) return;
       const variants = product.colorGroup
-        ? PRODUCTS.filter((p) => p.colorGroup === product.colorGroup && SPIN_FRAMES[p.id])
+        ? PRODUCTS.filter((p) => p.colorGroup === product.colorGroup && SPIN_FRAMES[p.id] && (p.id === product.id || !isSoldOut(p)))
         : [];
       fittingColorsEl.hidden = variants.length < 2;
       fittingSwatchesEl.innerHTML = variants.length < 2 ? "" : variants.map((v) => `

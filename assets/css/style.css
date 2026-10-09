@@ -1247,3 +1247,13 @@ a { color: inherit; }
 
 #modal-add-cart { display: block; width: 100%; margin-bottom: 10px; }
 #modal-cta { display: block; text-align: center; }
+
+/* Collection entièrement épuisée. */
+.grid-empty {
+  grid-column: 1 / -1;
+  padding: 56px 20px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
