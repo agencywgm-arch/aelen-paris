@@ -802,7 +802,7 @@ a { color: inherit; }
 .waitlist-preview-grid {
   position: absolute;
   inset: 0;
-  background: #1c1917 url("../img/brand/waitlist-bg.webp") center / 100% 100% no-repeat;
+  background: #1c1917 url("../img/brand/waitlist-bg.webp?v=2") center / 100% 100% no-repeat;
 }
 
 .waitlist-scrim {

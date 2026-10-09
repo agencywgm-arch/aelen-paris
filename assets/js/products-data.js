@@ -19,7 +19,7 @@ const PRODUCTS = [
       "Coton résistant, doublure satinée",
     ],
     images: [
-      "assets/img/fitting-tryons/trench-chocolat-m.webp",
+      "assets/img/fitting-tryons/trench-chocolat-cover.webp",
       { src: "assets/img/products/trench-chocolat-front.png", fit: "contain" },
       { src: "assets/img/products/trench-chocolat-back.png", fit: "contain" },
     ],
@@ -43,7 +43,7 @@ const PRODUCTS = [
       "Coton gabardine",
     ],
     images: [
-      "assets/img/fitting-tryons/trench-beige-m.webp",
+      "assets/img/fitting-tryons/trench-beige-cover.webp",
       { src: "assets/img/products/trench-beige-front.png", fit: "contain" },
       { src: "assets/img/products/trench-beige-back.png", fit: "contain" },
     ],
