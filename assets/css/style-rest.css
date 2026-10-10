@@ -220,6 +220,7 @@
   .modal-image { aspect-ratio: 4/5; }
   .modal-image.modal-image-contain img { padding: 12px; }
   .modal-thumbs img { width: 48px; height: 60px; }
+  .loupe-lens { width: 150px; height: 150px; }
   .hero-video { height: 200vh; }
   .hero-scroll-hint { display: none; }
   .hero-video-el,

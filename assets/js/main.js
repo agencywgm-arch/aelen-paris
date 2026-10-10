@@ -223,11 +223,114 @@
   let currentProduct = null;
   let selectedSize = null;
 
+  // ---- Loupe (zoom sur les détails du vêtement) ----
+  const LOUPE_ZOOM = 2.6;
+  const loupeBtn = document.getElementById("loupe-btn");
+  const loupeLens = document.getElementById("loupe-lens");
+  const loupeHint = document.getElementById("loupe-hint");
+  const modalImageBox = modalImage.parentElement;
+  let loupeOn = false;
+  let loupeSrc = "";
+  let loupeUV = null; // dernière position (0..1) pour recalculer après un resize
+  let currentImageEntry = null;
+
+  function loupeSource() {
+    if (currentImageEntry && typeof currentImageEntry === "object" && currentImageEntry.zoom) return currentImageEntry.zoom;
+    return modalImage.currentSrc || modalImage.src;
+  }
+
+  function loupeLoadSource() {
+    const src = loupeSource();
+    if (!src || src === loupeSrc) return;
+    loupeSrc = src;
+    const pre = new Image();
+    pre.src = src;
+    loupeLens.style.backgroundImage = `url("${src}")`;
+  }
+
+  // Rectangle réellement occupé par la photo dans le cadre (cover ou contain)
+  function loupeImageRect() {
+    const box = modalImageBox.getBoundingClientRect();
+    const nw = modalImage.naturalWidth, nh = modalImage.naturalHeight;
+    if (!nw || !nh) return null;
+    const cs = getComputedStyle(modalImage);
+    const pad = parseFloat(cs.paddingLeft) || 0;
+    const aw = box.width - pad * 2, ah = box.height - pad * 2;
+    const contain = modalImageBox.classList.contains("modal-image-contain");
+    const scale = contain ? Math.min(aw / nw, ah / nh) : Math.max(aw / nw, ah / nh);
+    const rw = nw * scale, rh = nh * scale;
+    return { box, rw, rh, left: (box.width - rw) / 2, top: (box.height - rh) / 2 };
+  }
+
+  function loupeMove(clientX, clientY, touch) {
+    const r = loupeImageRect();
+    if (!r) return;
+    const x = clientX - r.box.left, y = clientY - r.box.top;
+    const u = Math.min(1, Math.max(0, (x - r.left) / r.rw));
+    const v = Math.min(1, Math.max(0, (y - r.top) / r.rh));
+    loupeUV = { u, v, touch };
+    loupeLens.hidden = false;
+    const L = loupeLens.offsetWidth;
+    // au doigt, la loupe se place au-dessus pour ne pas être cachée
+    let lx = x - L / 2;
+    let ly = touch ? y - L * 0.75 - L / 2 : y - L / 2;
+    lx = Math.min(r.box.width - L - 4, Math.max(4, lx));
+    ly = Math.min(r.box.height - L - 4, Math.max(4, ly));
+    loupeLens.style.left = lx + "px";
+    loupeLens.style.top = ly + "px";
+    const zw = r.rw * LOUPE_ZOOM, zh = r.rh * LOUPE_ZOOM;
+    loupeLens.style.backgroundSize = `${zw}px ${zh}px`;
+    loupeLens.style.backgroundPosition = `${L / 2 - u * zw - 3}px ${L / 2 - v * zh - 3}px`;
+  }
+
+  function loupeSetOn(on) {
+    loupeOn = on;
+    loupeBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    loupeBtn.setAttribute("aria-label", on ? "Désactiver la loupe" : "Activer la loupe");
+    modalImageBox.classList.toggle("is-loupe", on);
+    loupeLens.hidden = true;
+    loupeUV = null;
+    loupeHint.hidden = !on;
+    if (on) {
+      const coarse = window.matchMedia("(pointer: coarse)").matches;
+      loupeHint.textContent = coarse ? "Touchez et glissez sur la photo pour zoomer." : "Survolez la photo pour zoomer sur les détails.";
+      loupeLoadSource();
+    }
+  }
+
+  function loupeReset() {
+    loupeSetOn(false);
+    loupeSrc = "";
+    loupeLens.style.backgroundImage = "";
+  }
+
+  if (loupeBtn) {
+    loupeBtn.addEventListener("click", () => loupeSetOn(!loupeOn));
+    const ignore = (e) => e.target.closest(".modal-thumbs, .loupe-btn, .soldout-overlay");
+    modalImageBox.addEventListener("pointermove", (e) => {
+      if (!loupeOn || ignore(e)) return;
+      if (e.pointerType === "mouse") { loupeHint.hidden = true; loupeMove(e.clientX, e.clientY, false); }
+      else if (e.buttons || e.pointerType === "touch") { loupeHint.hidden = true; loupeMove(e.clientX, e.clientY, true); }
+    });
+    modalImageBox.addEventListener("pointerdown", (e) => {
+      if (!loupeOn || ignore(e) || e.pointerType === "mouse") return;
+      loupeHint.hidden = true;
+      loupeMove(e.clientX, e.clientY, true);
+    });
+    modalImageBox.addEventListener("pointerleave", (e) => {
+      if (e.pointerType === "mouse") loupeLens.hidden = true;
+    });
+    modalImage.addEventListener("load", () => { if (loupeOn) { loupeLens.hidden = true; loupeLoadSource(); } });
+    window.addEventListener("resize", () => { if (loupeOn) loupeLens.hidden = true; });
+  }
+
   function selectImage(product, index) {
     const entry = product.images[index];
+    currentImageEntry = entry;
     modalImage.src = imgSrc(entry);
     modalImage.alt = product.name;
     modalImage.parentElement.classList.toggle("modal-image-contain", imgFit(entry, product) === "contain");
+    if (loupeBtn) { loupeLens.hidden = true; loupeSrc = ""; if (loupeOn) loupeLoadSource(); }
     modalThumbs.querySelectorAll("img").forEach((img, i) => {
       img.classList.toggle("active", i === index);
     });
@@ -273,12 +376,14 @@
     modalThumbs.querySelectorAll("img").forEach((img) => {
       img.addEventListener("click", () => selectImage(product, Number(img.dataset.index)));
     });
+    if (loupeBtn) loupeReset();
     overlay.hidden = false;
     document.body.style.overflow = "hidden";
   }
 
   function closeModal() {
     overlay.hidden = true;
+    if (loupeBtn) loupeReset();
     document.body.style.overflow = "";
     const fittingOverlayEl = document.getElementById("fitting-overlay");
     if (fittingOverlayEl && !fittingOverlayEl.hidden) {
