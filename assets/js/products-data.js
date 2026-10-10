@@ -65,7 +65,7 @@ const PRODUCTS = [
       "Doublure interne soignée",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/veste-croco-beige-cover.webp", fit: "cover" },
+      { src: "assets/img/fitting-tryons/veste-croco-beige-cover-v2.webp", fit: "cover" },
       "assets/img/products/veste-croco-beige-01.png",
       "assets/img/products/veste-croco-beige-back.png",
     ],
@@ -110,7 +110,7 @@ const PRODUCTS = [
       "Poche à rabat, poignets boutonnés assortis",
     ],
     images: [
-      "assets/img/fitting-tryons/veste-foulard-marron-cover-v2.webp",
+      "assets/img/fitting-tryons/veste-foulard-marron-cover-v3.webp",
       { src: "assets/img/products/veste-foulard-marron-front.png", fit: "contain" },
       { src: "assets/img/products/veste-foulard-marron-back.png", fit: "contain" },
     ],
@@ -134,7 +134,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      "assets/img/fitting-tryons/pull-raye-beige-cover.webp",
+      "assets/img/fitting-tryons/pull-raye-beige-cover-v2.webp",
       { src: "assets/img/products/pull-raye-beige-front.png", fit: "contain" },
     ],
   },
@@ -157,7 +157,7 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      "assets/img/fitting-tryons/pull-raye-rouge-cover.webp",
+      "assets/img/fitting-tryons/pull-raye-rouge-cover-v2.webp",
       { src: "assets/img/products/pull-raye-rouge-front.png", fit: "contain" },
     ],
   },
