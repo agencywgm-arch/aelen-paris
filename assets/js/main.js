@@ -1171,7 +1171,7 @@
         const r = await fetch("/api/contact", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: fd.get("name"), email: fd.get("email"), message: fd.get("message") }),
+          body: JSON.stringify({ name: fd.get("name"), email: fd.get("email"), subject: fd.get("subject"), message: fd.get("message") }),
         });
         if (contactNote) contactNote.textContent = r.ok ? "Message envoyé." : "Erreur, réessayez.";
         if (r.ok) contactForm.reset();

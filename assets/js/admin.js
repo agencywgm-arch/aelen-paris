@@ -797,7 +797,7 @@
               <td>${formatDate(m.createdAt)}</td>
               <td>${escapeHtml(m.name)}</td>
               <td>${escapeHtml(m.email)}</td>
-              <td>${escapeHtml(m.message)}</td>
+              <td>${m.subject ? `<strong>${escapeHtml(m.subject)}</strong><br>` : ""}${escapeHtml(m.message)}</td>
               <td>${m.isRead ? "" : '<button type="button" class="admin-btn-small admin-mark-read">Marquer lu</button>'}</td>
             </tr>
           `
@@ -807,7 +807,7 @@
         <h2>Messages de contact</h2>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>Date</th><th>Nom</th><th>E-mail</th><th>Message</th><th></th></tr></thead>
+            <thead><tr><th>Date</th><th>Nom</th><th>E-mail</th><th>Objet / Message</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
