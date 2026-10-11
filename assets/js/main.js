@@ -44,7 +44,7 @@
     if (!reduceMotionHero) {
       if (!heroVideo.querySelector("source")) {
         const source = document.createElement("source");
-        source.src = isMobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-hq.mp4";
+        source.src = isMobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-v2.mp4";
         source.type = "video/mp4";
         heroVideo.appendChild(source);
         heroVideo.preload = "auto";

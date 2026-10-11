@@ -65,7 +65,8 @@
   <link rel="stylesheet" href="assets/css/style-rest.css" />
   <link rel="stylesheet" href="assets/css/fitting-cabin.css" />
   <link rel="stylesheet" href="assets/css/demo-tour.css" />
-  <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" />
+  <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" media="(max-width: 860px)" />
+  <link rel="preload" as="image" href="assets/video/hero-poster-pc-v2.jpg" fetchpriority="high" media="(min-width: 861px)" />
   <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
 </head>
 <body>
@@ -96,6 +97,8 @@
   <main id="top">
     <section class="hero-video" id="hero-video">
       <div class="hero-video-sticky">
+        <picture>
+          <source media="(min-width: 861px)" srcset="assets/video/hero-poster-pc-v2.jpg" />
         <img
           class="hero-poster"
           src="assets/video/hero-poster.jpg"
@@ -105,6 +108,7 @@
           fetchpriority="high"
           decoding="async"
         />
+        </picture>
         <video
           id="hero-video-el"
           class="hero-video-el"
@@ -120,7 +124,8 @@
             var mobile = window.matchMedia("(max-width: 860px)").matches;
             var s = document.createElement("source");
             /* PC = paysage HQ | mobile = portrait */
-            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-hq.mp4";
+            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-v2.mp4";
+            if (!mobile) v.poster = "assets/video/hero-poster-pc-v2.jpg";
             s.type = "video/mp4";
             v.appendChild(s);
             v.load();
