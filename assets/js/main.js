@@ -381,6 +381,8 @@
     document.body.style.overflow = "hidden";
   }
 
+  window.aelenOpenProduct = openModal;
+
   function closeModal() {
     overlay.hidden = true;
     if (loupeBtn) loupeReset();

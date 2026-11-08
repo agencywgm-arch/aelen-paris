@@ -65,9 +65,8 @@
   <link rel="stylesheet" href="assets/css/style-rest.css" />
   <link rel="stylesheet" href="assets/css/fitting-cabin.css" />
   <link rel="stylesheet" href="assets/css/demo-tour.css" />
-  <link rel="preload" as="image" href="assets/video/hero-poster.jpg" fetchpriority="high" media="(max-width: 860px)" />
-  <link rel="preload" as="image" href="assets/video/hero-poster-pc-v2.jpg" fetchpriority="high" media="(min-width: 861px)" />
-  <link rel="preload" as="video" href="assets/video/hero-mobile.mp4" media="(max-width: 860px)" />
+  <link rel="stylesheet" href="assets/css/lookbook.css" />
+  <link rel="preload" as="image" href="assets/img/lookbook/cover.jpg" fetchpriority="high" />
 </head>
 <body>
 
@@ -95,50 +94,14 @@
   </header>
 
   <main id="top">
-    <section class="hero-video" id="hero-video">
-      <div class="hero-video-sticky">
-        <picture>
-          <source media="(min-width: 861px)" srcset="assets/video/hero-poster-pc-v2.jpg" />
-        <img
-          class="hero-poster"
-          src="assets/video/hero-poster.jpg"
-          alt=""
-          width="1890"
-          height="1080"
-          fetchpriority="high"
-          decoding="async"
-        />
-        </picture>
-        <video
-          id="hero-video-el"
-          class="hero-video-el"
-          muted
-          playsinline
-          preload="auto"
-          poster="assets/video/hero-poster.jpg"
-        ></video>
-        <script>
-          (function () {
-            var v = document.getElementById("hero-video-el");
-            if (!v) return;
-            var mobile = window.matchMedia("(max-width: 860px)").matches;
-            var s = document.createElement("source");
-            /* PC = paysage HQ | mobile = portrait */
-            s.src = mobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-pc-v2.mp4";
-            if (!mobile) v.poster = "assets/video/hero-poster-pc-v2.jpg";
-            s.type = "video/mp4";
-            v.appendChild(s);
-            v.load();
-          })();
-        </script>
-        <div class="hero-video-scrim"></div>
-        <div class="hero-inner">
-          <p class="hero-eyebrow">Nouvelle collection</p>
-          <h1>L'allure parisienne, <br />pièce après pièce.</h1>
-          <p>Trenchs, vestes courtes et mailles conçus à Paris — des silhouettes structurées, des matières nobles, pensées pour durer bien au-delà d'une saison.</p>
-          <a href="#collection" class="btn btn-solid">Découvrir la collection</a>
-        </div>
-        <div class="hero-scroll-hint">Faites défiler</div>
+    <section class="mag" id="hero-video" aria-label="Lookbook Ælen Paris : feuilletez le magazine et achetez depuis les photos">
+      <div class="mag-stage">
+        <canvas id="glc" aria-label="Magazine Ælen Paris, cliquez sur une photo pour acheter la pièce"></canvas>
+        <button type="button" class="mag-btn" id="magPrev" aria-label="Page précédente">←</button>
+        <button type="button" class="mag-btn" id="magNext" aria-label="Page suivante">→</button>
+        <div class="mag-bar"><span id="magLabel" class="mag-label">Couverture</span></div>
+        <a class="mag-skip" href="#collection">Collection ↓</a>
+        <h1 class="visually-hidden-lb" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Ælen Paris — l'allure parisienne, pièce après pièce</h1>
       </div>
     </section>
 
@@ -407,6 +370,7 @@
   <script src="assets/js/products-data.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/fitting-desktop.js"></script>
+  <script src="assets/js/lookbook.js"></script>
   <script src="assets/js/demo-tour.js"></script>
 </body>
 </html>
