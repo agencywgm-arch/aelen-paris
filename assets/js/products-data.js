@@ -19,7 +19,9 @@ const PRODUCTS = [
       "Coton résistant, doublure satinée",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/trench-chocolat-cover.webp", zoom: "assets/img/fitting-tryons/trench-chocolat-cover-hd.webp" },
+      { src: "assets/img/collection/trench-chocolat-mc1.jpg", fit: "cover" },
+      { src: "assets/img/collection/trench-chocolat-mc2.jpg", fit: "cover" },
+      { src: "assets/img/collection/trench-chocolat-mc3.jpg", fit: "cover" },
       { src: "assets/img/products/trench-chocolat-front.png", fit: "contain" },
       { src: "assets/img/products/trench-chocolat-back.png", fit: "contain" },
     ],
@@ -43,7 +45,9 @@ const PRODUCTS = [
       "Coton gabardine",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/trench-beige-cover.webp", zoom: "assets/img/fitting-tryons/trench-beige-cover-hd.webp" },
+      { src: "assets/img/collection/trench-beige-mk1.jpg", fit: "cover" },
+      { src: "assets/img/collection/trench-beige-mk2.jpg", fit: "cover" },
+      { src: "assets/img/collection/trench-beige-mk3.jpg", fit: "cover" },
       { src: "assets/img/products/trench-beige-front.png", fit: "contain" },
       { src: "assets/img/products/trench-beige-back.png", fit: "contain" },
     ],
@@ -65,7 +69,9 @@ const PRODUCTS = [
       "Doublure interne soignée",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/veste-croco-beige-cover-v2.webp", fit: "cover", zoom: "assets/img/fitting-tryons/veste-croco-beige-cover-v2-hd.webp" },
+      { src: "assets/img/collection/veste-croco-beige-ms1.jpg", fit: "cover" },
+      { src: "assets/img/collection/veste-croco-beige-ms2.jpg", fit: "cover" },
+      { src: "assets/img/collection/veste-croco-beige-ms3.jpg", fit: "cover" },
       "assets/img/products/veste-croco-beige-01.png",
       "assets/img/products/veste-croco-beige-back.png",
     ],
@@ -110,7 +116,8 @@ const PRODUCTS = [
       "Poche à rabat, poignets boutonnés assortis",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/veste-foulard-marron-cover-v3.webp", zoom: "assets/img/fitting-tryons/veste-foulard-marron-cover-v3-hd.webp" },
+      { src: "assets/img/collection/veste-foulard-marron-mel1.jpg", fit: "cover" },
+      { src: "assets/img/collection/veste-foulard-marron-mel2.jpg", fit: "cover" },
       { src: "assets/img/products/veste-foulard-marron-front.png", fit: "contain" },
       { src: "assets/img/products/veste-foulard-marron-back.png", fit: "contain" },
     ],
@@ -134,7 +141,8 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/pull-raye-beige-cover-v2.webp", zoom: "assets/img/fitting-tryons/pull-raye-beige-cover-v2-hd.webp" },
+      { src: "assets/img/collection/pull-raye-beige-mm2a.jpg", fit: "cover" },
+      { src: "assets/img/collection/pull-raye-beige-mm2b.jpg", fit: "cover" },
       { src: "assets/img/products/pull-raye-beige-front.png", fit: "contain" },
     ],
   },
@@ -157,7 +165,8 @@ const PRODUCTS = [
       "Coupe courte, manches amples",
     ],
     images: [
-      { src: "assets/img/fitting-tryons/pull-raye-rouge-cover-v2.webp", zoom: "assets/img/fitting-tryons/pull-raye-rouge-cover-v2-hd.webp" },
+      { src: "assets/img/collection/pull-raye-rouge-mm1a.jpg", fit: "cover" },
+      { src: "assets/img/collection/pull-raye-rouge-mm1b.jpg", fit: "cover" },
       { src: "assets/img/products/pull-raye-rouge-front.png", fit: "contain" },
     ],
   },
