@@ -108,7 +108,7 @@
   var hh=(document.querySelector('.site-header')||{offsetHeight:76}).offsetHeight,ph=Math.min(r.height*.9,r.height-hh-46),pw=ph*(TW/TH);if(pw*(m?1:2)>r.width*(m?1:.98)){pw=r.width*(m?1:.98)/(m?1:2);ph=pw*(TH/TW)}
   W=pw;H=ph;TOPY=hh+8;OY=r.height/2-TOPY-H;N=mobile?NP:Math.ceil(NP/2);smax=mobile?N-1:N;
   /* feuilles : desktop front=2i back=2i+1 ; mobile front=i, dos blanc */
-  mag.style.height=(smax*(mobile?80:95)+100)+"vh";
+  mag.style.height=(smax*(mobile?38:60)+100)+"vh";
   if(gl){gl.viewport(0,0,cw,ch)}
   dirty=true;
  }
@@ -186,7 +186,7 @@
   auto.isAuto=true;
  }
  function goTo(to,dur){to=clamp(to,0,smax);var from=S,t0=null;if(Math.abs(to-from)<.001)return;auto=function(now){if(t0===null)t0=now;var f=clamp((now-t0)/(dur*1000),0,1);setS(from+(to-from)*f);return f<1};auto.isTween=true}
- var tgt=0;function step(d){activity();var base=Math.round(S);tgt=clamp(base+d,0,smax);goTo(tgt,mobile?1.6:2.0)}
+ var tgt=0;function step(d){activity();var base=Math.round(S);tgt=clamp(base+d,0,smax);goTo(tgt,mobile?.8:1.0)}
  function setS(s){S=s;selfScroll=performance.now();scrollTo({top:scrollForS(s),behavior:"instant"});dirty=true}
  var needIdx=-9;
  function ensure(){var k=Math.floor(S);var ex=auto&&auto.isAuto?6:0,lo=mobile?k-1:2*k-2,hi=(mobile?k+3:2*k+5)+ex;for(var p=0;p<NP;p++){if(p>=lo&&p<=hi)need(p);else if(pageTex[p]&&(p<lo-2||p>hi+2))drop(p)}}
@@ -213,13 +213,23 @@
   var px=cx-r.left-mid-shift,hh=r.height,top=TOPY,bot=TOPY+H,py=cy-r.top;if(py<top||py>bot)return -1;
   if(px>=0&&px<=W)return mobile?k:(k<N?2*k:-1);if(!mobile&&px<0&&px>=-W)return k>=1?2*k-1:-1;return -1}
  cv.addEventListener("click",function(e){if(swiped){swiped=false;return}var p=pageAt(e.clientX,e.clientY);stopAuto();
-  if(p<0||p>=NP){step(1);return}var d=DEFS[p];
+  if(p<0||p>=NP){if(S>=smax-.05)toCollection();else step(1);return}var d=DEFS[p];
   if(d.t==="prod"&&window.aelenOpenProduct){window.aelenOpenProduct(d.id)}
   else if(d.t==="end"){var c=document.getElementById("collection");if(c)c.scrollIntoView({behavior:"smooth"})}
   else step(1)});
- var tx=0,ty=0,swiped=false;
- cv.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;swiped=false},{passive:true});
- cv.addEventListener("touchend",function(e){var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){swiped=true;stopAuto();step(dx<0?1:-1)}},{passive:true});
+ var tx=0,ty=0,tt=0,swiped=false;
+ function toCollection(){var c=document.getElementById("collection");if(c)c.scrollIntoView({behavior:"smooth"})}
+ /* swipe gauche/droite : un grand geste tourne jusqu'à 4 pages d'un coup ; au-delà de la dernière page, on arrive à la collection */
+ function swipe(dir,dx,dt){var v=Math.abs(dx)/Math.max(dt,1),n=1+Math.floor(Math.abs(dx)/(innerWidth*.28))+(v>1.1?1:0);n=clamp(n,1,4);
+  if(dir>0&&S>=smax-.05){toCollection();return}
+  activity();var base=Math.round(S),to=clamp(base+dir*n,0,smax);goTo(to,.55+.18*Math.abs(to-base))}
+ cv.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=performance.now();swiped=false},{passive:true});
+ cv.addEventListener("touchend",function(e){var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.2){swiped=true;swipe(dx<0?1:-1,dx,performance.now()-tt)}},{passive:true});
+ /* souris : glisser horizontalement */
+ var mx=0,mt=0,md=false;cv.addEventListener("mousedown",function(e){md=true;mx=e.clientX;mt=performance.now()});
+ addEventListener("mouseup",function(e){if(!md)return;md=false;var dx=e.clientX-mx;if(Math.abs(dx)>60){swiped=true;swipe(dx<0?1:-1,dx,performance.now()-mt)}});
+ /* trackpad : défilement horizontal */
+ var wl=0;cv.addEventListener("wheel",function(e){if(Math.abs(e.deltaX)>Math.abs(e.deltaY)&&Math.abs(e.deltaX)>30&&performance.now()-wl>500){wl=performance.now();swipe(e.deltaX>0?1:-1,e.deltaX*4,100)}},{passive:true});
  addEventListener("keydown",function(e){var t=e.target&&e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT"||document.body.style.overflow==="hidden")return;var rr=mag.getBoundingClientRect();if(!(rr.top<=1&&rr.bottom>innerHeight*.5))return;if(e.key==="ArrowRight"){stopAuto();step(1)}else if(e.key==="ArrowLeft"){stopAuto();step(-1)}});
 })();
 
