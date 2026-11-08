@@ -208,7 +208,7 @@
  var go=function(){resize();S=sFromScroll();dirty=true;requestAnimationFrame(loop);0};
  (document.fonts&&document.fonts.load?Promise.all([document.fonts.load('600 80px "Playfair Display"'),document.fonts.load('italic 500 40px "Playfair Display"'),document.fonts.load('400 14px "Lato"')]).catch(function(){}):Promise.resolve()).then(go);
  /* clic : page droite = suivant, page gauche = précédent */
- function pageAt(cx,cy){var r=cv.getBoundingClientRect(),s=S;if(Math.abs(s-Math.round(s))>.06)return -1;var k=Math.round(s),mid=r.width/2,shift;
+ function pageAt(cx,cy){var r=cv.getBoundingClientRect(),s=S;var k=Math.round(s),mid=r.width/2,shift;
   if(mobile)shift=-W/2;else{var t0=ease(clamp(s,0,1)),tl=ease(clamp(s-(N-1),0,1));shift=-(W/2)*(1-t0)+(W/2)*tl}
   var px=cx-r.left-mid-shift,hh=r.height,top=TOPY,bot=TOPY+H,py=cy-r.top;if(py<top||py>bot)return -1;
   if(px>=0&&px<=W)return mobile?k:(k<N?2*k:-1);if(!mobile&&px<0&&px>=-W)return k>=1?2*k-1:-1;return -1}
@@ -221,8 +221,6 @@
  cv.addEventListener("touchstart",function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;swiped=false},{passive:true});
  cv.addEventListener("touchend",function(e){var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.3){swiped=true;stopAuto();step(dx<0?1:-1)}},{passive:true});
  addEventListener("keydown",function(e){var t=e.target&&e.target.tagName;if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT"||document.body.style.overflow==="hidden")return;var rr=mag.getBoundingClientRect();if(!(rr.top<=1&&rr.bottom>innerHeight*.5))return;if(e.key==="ArrowRight"){stopAuto();step(1)}else if(e.key==="ArrowLeft"){stopAuto();step(-1)}});
- document.getElementById("magPrev").onclick=function(){stopAuto();step(-1)};
- document.getElementById("magNext").onclick=function(){stopAuto();step(1)};
 })();
 
 
